@@ -1,0 +1,14 @@
+{
+  "domain": "goecharger_api2",
+  "name": "go-eCharger APIv2 Connect",
+  "codeowners": [
+    "@marq24"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/marq24/ha-goecharger-api2",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/marq24/ha-goecharger-api2/issues",
+  "requirements": [],
+  "version": "2024.5.0"
+}
