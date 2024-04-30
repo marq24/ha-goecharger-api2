@@ -48,7 +48,7 @@ class ExtNumberEntityDescription(NumberEntityDescription):
     write_zero_as_null: bool | None = None
     handle_as_float: bool | None = None
     factor: int | None = None
-
+    idx: int | str | None = None
 
 @dataclass
 class ExtSelectEntityDescription(SelectEntityDescription):
@@ -342,24 +342,61 @@ NUMBER_SENSORS = [
         icon="mdi:priority-high",
         entity_registry_enabled_default=False
     ),
-    # lot -> is an array!!! ->   "lot": {
+    # lot -> is an object ->   "lot": {
     #     "amp": 32,
     #     "dyn": 32,
     #     "sta": 32,
     #     "ts": 3
     #   }
-    # ExtNumberEntityDescription(
-    #     key=Tag.LOT.key,
-    #     native_max_value=1,
-    #     native_min_value=0,
-    #     native_step=1,
-    #     as_int=True,
-    #     entity_category=EntityCategory.CONFIG,
-    #     native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-    #     device_class=SensorDeviceClass.CURRENT,
-    #     icon="mdi:current-ac",
-    #     entity_registry_enabled_default=False
-    # ),
+    ExtNumberEntityDescription(
+        key=Tag.LOT.key,
+        idx="amp",
+        native_max_value=32,
+        native_min_value=6,
+        native_step=1,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        icon="mdi:current-ac",
+        entity_registry_enabled_default=False
+    ),
+    ExtNumberEntityDescription(
+        key=Tag.LOT.key,
+        idx="dyn",
+        native_max_value=32,
+        native_min_value=6,
+        native_step=1,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        icon="mdi:current-ac",
+        entity_registry_enabled_default=False
+    ),
+    ExtNumberEntityDescription(
+        key=Tag.LOT.key,
+        idx="sta",
+        native_max_value=32,
+        native_min_value=6,
+        native_step=1,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        icon="mdi:current-ac",
+        entity_registry_enabled_default=False
+    ),
+    ExtNumberEntityDescription(
+        key=Tag.LOT.key,
+        idx="ts",
+        native_max_value=4000,
+        native_min_value=0,
+        native_step=1,
+        mode=NumberMode.BOX,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        icon="mdi:current-ac",
+        entity_registry_enabled_default=False
+    ),
     # mca
     ExtNumberEntityDescription(
         key=Tag.MCA.key,

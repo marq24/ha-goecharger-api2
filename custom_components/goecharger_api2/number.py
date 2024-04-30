@@ -27,7 +27,11 @@ class GoeChargerNumber(GoeChargerBaseEntity, NumberEntity):
     @property
     def native_value(self):
         try:
-            value = self.coordinator.data[self.data_key]
+            if self.entity_description.idx is not None:
+                value = self.coordinator.data[self.data_key][self.entity_description.idx]
+            else:
+                value = self.coordinator.data[self.data_key]
+
             if value is None or value == "":
                 return "unknown"
             elif self.entity_description.handle_as_float is not None and self.entity_description.handle_as_float:
@@ -48,16 +52,39 @@ class GoeChargerNumber(GoeChargerBaseEntity, NumberEntity):
 
     async def async_set_native_value(self, value) -> None:
         try:
-            if int(value) == 0 and self.entity_description.write_zero_as_null is not None and self.entity_description.write_zero_as_null:
-                await self.coordinator.async_write_key(self.data_key, None, self)
-            elif self.entity_description.factor is not None and self.entity_description.factor > 0:
-                # no special handling for 'handle_as_float' here - since the float's just exist in the GUI... if the
-                # backend these values are (keep my fingers crossed) always int's
-                await self.coordinator.async_write_key(self.data_key, int(value * self.entity_description.factor), self)
-            elif self.entity_description.handle_as_float is not None and self.entity_description.handle_as_float:
-                await self.coordinator.async_write_key(self.data_key, float(value), self)
+            if self.entity_description.idx is not None:
+                # we have to write all values of the object... [not only the set one]
+                obj = self.coordinator.data[self.data_key]
+
+                if int(value) == 0 and self.entity_description.write_zero_as_null is not None and self.entity_description.write_zero_as_null:
+                    obj[self.entity_description.idx] = None
+                elif self.entity_description.factor is not None and self.entity_description.factor > 0:
+                    # no special handling for 'handle_as_float' here - since the float's just exist in the GUI... if the
+                    # backend these values are (keep my fingers crossed) always int's
+                    obj[self.entity_description.idx] = int(value * self.entity_description.factor)
+                elif self.entity_description.handle_as_float is not None and self.entity_description.handle_as_float:
+                    obj[self.entity_description.idx] = float(value)
+                else:
+                    # we will write all numbers as integer's [no decimal's/fractions!!!]
+                    obj[self.entity_description.idx] = int(value)
+
+                _LOGGER.error(f"object: {obj}")
+                await self.coordinator.async_write_key(self.data_key, obj, self)
+
             else:
-                # we will write all numbers as integer's [no decimal's/fractions!!!]
-                await self.coordinator.async_write_key(self.data_key, int(value), self)
+                value = self.coordinator.data[self.data_key]
+
+                if int(value) == 0 and self.entity_description.write_zero_as_null is not None and self.entity_description.write_zero_as_null:
+                    await self.coordinator.async_write_key(self.data_key, None, self)
+                elif self.entity_description.factor is not None and self.entity_description.factor > 0:
+                    # no special handling for 'handle_as_float' here - since the float's just exist in the GUI... if the
+                    # backend these values are (keep my fingers crossed) always int's
+                    await self.coordinator.async_write_key(self.data_key, int(value * self.entity_description.factor), self)
+                elif self.entity_description.handle_as_float is not None and self.entity_description.handle_as_float:
+                    await self.coordinator.async_write_key(self.data_key, float(value), self)
+                else:
+                    # we will write all numbers as integer's [no decimal's/fractions!!!]
+                    await self.coordinator.async_write_key(self.data_key, int(value), self)
+
         except ValueError:
             return "unavailable"

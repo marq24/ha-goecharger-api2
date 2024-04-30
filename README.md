@@ -21,6 +21,11 @@ Support for all go-eCharger Wallboxes supporting the APIv2 - __of course__ the A
 
 Please be aware, that we are developing this integration to best of our knowledge and belief, but cant give a guarantee. Therefore, use this integration **at your own risk**.
 
+## Requirements
+
+- go-eCharger Wallbox running Firmware version __56.1__ (or higher) - tested successfully with 56.2 BETA
+- enabled APIv2
+
 ## Installation
 
 ### via HACS
@@ -118,7 +123,19 @@ and when you make use of the PV Surplus Charging fature additionally the values 
  - ppv
  - pakku
 
-Once the __car__ status will switch from `idle` (=1) to something different the integration will leave the hibernation-mode and update all the (none configuration) entities.
+Once the __car__ status will switch from `idle` (=1) to something different the integration will leave the hibernation-mode and update all the (none configuration) entities with the configured update interval.
+
+### Enable HTTP API v2 in App
+
+1. Start the go-eCharger App
+2. Select 'Internet'
+3. Enable 'Access to /api/status and /api/set API' (Allow local HTTP API v2) as shown here:
+
+   '![step1](https://github.com/marq24/ha-goecharger-api2/raw/main/app001.png)
+4. Toggle the '' as shown here:
+
+   ![step1](https://github.com/marq24/ha-goecharger-api2/raw/main/app002.png)
+5. __DO not forget__ to press the save Icon!
 
 ## Want to report an issue?
 
