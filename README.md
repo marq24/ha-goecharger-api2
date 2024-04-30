@@ -2,13 +2,17 @@
 
 ![logo](https://github.com/marq24/ha-goecharger-api2/raw/main/logo.png)
 
-Support for all go-eCharger Wallboxes supporting APIv2 - all (with very few exceptions) fields documented [in the official go-eCharger github repository](https://github.com/goecharger/go-eCharger-API-v2/blob/main/apikeys-en.md) are supported by this integration.
+Support for all go-eCharger Wallboxes supporting the APIv2 - __of course__ the APIv2 have to be enabled via the go-eCharger mobile app, __before__ you can use this integration.
 
-This integration also support a German translated interface, sensor names and values.
-
-For all go-eCharger (status) fields that support a numeric status code, this code is available as separate sensor.
-
-Please note that the configuration data will be read only every 24hours from the hardware (to save data) - but you can update the sensors any time with an 'update' button.
+## Main features
+ 
+ - __All documented fields__ [in the official go-eCharger github repository](https://github.com/goecharger/go-eCharger-API-v2/blob/main/apikeys-en.md) are supported by this integration (with very few exceptions)
+ - Support for 'PV surplus charging' (PV-Überschuss Laden) __without additional hardware__ - no need to pay for evcc. In order to use this feature a small additional manual setup process is required [[details can be found below](#pvsurplus)]
+ - For all go-eCharger (status) fields that support a numeric status code, this code is available as separate sensor
+ - Multilanguage support: a German translation included (any feedback highly appreciated!) & looking forward to other language contributions
+- Hibernation-Mode: only request sensor data from wallbox when system is in use [[details can be found below](#hibernation)]
+  
+  Please note that the configuration data will be read only every 24hours from the hardware (to save data) - but you can update the sensors any time with an 'update' button.
 
 [![hacs_badge][hacsbadge]][hacs] [![BuyMeCoffee][buymecoffeebadge]][buymecoffee] [![PayPal][paypalbadge]][paypal]
 
@@ -17,16 +21,18 @@ Please note that the configuration data will be read only every 24hours from the
 
 Please be aware, that we are developing this integration to best of our knowledge and belief, but cant give a guarantee. Therefore, use this integration **at your own risk**.
 
-### HACS
+## Installation
 
-1. Add a custom integration repository to HACS: [ha-goecharger-api2](https://github.com/marq24/ha-goecharger-api2)
+### via HACS
+
+1. Add a custom integration repository to HACS: [https://github.com/marq24/ha-goecharger-api2](https://github.com/marq24/ha-goecharger-api2)
 1. Install the custom integration
 1. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "go-eCharger APIv2 Connect"
 1. Setup the go-eCharger custom integration as described below
 
   <!--1. In HACS Store, search for [***marq24/ha-goecharger-api2***]-->
 
-### Manual
+### manual steps
 
 1. Using the tool of choice open the directory (folder) for your HA configuration (where you find `configuration.yaml`).
 2. If you do not have a `custom_components` directory (folder) there, you need to create it.
@@ -44,7 +50,7 @@ Just click the following Button to start the configuration automatically:
 
 [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=goecharger_api2)
 
-### Manual
+### Manual steps
 
 Use the following steps for a manual configuration by adding the custom integration using the web interface and follow instruction on screen:
 
@@ -56,8 +62,9 @@ After the integration was added you can use the 'config' button to adjust your s
 
 Please note, that some of the available sensors are __not__ enabled by default.
 
+<a id="pvsurplus"></a>
 
-## Enable PV Surplus Charging via HA automation (manual step)
+## Enable PV Surplus Charging via HA automation
 
 When you use this integration you do not need any additional hardware (go-eController) in order to allow PV surplus charging. The only thing that is required to add a HA automation fetching the data from your grid & solar power entities.
 
@@ -66,11 +73,17 @@ __Once you have enabled the automation, you obviously also need to enable the 'U
 Please note, that __only__ the `pgrid` value is required - the other two fields/sensors are just _optional_.
 
 ### Example automation
-Please note that this example is for a for SENEC.Home System - if you are using 'my' SENEC.Home Integration you can use the code below 1:1 - in any other case: __You must adjust/replace the sensor identifiers!!!__
+
+Please note that this example is for a for SENEC.Home System - if you are using 'my' SENEC.Home Integration you can use the code below 1:1 - in any other case: __You must adjust/replace the sensor identifiers!!!__. So if you are not a SENEC.Home user please replace the following:
+
+- `sensor.senec_grid_state_power` with the entity that provide the information in WATT you're currently consuming from the grid (positive value) or you are exporting to the grid (negative value). Once the value is negative the go-eCharger might use the available power to start with charging your car.
+- _optional_ `sensor.senec_solar_generated_power` with the entity that provided the total power generation by your PV (in WATT)
+- _optional_ `sensor.senec_battery_state_power` with the entity that provided the power in WATT currently will be used to charge an additional battery (positive value) or will be consumed from the battery (negative value).
+
 ```
 alias: go-e surplus charging
 description: >-
-  Simple automation to update values needed by go-eChargers for using solar surplus charching.
+  Simple automation to update values needed by go-eChargers for using solar surplus charging.
 trigger:
   - platform: time_pattern
     seconds: /5
@@ -84,6 +97,28 @@ action:
 mode: single
 ```
 
+<a id="hibernation"></a>
+
+### Hibernation-Mode - Good to know 
+
+This integration will __not always fetch all sensor data from your wallbox__. For example the configuration values - they probably do not change every 5 sec. - so in order to reduce the overall system load the integration will refresh the configuration entities just every 24h - OR when you make adjustments to any of the go-eCharger settings via HA. If you want to manually sync the configuration sensors, then you can use the `button.goe_[serial]_zfocore`[^1] ['Read Configuration' button].
+
+Additionally, to the configuration values the number of entities that will be refreshed when no vehicle is connected (car state = 'Idle'), is also drastically reduced. In this case, the integration will __only__ read the full data set __every 5 minutes__ from your wallbox.
+
+So the integration have some _sort of hibernation-mode_ in which only the following entities will be frequently read from your wallbox (based on the configured update interval):
+  
+ - __car__: vehicle connection status 
+ - __modelStatus__: wallbox status
+ - __err__: possible error status
+ - __nrg__: power values
+ - __tma__: temperature values
+ 
+and when you make use of the PV Surplus Charging fature additionally the values for: 
+ - pgrid
+ - ppv
+ - pakku
+
+Once the __car__ status will switch from `idle` (=1) to something different the integration will leave the hibernation-mode and update all the (none configuration) entities.
 
 ---
 
@@ -96,6 +131,8 @@ Be smart switch to Tibber - that's what I did in october 2023. If you want to jo
 Please consider [using my personal Tibber invitation link to join Tibber today](https://invite.tibber.com/6o0kqvzf) or Enter the following code: 6o0kqvzf (six, oscar, zero, kilo, quebec, victor, zulu, foxtrot) afterward in the Tibber App - TIA!
 
 ---
+[^1] `focore` stands for: FOrce COnfiguration REquest
+
 
 [hacs]: https://hacs.xyz
 [hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge&logo=homeassistantcommunitystore&logoColor=ccc

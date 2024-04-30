@@ -76,7 +76,7 @@ BINARY_SENSORS = [
         idx=0,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=None,
-        icon="mdi:car",
+        icon="mdi:car-connected",
         icon_off="mdi:car-off",
         entity_registry_enabled_default=True
     ),
@@ -567,7 +567,7 @@ SELECT_SENSORS = [
         options=["0", "1"],
         entity_category=EntityCategory.CONFIG,
         device_class=None,
-        icon="mdi:seesaw",
+        icon="mdi:scale-balance",
         entity_registry_enabled_default=True
     ),
     ExtSelectEntityDescription(
@@ -601,7 +601,7 @@ SELECT_SENSORS = [
         options=["0", "1", "2"],
         entity_category=EntityCategory.CONFIG,
         device_class=None,
-        icon="mdi:account-lock-open",
+        icon="mdi:lock-open-outline",
         entity_registry_enabled_default=True
     ),
 ]
@@ -866,7 +866,7 @@ SENSOR_SENSORS = [
         native_unit_of_measurement=None,
         state_class=None,
         device_class=None,
-        icon="mdi:heart-pulse",
+        icon="mdi:state-machine",
         entity_registry_enabled_default=False
     ),
     ExtSensorEntityDescription(
@@ -876,7 +876,7 @@ SENSOR_SENSORS = [
         native_unit_of_measurement=None,
         state_class=None,
         device_class=None,
-        icon="mdi:heart-pulse",
+        icon="mdi:state-machine",
         entity_registry_enabled_default=True
     ),
     ExtSensorEntityDescription(
@@ -923,7 +923,7 @@ SENSOR_SENSORS = [
         native_unit_of_measurement=None,
         state_class=None,
         device_class=None,
-        icon="mdi:heart-pulse",
+        icon="mdi:state-machine",
         entity_registry_enabled_default=False
     ),
     ExtSensorEntityDescription(
@@ -933,7 +933,7 @@ SENSOR_SENSORS = [
         native_unit_of_measurement=None,
         state_class=None,
         device_class=None,
-        icon="mdi:heart-pulse",
+        icon="mdi:state-machine",
         entity_registry_enabled_default=True
     ),
     ExtSensorEntityDescription(
@@ -1437,7 +1437,7 @@ SWITCH_SENSORS = [
         key=Tag.LOE.key,
         entity_category=EntityCategory.CONFIG,
         device_class=None,
-        icon="mdi:seesaw",
+        icon="mdi:scale-balance",
         entity_registry_enabled_default=False
     ),
     ExtSwitchEntityDescription(

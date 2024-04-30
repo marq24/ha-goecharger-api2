@@ -12,6 +12,7 @@ from custom_components.goecharger_api2.pygoecharger_ha.const import (
     FILTER_VERSIONS,
     FILTER_MIN_STATES,
     FILTER_MIN_PLUS_IDS_STATES,
+    FILTER_TIMES_ADDON,
     FILTER_ALL_STATES,
     FILTER_ALL_CONFIG,
 )
@@ -71,19 +72,31 @@ class GoeChargerApiV2Bridge:
             else:
                 filter = FILTER_MIN_STATES
 
+            # check waht additional times do frequent upddate?!
+            filter = filter+FILTER_TIMES_ADDON
+
             idle_states = await self._read_filtered_data(filters=filter, log_info="read_idle_states")
             if len(idle_states) > 0:
-                self._states[Tag.ERR.key] = idle_states[Tag.ERR.key]
-                self._states[Tag.NRG.key] = idle_states[Tag.NRG.key]
-                self._states[Tag.TMA.key] = idle_states[Tag.TMA.key]
-                self._states[Tag.CAR.key] = idle_states[Tag.CAR.key]
-                self._states[Tag.MODELSTATUS.key] = idle_states[Tag.MODELSTATUS.key]
+                # copy all fields from 'idle_states' to self._states
+                self._states.update(idle_states)
 
-                if self._REQUEST_IDS_DATA:
-                    self._states[Tag.PGRID.key] = idle_states[Tag.PGRID.key]
-                    self._states[Tag.PAKKU.key] = idle_states[Tag.PAKKU.key]
-                    self._states[Tag.PPV.key] = idle_states[Tag.PPV.key]
-                    self._REQUEST_IDS_DATA = False
+                # self._states[Tag.ERR.key] = idle_states[Tag.ERR.key]
+                # self._states[Tag.NRG.key] = idle_states[Tag.NRG.key]
+                # self._states[Tag.TMA.key] = idle_states[Tag.TMA.key]
+                # self._states[Tag.CAR.key] = idle_states[Tag.CAR.key]
+                # self._states[Tag.MODELSTATUS.key] = idle_states[Tag.MODELSTATUS.key]
+                #
+                # if self._REQUEST_IDS_DATA:
+                #     self._states[Tag.PGRID.key] = idle_states[Tag.PGRID.key]
+                #     self._states[Tag.PAKKU.key] = idle_states[Tag.PAKKU.key]
+                #     self._states[Tag.PPV.key] = idle_states[Tag.PPV.key]
+                #     self._REQUEST_IDS_DATA = False
+                #
+                # if include_times:
+                #     list=FILTER_TIMES_ADDON.split(',')
+                #     for a_key in list:
+                #         if a_key in idle_states:
+                #             self._states[a_key] = idle_states[a_key]
 
                 if Tag.CAR.key in self._states and self._states[Tag.CAR.key] != CAR_VALUES.IDLE.value:
                     # the car state is not 'idle' - so we should fetch all states...

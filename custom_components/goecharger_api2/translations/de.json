@@ -204,7 +204,7 @@
       "wst_value": {"name": "WiFi Status"},
 
       "fsptws": {"name": "Wechsel von/zu '1-phasigem Laden angefordert seit"},
-      "inva": {"name": "Inverter-Daten 'alter'"},
+      "inva": {"name": "Inverter-Daten 'Alter'"},
       "lbp": {"name": "Letze Wallbox Schalter Betätigung"},
       "lccfc": {"name": "Letzter Fahrzeug Statuswechsel von 'Laden'"},
       "lccfi": {"name": "Letzter Fahrzeug Statuswechsel von 'Inaktiv/Frei'"},
