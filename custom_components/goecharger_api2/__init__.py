@@ -6,7 +6,7 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_TYPE, CONF_ID, CONF_SCAN_INTERVAL
-from homeassistant.core import Config, Event
+from homeassistant.core import Config, Event, SupportsResponse
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as config_val
@@ -24,13 +24,9 @@ from .const import (
     MANUFACTURER,
     PLATFORMS,
     STARTUP_MESSAGE,
-    SERVICE_SET_HOLIDAY,
-    SERVICE_SET_SCHEDULE_DATA,
-    SERVICE_SET_DISINFECTION_START_TIME,
-    SERVICE_GET_ENERGY_BALANCE,
-    SERVICE_GET_ENERGY_BALANCE_MONTHLY
-
+    SERVICE_SET_PV_DATA,
 )
+from .service import GoeChargerApiV2Service
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -71,6 +67,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     if config_entry.state != ConfigEntryState.LOADED:
         config_entry.add_update_listener(async_reload_entry)
 
+    # initialize our service...
+    service = GoeChargerApiV2Service(hass, config_entry, coordinator)
+    hass.services.async_register(DOMAIN, SERVICE_SET_PV_DATA, service.set_pv_data,
+                                 supports_response=SupportsResponse.OPTIONAL)
+
     # ok we are done...
     return True
 
@@ -87,7 +88,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
             coordinator.clear_data()
             hass.data[DOMAIN].pop(config_entry.entry_id)
 
-        # hass.services.async_remove(DOMAIN, SERVICE_SET_HOLIDAY)
+        hass.services.async_remove(DOMAIN, SERVICE_SET_PV_DATA)
 
     return unload_ok
 
@@ -135,11 +136,11 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Update data via library."""
         try:
-            #if self.data is not None:
+            # if self.data is not None:
             #    _LOGGER.debug(f"number of fields before query: {len(self.data)} ")
             # result = await self.bridge.read_all()
-            #_LOGGER.debug(f"number of fields after query: {len(result)}")
-            #return result
+            # _LOGGER.debug(f"number of fields after query: {len(result)}")
+            # return result
 
             return await self.bridge.read_all()
 
@@ -149,12 +150,12 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.error(f"unexpected: {other}")
             raise UpdateFailed() from other
 
-    #async def async_write_tags(self, kv_pairs: Collection[Tuple[WKHPTag, Any]]) -> dict:
+    # async def async_write_tags(self, kv_pairs: Collection[Tuple[WKHPTag, Any]]) -> dict:
     #    """Get data from the API."""
     #    ret = await self.bridge.async_write_values(kv_pairs)
     #    return ret
 
-    async def async_write_key(self, key: str, value, entity: Entity = None):
+    async def async_write_key(self, key: str, value, entity: Entity = None) -> dict:
         """Update single data"""
         result = await self.bridge.write_value_to_key(key, value)
         _LOGGER.debug(f"write result: {result}")
@@ -166,6 +167,13 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
 
         if entity is not None:
             entity.async_schedule_update_ha_state(force_refresh=True)
+
+        # since we do not force an update when setting PV surplus data, we 'patch' internally our values
+        if key == Tag.IDS.key:
+            self.data = self.bridge._versions | self.bridge._states | self.bridge._config
+            self.async_update_listeners()
+
+        return result
 
     async def read_versions(self):
         await self.bridge.read_versions()

@@ -29,11 +29,7 @@ If you have any issues with this you need to open an issue here:
 -------------------------------------------------------------------
 """
 
-SERVICE_SET_HOLIDAY: Final = "set_holiday"
-SERVICE_SET_DISINFECTION_START_TIME: Final = "set_disinfection_start_time"
-SERVICE_SET_SCHEDULE_DATA: Final = "set_schedule_data"
-SERVICE_GET_ENERGY_BALANCE: Final = "get_energy_balance"
-SERVICE_GET_ENERGY_BALANCE_MONTHLY: Final = "get_energy_balance_monthly"
+SERVICE_SET_PV_DATA: Final = "set_pv_data"
 
 
 @dataclass
@@ -1283,6 +1279,7 @@ SENSOR_SENSORS = [
     # pakku
     ExtSensorEntityDescription(
         key=Tag.PAKKU.key,
+        suggested_display_precision=2,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -1293,6 +1290,7 @@ SENSOR_SENSORS = [
     # pgrid
     ExtSensorEntityDescription(
         key=Tag.PGRID.key,
+        suggested_display_precision=2,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -1313,10 +1311,12 @@ SENSOR_SENSORS = [
     # ppv
     ExtSensorEntityDescription(
         key=Tag.PPV.key,
+        suggested_display_precision=2,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
+        icon="mdi:solar-power",
         entity_registry_enabled_default=True
     ),
 

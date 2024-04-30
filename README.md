@@ -57,6 +57,34 @@ After the integration was added you can use the 'config' button to adjust your s
 Please note, that some of the available sensors are __not__ enabled by default.
 
 
+## Enable PV Surplus Charging via HA automation (manual step)
+
+When you use this integration you do not need any additional hardware (go-eController) in order to allow PV surplus charging. The only thing that is required to add a HA automation fetching the data from your grid & solar power entities.
+
+__Once you have enabled the automation, you obviously also need to enable the 'Use PV surplus charging' setting of your go-eCharger!__
+
+Please note, that __only__ the `pgrid` value is required - the other two fields/sensors are just _optional_.
+
+### Example automation
+Please note that this example is for a for SENEC.Home System - if you are using 'my' SENEC.Home Integration you can use the code below 1:1 - in any other case: __You must adjust/replace the sensor identifiers!!!__
+```
+alias: go-e surplus charging
+description: >-
+  Simple automation to update values needed by go-eChargers for using solar surplus charching.
+trigger:
+  - platform: time_pattern
+    seconds: /5
+condition: []
+action:
+  - service: goecharger_api2.set_pv_data
+    data:
+      pgrid: "{{states('sensor.senec_grid_state_power')}}"
+      ppv:  "{{states('sensor.senec_solar_generated_power')}}"
+      pakku: "{{states('sensor.senec_battery_state_power')}}"
+mode: single
+```
+
+
 ---
 
 ###### Advertisement / Werbung - alternative way to support me

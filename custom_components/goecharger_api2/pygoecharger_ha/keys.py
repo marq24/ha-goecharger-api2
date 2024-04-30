@@ -375,7 +375,7 @@ class Tag(ApiKey, Enum):
     # zeroFeedinOffset in W
     ZFO = ApiKey(key="zfo", cat=CAT.CONFIG, writeable=True)
 
-    # undocumented PV-DATA-Write -> wriate a json object [{"pGrid": 1000., "pPv": 1000., "pAkku": 1000.}]
+    # undocumented PV-DATA-Write -> write a json object [{"pGrid": 1000., "pPv": 1000., "pAkku": 1000.}]
     # see also https://github.com/goecharger/go-eCharger-API-v2/discussions/110
     IDS = ApiKey(key="ids", cat=CAT.STATUS, writeable=True, writeonly=True)
 

@@ -11,6 +11,7 @@ from custom_components.goecharger_api2.pygoecharger_ha.const import (
     FILTER_SYSTEMS,
     FILTER_VERSIONS,
     FILTER_MIN_STATES,
+    FILTER_MIN_PLUS_IDS_STATES,
     FILTER_ALL_STATES,
     FILTER_ALL_CONFIG,
 )
@@ -31,6 +32,7 @@ class GoeChargerApiV2Bridge:
 
         self._LAST_CONFIG_UPDATE_TS = 0
         self._LAST_FULL_STATE_UPDATE_TS = 0
+        self._REQUEST_IDS_DATA = False
         self._versions = {}
         self._states = {}
         self._config = {}
@@ -41,6 +43,7 @@ class GoeChargerApiV2Bridge:
     def clear_data(self):
         self._LAST_CONFIG_UPDATE_TS = 0
         self._LAST_FULL_STATE_UPDATE_TS = 0
+        self._REQUEST_IDS_DATA = False
         self._versions = {}
         self._states = {}
         self._config = {}
@@ -63,13 +66,25 @@ class GoeChargerApiV2Bridge:
     async def read_all_states(self):
         # ok we are in idle state - so we do not need all states... [but 5 minutes (=300sec) do a full update]
         if "car" in self._states and CAR_VALUES.IDLE.value == self._states["car"] and self._LAST_FULL_STATE_UPDATE_TS + 300 > time():
-            idle_states = await self._read_filtered_data(filters=FILTER_MIN_STATES, log_info="read_idle_states")
+            if self._REQUEST_IDS_DATA:
+                filter = FILTER_MIN_PLUS_IDS_STATES
+            else:
+                filter = FILTER_MIN_STATES
+
+            idle_states = await self._read_filtered_data(filters=filter, log_info="read_idle_states")
             if len(idle_states) > 0:
                 self._states[Tag.ERR.key] = idle_states[Tag.ERR.key]
                 self._states[Tag.NRG.key] = idle_states[Tag.NRG.key]
                 self._states[Tag.TMA.key] = idle_states[Tag.TMA.key]
                 self._states[Tag.CAR.key] = idle_states[Tag.CAR.key]
                 self._states[Tag.MODELSTATUS.key] = idle_states[Tag.MODELSTATUS.key]
+
+                if self._REQUEST_IDS_DATA:
+                    self._states[Tag.PGRID.key] = idle_states[Tag.PGRID.key]
+                    self._states[Tag.PAKKU.key] = idle_states[Tag.PAKKU.key]
+                    self._states[Tag.PPV.key] = idle_states[Tag.PPV.key]
+                    self._REQUEST_IDS_DATA = False
+
                 if Tag.CAR.key in self._states and self._states[Tag.CAR.key] != CAR_VALUES.IDLE.value:
                     # the car state is not 'idle' - so we should fetch all states...
                     await self.read_all_states()
@@ -177,8 +192,12 @@ class GoeChargerApiV2Bridge:
                         r_json = await res.json()
                         if r_json is not None and len(r_json) > 0:
                             if key in r_json and r_json[key]:
-                                self._LAST_CONFIG_UPDATE_TS = 0
-                                self._LAST_FULL_STATE_UPDATE_TS = 0
+                                # ignore 'force-update' for 'ids' (PV surplus charging)
+                                if key != Tag.IDS.key:
+                                    self._LAST_CONFIG_UPDATE_TS = 0
+                                    self._LAST_FULL_STATE_UPDATE_TS = 0
+                                else:
+                                    self._REQUEST_IDS_DATA = True
                                 return {key: value}
                             else:
                                 return {"err": r_json}

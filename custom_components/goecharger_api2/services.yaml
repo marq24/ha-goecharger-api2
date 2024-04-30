@@ -1,0 +1,84 @@
+set_pv_data:
+  # Service name as shown in UI
+  name: Send PV data to Wallbox (to allow Charge with PV Surplus)
+  # Description of the service
+  description: DESC-HERE
+  # If the service accepts entity IDs, target allows the user to specify entities by entity, device, or area. If `target` is specified, `entity_id` should not be defined in the `fields` map. By default it shows only targets matching entities from the same domain as the service, but if further customization is required, target supports the entity, device, and area selectors (https://www.home-assistant.io/docs/blueprint/selectors/). Entity selector parameters will automatically be applied to device and area, and device selector parameters will automatically be applied to area.
+  #target:
+  # Different fields that your service accepts
+  fields:
+    # Key of the field
+    pgrid:
+      # Field name as shown in UI
+      name: Power from/to Grid (in Watt)
+      # Description of the field
+      description: Negative values means export to the grid, positive value means importing from grid.
+      required: true
+      default: 0
+      # Selector (https://www.home-assistant.io/docs/blueprint/selectors/) to control the input UI for this field
+      selector:
+        number:
+          min: -50000
+          max: 50000
+          unit_of_measurement: "W"
+          method: "box"
+    ppv:
+      name: Power from PV
+      # Description of the field
+      description: The current PV production  (in Watt)
+      required: false
+      default: 0
+      # Selector (https://www.home-assistant.io/docs/blueprint/selectors/) to control the input UI for this field
+      selector:
+        number:
+          min: 0
+          max: 50000
+          unit_of_measurement: "W"
+          method: "box"
+    pakku:
+      name: Power from/to Battery (in Watt)
+      description: Negative values means charging the battery, positive value means consuming power from the battery.
+      required: false
+      default: 0
+      # Selector (https://www.home-assistant.io/docs/blueprint/selectors/) to control the input UI for this field
+      selector:
+        number:
+          min: -50000
+          max: 50000
+          unit_of_measurement: "W"
+          method: "box"
+
+set_disinfection_start_time:
+  # Service name as shown in UI
+  name: Set disinfection start time
+  # Description of the service
+  description: Set the start time for disinfection
+  # If the service accepts entity IDs, target allows the user to specify entities by entity, device, or area. If `target` is specified, `entity_id` should not be defined in the `fields` map. By default it shows only targets matching entities from the same domain as the service, but if further customization is required, target supports the entity, device, and area selectors (https://www.home-assistant.io/docs/blueprint/selectors/). Entity selector parameters will automatically be applied to device and area, and device selector parameters will automatically be applied to area.
+  #target:
+  # Different fields that your service accepts
+  fields:
+    # Key of the field
+    starthhmm:
+      # Field name as shown in UI
+      name: Disinfection Start Time
+      # Description of the field
+      description: Set the disinfection start time
+      # Whether or not field is required (default = false)
+      required: true
+      # Advanced fields are only shown when the advanced mode is enabled for the user (default = false)
+      # advanced: true
+      # Example value that can be passed for this field
+      #example: "low"
+      # The default field value
+      #default: "high"
+      selector:
+        time:
+      # Selector (https://www.home-assistant.io/docs/blueprint/selectors/) to control the input UI for this field
+      #selector:
+      #  select:
+      #    options:
+      #      - "off"
+      #      - "low"
+      #      - "medium"
+      #      - "high"
+

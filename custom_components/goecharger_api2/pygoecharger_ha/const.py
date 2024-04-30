@@ -4,6 +4,7 @@ from typing import Final
 FILTER_SYSTEMS: Final = "oem,sse,typ,var"
 FILTER_VERSIONS: Final = "ccrv,fwc,fwv"
 FILTER_MIN_STATES: Final = "car,modelStatus,err,nrg,tma"
+FILTER_MIN_PLUS_IDS_STATES: Final = "car,modelStatus,err,nrg,tma,pakku,ppv,pgrid"
 FILTER_ALL_STATES: Final = "acu,adi,amt,atp,awcp,car,cbl,ccu,ccw,cdi,cus,deltaa,deltap,err,eto,ffb,fhz,fsp,fsptws,inva,lbp,lccfc,lccfi,lcctc,lck,lfspt,lmsc,loa,lpsc,mcpea,mmp,modelStatus,nif,nrg,pakku,pgrid,pha,pnp,ppv,pwm,rbc,rbt,rfb,rssi,rst,tlf,tls,tma,tpa,wh,wsms,wst"
 FILTER_ALL_CONFIG: Final = "acp,acs,ama,amp,ara,ate,att,awc,awe,awp,bac,cch,cco,cfi,cid,clp,cwc,cwe,dwo,esk,fmt,fna,frc,frm,fst,fup,fzf,hsa,lbr,lmo,loe,lof,log,lop,lot,loty,lse,map,mca,mci,mcpd,mptwt,mpwst,nmo,pgt,po,psh,psm,psmd,sch_satur,sch_sund,sch_week,sdp,sh,spl3,su,sua,sumd,tds,tof,upo,ust,zfo"
 
