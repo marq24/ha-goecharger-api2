@@ -32,11 +32,13 @@
     }
   },
   "services": {
-    "dummy_service": {
-      "name": "Startzeit des...",
-      "description": "Setze die Uhrzeit...",
+    "set_pv_data": {
+      "name": "PV-Daten an Wallbox senden (um dem go-eCharger das Laden mit PV-Überschuss zu ermöglichen)",
+      "description": "Dies ist ein einfacher Proxy-Dienst, damit wir die Automatisierung etwas einfacher konfigurieren können",
       "fields": {
-        "starthhmm": {"name": "Startzeit", "description": "Startzeit des..."}
+        "pgrid":  {"name": "Leistung vom/aus dem Netz (in Watt)", "description": "Negative Werte bedeuten Export in das Stromnetz, positive Werte bedeuten Verbrauch aus dem Netz."},
+        "ppv":    {"name": "Leistung der PV (in Watt)", "description": "Die aktuelle PV-Produktion."},
+        "paccu":  {"name": "Leistung von/aud der Batterie (in Watt)", "description": "Negative Werte bedeuten, dass die Batterie geladen wird, positive Werte bedeuten, dass Strom aus der Batterie verbraucht wird."}
       }
     }
   },

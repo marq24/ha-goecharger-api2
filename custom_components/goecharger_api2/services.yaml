@@ -2,7 +2,7 @@ set_pv_data:
   # Service name as shown in UI
   name: Send PV data to Wallbox (to allow Charge with PV Surplus)
   # Description of the service
-  description: DESC-HERE
+  description: This is a simple proxy service so that we can configure the automation a bit easier
   # If the service accepts entity IDs, target allows the user to specify entities by entity, device, or area. If `target` is specified, `entity_id` should not be defined in the `fields` map. By default it shows only targets matching entities from the same domain as the service, but if further customization is required, target supports the entity, device, and area selectors (https://www.home-assistant.io/docs/blueprint/selectors/). Entity selector parameters will automatically be applied to device and area, and device selector parameters will automatically be applied to area.
   #target:
   # Different fields that your service accepts
@@ -25,7 +25,7 @@ set_pv_data:
     ppv:
       name: Power from PV
       # Description of the field
-      description: The current PV production  (in Watt)
+      description: The current PV production (in Watt)
       required: false
       default: 0
       # Selector (https://www.home-assistant.io/docs/blueprint/selectors/) to control the input UI for this field

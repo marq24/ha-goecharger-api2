@@ -31,6 +31,17 @@
       }
     }
   },
+  "services": {
+    "set_pv_data": {
+      "name": "Send PV data to Wallbox (to allow charging with PV surplus)",
+      "description": "This is a simple proxy service so that we can configure the automation a bit easier",
+      "fields": {
+        "pgrid":  {"name": "Power from/to grid (in Watt)", "description": "Negative values means export to the grid, positive value means importing from grid."},
+        "ppv":    {"name": "Power from PV (in Watt)", "description": "The current PV production"},
+        "paccu":  {"name": "Power from/to battery (in Watt)", "description": "Negative values means charging the battery, positive value means consuming power from the battery."}
+      }
+    }
+  },
   "entity": {
     "binary_sensor": {
       "car_0":{"name":  "Car connected"},
