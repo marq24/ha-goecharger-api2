@@ -4,7 +4,7 @@
 
 Support for all go-eCharger Wallboxes supporting APIv2 - all (with very few exceptions) fields documented [in the official go-eCharger github repository](https://github.com/goecharger/go-eCharger-API-v2/blob/main/apikeys-en.md) are supported by this integration.
 
-This integration also support a German translated interface and sensor names & values.
+This integration also support a German translated interface, sensor names and values.
 
 For all go-eCharger (status) fields that support a numeric status code, this code is available as separate sensor.
 
@@ -22,7 +22,7 @@ Please be aware, that we are developing this integration to best of our knowledg
 1. Add a custom integration repository to HACS: [ha-goecharger-api2](https://github.com/marq24/ha-goecharger-api2)
 1. Install the custom integration
 1. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "go-eCharger APIv2 Connect"
-1. Setup the waterkotte custom integration as described below
+1. Setup the go-eCharger custom integration as described below
 
   <!--1. In HACS Store, search for [***marq24/ha-goecharger-api2***]-->
 
@@ -48,15 +48,13 @@ Just click the following Button to start the configuration automatically:
 
 Use the following steps for a manual configuration by adding the custom integration using the web interface and follow instruction on screen:
 
-- Go to `Configuration -> Integrations` and add "Waterkotte" integration
-- Provide the IP address (or hostname) of your Waterkotte Heatpump web server
-- Select the Interface-Type of your Waterkotte (when you need to provide the user & password 'waterkotte' to login via your app/browser, then select `EcoTouch Mode`)
-- Select the number of TAGs that can be fetched in a single call to your device (older devices might need to adjust this value - for my in 2022 installed Waterkotte 75 is totally fine)
-- Provide area where the heatpump is located
+- Go to `Configuration -> Integrations` and add "go-eCharger APIv2 Connect" integration
+- Provide the IP address (or hostname) of your go-eCharger web server
+- Provide area where the wallbox is located
 
-After the integration was added you can use the 'config' button to adjust your settings and you can additionally modify the update intervall
+After the integration was added you can use the 'config' button to adjust your settings, you can additionally modify the update interval
 
-Please note, that most of the available sensors are __not__ enabled by default.
+Please note, that some of the available sensors are __not__ enabled by default.
 
 
 ---

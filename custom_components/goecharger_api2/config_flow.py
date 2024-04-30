@@ -1,4 +1,3 @@
-"""Adds config flow for Waterkotte Heatpump."""
 import logging
 
 import voluptuous as vol
@@ -42,6 +41,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if valid:
                 user_input[CONF_TYPE] = f"{self._type} [{self._variant}]"
                 user_input[CONF_ID] = self._serial
+                user_input[CONF_SCAN_INTERVAL] = max(5, user_input[CONF_SCAN_INTERVAL])
                 title = f"go-eCharger API v2 [{self._serial}]"
                 return self.async_create_entry(title=title, data=user_input)
             else:
@@ -102,13 +102,14 @@ class GoeChargerApiV2OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if user_input is not None:
+            user_input[CONF_SCAN_INTERVAL] = max(5, user_input[CONF_SCAN_INTERVAL])
             self.options.update(user_input)
             return await self._update_options()
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({
-                vol.Required(CONF_SCAN_INTERVAL, default=self.options.get(CONF_SCAN_INTERVAL, 5)): int,
+                vol.Required(CONF_SCAN_INTERVAL, default=self.options.get(CONF_SCAN_INTERVAL, 5)): int
             }),
         )
 

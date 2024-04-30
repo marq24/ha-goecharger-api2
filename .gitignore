@@ -6,3 +6,6 @@ venv
 .venv
 core.*
 *.iml
+/out-src.txt
+/go-e-gmbh-logo-vector.png
+/go-e-gmbh-logo-vector.svg

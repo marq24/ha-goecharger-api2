@@ -10,6 +10,6 @@ body:
   - type: textarea
     id: logs
     attributes:
-      label: List of tags
-      placeholder: "Please use the inspect feature of your browser (while using the default waterkotte web client) in order to extract the corresponding TAGs that should be used to previde the requested data - TIA"
+      label: API Keys
+      placeholder: "When you miss some data - please let me know the API-Key that provide the data - TIA"
       render: shell

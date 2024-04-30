@@ -83,7 +83,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
     if unload_ok:
         if DOMAIN in hass.data and config_entry.entry_id in hass.data[DOMAIN]:
-            # even if waterkotte does not support logout... I code it here...
             coordinator = hass.data[DOMAIN][config_entry.entry_id]
             coordinator.clear_data()
             hass.data[DOMAIN].pop(config_entry.entry_id)

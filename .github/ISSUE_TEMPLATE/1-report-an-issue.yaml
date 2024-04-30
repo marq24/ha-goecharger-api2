@@ -1,5 +1,5 @@
 name: Problem Report
-description: please report any technical issue with this home assistant integration - please note this is not a official Waterkotte repository or service
+description: please report any technical issue with this home assistant integration - please note this is not a official go-eCharger repository or service
 labels: bug
 body:
   - type: checkboxes

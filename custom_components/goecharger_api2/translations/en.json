@@ -1,21 +1,16 @@
 {
   "selector": {
-    "set_schedule_data_schedule_days": {
+    "dummy": {
       "options": {
-        "1mo":  "Mondays",
-        "2tu":  "Tuesdays",
-        "3we":  "Wednesdays",
-        "4th":  "Thursdays",
-        "5fr":  "Fridays",
-        "6sa":  "Saturdays",
-        "7su":  "Sundays"
+        "d1":  "Mo",
+        "d2":  "Tu"
       }
     }
   },
   "config": {
     "step": {
       "user": {
-        "description": "Important note: With the 'Adjust Schedules Service' you can adjust all schedules of your Waterkotte heat pump. Adding the optional entities is not necessary for this. These are only needed if you want to modify or display the schedule settings via your dashboard or one of your automations.\r\rIf you are unsure, do not add the optional scheduling entities in the first step. They can be added at any time via a configuration settings at a later date.",
+        "description": "If you need help setting it up, you can find it here: https://github.com/marq24/ha-goecharger-api2.\n\nImportant note: APIv2 access must first be activated in the Go-eCharger app settings",
         "data": {
           "host": "Host or IP of your go-eCharger Wallbox",
           "scan_interval": "Polling Interval in seconds [min: 5sec]"
@@ -29,7 +24,7 @@
   "options": {
     "step": {
       "user": {
-        "description": "If you need help with the configuration have a look here: https://github.com/marq24/ha-waterkotte.\n\nImportant note:",
+        "description": "If you need help setting it up, you can find it here: https://github.com/marq24/ha-goecharger-api2.",
         "data": {
           "polling_interval": "Polling Interval in seconds"
         }
@@ -60,28 +55,28 @@
       "amp": {"name": "Requested current"},
       "ate": {"name": "Automatic stop energy"},
       "att": {"name": "Automatic stop time"},
-      "awp": {"name": "Awattar maximum price threshold (in cent)"},
+      "awp": {"name": "Awattar maximum price threshold"},
       "cco": {"name": "Consumption per 100 km"},
       "dwo": {"name": "Charging energy limit"},
-      "fmt": {"name": "Min charge time (in min)"},
-      "fst": {"name": "Starting power in watts"},
+      "fmt": {"name": "Min charge time"},
+      "fst": {"name": "Starting power"},
       "lbr": {"name": "LED brightness"},
       "lof": {"name": "Load-Management fallback current"},
       "lop": {"name": "Load-Management priority"},
       "lot": {"name": "Load-Management total ampere"},
       "mca": {"name": "Minimum charging current"},
       "mci": {"name": "Minimum charging interval"},
-      "mcpd": {"name": "Minimum charge pause duration (in min)"},
-      "mcpea": {"name": "Minimum charge pause ends at (in min)"},
-      "mptwt": {"name": "Minimum phase toggle wait time (in min)"},
-      "mpwst": {"name": "Minimum phase wish switch time (in min)"},
-      "pgt": {"name": "pGridTarget in W"},
-      "po": {"name": "prioOffset in W"},
-      "psh": {"name": "phaseSwitchHysteresis in W"},
+      "mcpd": {"name": "Minimum charge pause duration"},
+      "mcpea": {"name": "Minimum charge pause ends at"},
+      "mptwt": {"name": "Minimum phase toggle wait time"},
+      "mpwst": {"name": "Minimum phase wish switch time"},
+      "pgt": {"name": "GridTarget Power"},
+      "po": {"name": "Priority Offset"},
+      "psh": {"name": "Phase switch hysteresis"},
       "psmd": {"name": "Force single phase duration"},
-      "sh": {"name": "stopHysteresis in W"},
+      "sh": {"name": "Stop hysteresis"},
       "spl3": {"name": "Three phase switch level"},
-      "sumd": {"name": "Simulate unplugging duration (in min)"},
+      "sumd": {"name": "Simulate unplugging duration"},
       "zfo": {"name": "Zero Feed-in offset"}
     },
     "select": {
@@ -222,12 +217,12 @@
       "map": {"name":  "Load mapping"},
       "mmp": {"name": "Maximum measured charging power (debug)"},
       "nif": {"name": "Default route"},
-      "pakku": {"name": "Power from battery (from ids)"},
-      "pgrid": {"name": "Power from Grid"},
-      "pnp": {"name": "Number of Phases"},
+      "pakku": {"name": "Power from battery"},
+      "pgrid": {"name": "Power from grid"},
+      "pnp": {"name": "Number of phases"},
       "ppv": {"name": "Power PV"},
-      "pvopt_averagepakku": {"name": "average Power from Akku"},
-      "pvopt_averagepgrid": {"name": "average Power from Grid"},
+      "pvopt_averagepakku": {"name": "average Power from battery"},
+      "pvopt_averagepgrid": {"name": "average Power from grid"},
       "pvopt_averageppv": {"name": "average Power from PV"},
       "rbc": {"name": "Reboot Counter"},
       "rfb": {"name": "Relay Feedback"},
@@ -243,7 +238,7 @@
       "ara": {"name": "Automatic Stop remain in Awattar"},
       "awe": {"name": "Use Awattar (Charge when price is low)"},
       "cwe": {"name": "Cloud Websocket enabled"},
-      "esk": {"name": "Energy set kwh (only stored for app)"},
+      "esk": {"name": "Energy set kWh (only stored for app)"},
       "fup": {"name": "Use PV surplus"},
       "fzf": {"name": "Zero Feed-in"},
       "hsa": {"name": "HTTP STA authentication"},
