@@ -125,14 +125,15 @@ and when you make use of the PV Surplus Charging fature additionally the values 
 
 Once the __car__ status will switch from `idle` (=1) to something different the integration will leave the hibernation-mode and update all the (none configuration) entities with the configured update interval.
 
-### Enable HTTP API v2 in App
+### Enable HTTP API v2 in go-eCharger App
+[screenshots are from the Android version]
 
-1. Start the go-eCharger App
-2. Select 'Internet'
-3. Enable 'Access to /api/status and /api/set API' (Allow local HTTP API v2) as shown here:
+1. Start the go-eCharger App 
+2. Select '_Internet_'
+3. Enable '_Advanced Settings_' as shown here:
 
    '![step1](https://github.com/marq24/ha-goecharger-api2/raw/main/app001.png)
-4. Toggle the '' as shown here:
+4. Toggle the '_Access to /api/status and /api/set API_' (_Allow local HTTP API v2_) as shown here:
 
    ![step1](https://github.com/marq24/ha-goecharger-api2/raw/main/app002.png)
 5. __DO not forget__ to press the save Icon!
