@@ -4,17 +4,17 @@
 
 Support for all go-eCharger Wallboxes supporting the APIv2 - __of course__ the APIv2 have to be enabled via the go-eCharger mobile app, __before__ you can use this integration.
 
+[![hacs_badge][hacsbadge]][hacs] [![BuyMeCoffee][buymecoffeebadge]][buymecoffee] [![PayPal][paypalbadge]][paypal]
+
 ## Main features
  
- - __All documented fields__ [in the official go-eCharger github repository](https://github.com/goecharger/go-eCharger-API-v2/blob/main/apikeys-en.md) are supported by this integration (with very few exceptions)
+ - __All documented fields__ [in the official go-eCharger GitHub repository](https://github.com/goecharger/go-eCharger-API-v2/blob/main/apikeys-en.md) are supported by this integration (with very few exceptions)
  - Support for 'PV surplus charging' (PV-Überschuss Laden) __without additional hardware__ - no need to pay for evcc. In order to use this feature a small additional manual setup process is required [[details can be found below](#pvsurplus)]
  - For all go-eCharger (status) fields that support a numeric status code, this code is available as separate sensor
  - Multilanguage support: a German translation included (any feedback highly appreciated!) & looking forward to other language contributions
 - Hibernation-Mode: only request sensor data from wallbox when system is in use [[details can be found below](#hibernation)]
   
   Please note that the configuration data will be read only every 24hours from the hardware (to save data) - but you can update the sensors any time with an 'update' button.
-
-[![hacs_badge][hacsbadge]][hacs] [![BuyMeCoffee][buymecoffeebadge]][buymecoffee] [![PayPal][paypalbadge]][paypal]
 
 
 ## Disclaimer
@@ -59,10 +59,10 @@ Use the following steps for a manual configuration by adding the custom integrat
 - Provide area where the wallbox is located
 
 After the integration was added you can use the 'config' button to adjust your settings, you can additionally modify the update interval
+<a id="pvsurplus"></a>
 
 Please note, that some of the available sensors are __not__ enabled by default.
 
-<a id="pvsurplus"></a>
 
 ## Enable PV Surplus Charging via HA automation
 
@@ -101,7 +101,7 @@ mode: single
 
 ### Hibernation-Mode - Good to know 
 
-This integration will __not always fetch all sensor data from your wallbox__. For example the configuration values - they probably do not change every 5 sec. - so in order to reduce the overall system load the integration will refresh the configuration entities just every 24h - OR when you make adjustments to any of the go-eCharger settings via HA. If you want to manually sync the configuration sensors, then you can use the `button.goe_[serial]_zfocore`[^1] ['Read Configuration' button].
+This integration will __not always fetch all sensor data from your wallbox__. For example the configuration values - they probably do not change every 5 sec. - so in order to reduce the overall system load the integration will refresh the configuration entities just every 24h - OR when you make adjustments to any of the go-eCharger settings via HA. If you want to manually sync the configuration sensors, then you can use the `button.goe_[serial]_zfocore` [^1] ['Read Configuration' button].
 
 Additionally, to the configuration values the number of entities that will be refreshed when no vehicle is connected (car state = 'Idle'), is also drastically reduced. In this case, the integration will __only__ read the full data set __every 5 minutes__ from your wallbox.
 
@@ -120,6 +120,12 @@ and when you make use of the PV Surplus Charging fature additionally the values 
 
 Once the __car__ status will switch from `idle` (=1) to something different the integration will leave the hibernation-mode and update all the (none configuration) entities.
 
+## Want to report an issue?
+
+Please use the [GitHub Issues](https://github.com/marq24/ha-goecharger-api2/issues) for reporting any issues you encounter with this integration. Please be so kind before creating a new issues, check the closed ones, if your problem have been already reported (& solved).
+
+In order to speed up the support process you might like already prepare and provide DEBUG log output. In the case of a technical issue, I would need this DEBUG log output to be able to help/fix the issue. There is a short [tutorial/guide 'How to provide DEBUG log' here](https://github.com/marq24/ha-senec-v3/blob/master/docs/HA_DEBUG.md) - please take the time to quickly go through it.
+
 ---
 
 ###### Advertisement / Werbung - alternative way to support me
@@ -131,7 +137,12 @@ Be smart switch to Tibber - that's what I did in october 2023. If you want to jo
 Please consider [using my personal Tibber invitation link to join Tibber today](https://invite.tibber.com/6o0kqvzf) or Enter the following code: 6o0kqvzf (six, oscar, zero, kilo, quebec, victor, zulu, foxtrot) afterward in the Tibber App - TIA!
 
 ---
-[^1] `focore` stands for: FOrce COnfiguration REquest
+
+### References
+
+- https://github.com/goecharger/go-eCharger-API-v2/blob/main/apikeys-en.md
+
+[^1]: `focore` stands for: FOrce COnfiguration REquest
 
 
 [hacs]: https://hacs.xyz
