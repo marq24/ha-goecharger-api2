@@ -177,9 +177,9 @@
       "tma_1": {"name": "Temperatursensor II"},
       "cdi_type": {"name": "Ladevorgangs-Zähler"},
       "cdi_value": {"name": "Ladevorgangs-Dauer"},
-      "atp_": {"name": "Next-Trip Plan Daten"},
+      "atp_x": {"name": "Next-Trip Plan Daten"},
       "awcp_marketprice": {"name":  "Günstiger-Strompreis"},
-      "ccu_": {"name":  "Update Fortschritt"},
+      "ccu_x": {"name":  "Update Fortschritt"},
       "ccw_ssid": {"name":  "WiFi Verbindung"},
 
       "car": {"name": "Fahrzeug Status [CODE]"},
@@ -211,7 +211,7 @@
       "lcctc": {"name": "Letzter Fahrzeug Statuswechsel zu 'Laden'"},
       "lfspt": {"name": "Letzter Wechsel von/zu '1-phasigem Laden'"},
       "lmsc": {"name": "Letzter Statuswechsel"},
-      "lpsc": {"name": "Letzte PU-Überschuss Berechnung"},
+      "lpsc": {"name": "Letzte PV-Überschuss Berechnung"},
       "rbt": {"name": "Zeit seit Boot"},
 
       "acu": {"name": "Maximal zulässiger Strom"},

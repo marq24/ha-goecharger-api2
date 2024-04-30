@@ -2,7 +2,7 @@
 
 ![logo](https://github.com/marq24/ha-goecharger-api2/raw/main/logo.png)
 
-Support vor all go-eCharger Wallboxes supporting APIv2 - all Fields documented [in the official go-eCharger github repository](https://github.com/goecharger/go-eCharger-API-v2/blob/main/apikeys-en.md) are supported.
+Support for all go-eCharger Wallboxes supporting APIv2 - all (with very few exceptions) fields documented [in the official go-eCharger github repository](https://github.com/goecharger/go-eCharger-API-v2/blob/main/apikeys-en.md) are supported by this integration.
 
 This integration also support a German translated interface and sensor names & values.
 

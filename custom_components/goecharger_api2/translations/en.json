@@ -173,9 +173,9 @@
       "tma_1": {"name": "Temperature Sensor II"},
       "cdi_type": {"name": "Charging duration counter"},
       "cdi_value": {"name": "Charging duration"},
-      "atp_": {"name": "Next trip plan data"},
+      "atp_x": {"name": "Next trip plan data"},
       "awcp_marketprice": {"name":  "Awattar current price"},
-      "ccu_": {"name":  "Charge controller update progress"},
+      "ccu_x": {"name":  "Charge controller update progress"},
       "ccw_ssid": {"name":  "Connected WiFi"},
 
       "car": {"name": "Car state [CODE]"},
