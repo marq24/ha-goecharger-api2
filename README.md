@@ -1,6 +1,6 @@
 # Home Assistant Integration 'go-eCharger APIv2 Connect'
 
-![logo](https://github.com/marq24/ha-ha-goecharger-api2/raw/main/logo.png)
+![logo](https://github.com/marq24/ha-goecharger-api2/raw/main/logo.png)
 
 Support vor all go-eCharger Wallboxes supporting APIv2 - all Fields documented [in the official go-eCharger github repository](https://github.com/goecharger/go-eCharger-API-v2/blob/main/apikeys-en.md) are supported.
 
