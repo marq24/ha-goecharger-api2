@@ -87,9 +87,9 @@ Please note that this example is for a for SENEC.Home System - if you are using 
 - _optional_ `sensor.senec_battery_state_power` with the entity that provided the power in WATT currently will be used to charge an additional battery (positive value) or will be consumed from the battery (negative value).
 
 ```
-alias: go-e surplus charging
+alias: go-e PV surplus charging brigde
 description: >-
-  Simple automation to update values needed by go-eChargers for using solar surplus charging.
+  Simple automation to provide your go-eChargers with the required data so that the wallbox can support PV surplus charging.
 trigger:
   - platform: time_pattern
     seconds: /5
@@ -182,6 +182,14 @@ Just as reference here is the list of API keys that the current implementation o
 Please use the [GitHub Issues](https://github.com/marq24/ha-goecharger-api2/issues) for reporting any issues you encounter with this integration. Please be so kind before creating a new issues, check the closed ones, if your problem have been already reported (& solved).
 
 In order to speed up the support process you might like already prepare and provide DEBUG log output. In the case of a technical issue, I would need this DEBUG log output to be able to help/fix the issue. There is a short [tutorial/guide 'How to provide DEBUG log' here](https://github.com/marq24/ha-senec-v3/blob/master/docs/HA_DEBUG.md) - please take the time to quickly go through it.
+
+For this integration you need to add:
+```
+logger:
+  default: warning
+  logs:
+    custom_components.goecharger_api2: debug
+```
 
 ---
 
