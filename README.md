@@ -2,21 +2,21 @@
 
 ![logo](https://github.com/marq24/ha-goecharger-api2/raw/main/logo.png)
 
-Support for all go-eCharger Wallboxes supporting the APIv2 - __of course__ the APIv2 have to be enabled via the go-eCharger mobile app, __before__ you can use this integration.
+Support for all go-eCharger Wallboxes supporting the APIv2 - __of course__ the APIv2 have to be enabled via the go-eCharger mobile app, __before__ you can use this integration [[see instructions](#enable-http-api-v2-in-go-echarger-app)].
 
 [![hacs_badge][hacsbadge]][hacs] [![BuyMeCoffee][buymecoffeebadge]][buymecoffee] [![PayPal][paypalbadge]][paypal]
 
 ## Main features
  
- - __All documented fields__ [in the official go-eCharger GitHub repository](https://github.com/goecharger/go-eCharger-API-v2/blob/main/apikeys-en.md) are supported by this integration (with very few exceptions)
- - Support for 'PV surplus charging' (PV-Überschuss Laden) __without additional hardware__ - no need to pay for evcc. In order to use this feature a small additional manual setup process is required [[details can be found below](#pvsurplus)]
+ - __All documented fields__ [in the official go-eCharger GitHub repository](https://github.com/goecharger/go-eCharger-API-v2/blob/main/apikeys-en.md) are supported by this integration (with very few exceptions) [[see list of currently not handled API keys](#list-of-currently-not-handled-api-keys-27127)]
+ - Support for 'PV surplus charging' (PV-Überschuss Laden) __without additional hardware__ - no need to pay for evcc. In order to use this feature a small additional manual setup process is required [[details can be found below](#enable-pv-surplus-charging-via-ha-automation)]
  - For all go-eCharger (status) fields that support a numeric status code, this code is available as separate sensor
  - Multilanguage support: a German translation included (any feedback highly appreciated!) & looking forward to other language contributions
-- Hibernation-Mode: only request sensor data from wallbox when system is in use [[details can be found below](#hibernation)]
+- Hibernation-Mode: only request sensor data from wallbox when system is in use [[details can be found below](#hibernation-mode---good-to-know-)]
   
   Please note that the configuration data will be read only every 24hours from the hardware (to save data) - but you can update the sensors any time with an 'update' button.
 
-- Owners of a 22kW variant can force 16A only for all (can be enabled via the integration settings and require a restart of the integration to apply the settings)
+- Owners of a 22kW variant can __force 16A only__ for all relevant settings. (This can be enabled via the integration settings and require a restart of the integration - then with every restart the settings will be inspected and adjusted to a max of 16A if required)
 
 ## Disclaimer
 
@@ -25,7 +25,7 @@ Please be aware, that we are developing this integration to best of our knowledg
 ## Requirements
 
 - go-eCharger Wallbox running Firmware version __56.1__ (or higher) - tested successfully with 56.2 BETA
-- enabled APIv2
+- enabled APIv2 [[see instructions](#enable-http-api-v2-in-go-echarger-app)]
 
 ## Installation
 
@@ -105,7 +105,7 @@ mode: single
 
 <a id="hibernation"></a>
 
-### Hibernation-Mode - Good to know 
+## Hibernation-Mode - Good to know 
 
 This integration will __not always fetch all sensor data from your wallbox__. For example the configuration values - they probably do not change every 5 sec. - so in order to reduce the overall system load the integration will refresh the configuration entities just every 24h - OR when you make adjustments to any of the go-eCharger settings via HA. If you want to manually sync the configuration sensors, then you can use the `button.goe_[serial]_zfocore` [^1] ['Read Configuration' button].
 
@@ -127,7 +127,9 @@ and when you make use of the PV Surplus Charging fature additionally the values 
 
 Once the __car__ status will switch from `idle` (=1) to something different the integration will leave the hibernation-mode and update all the (none configuration) entities with the configured update interval.
 
-### Enable HTTP API v2 in go-eCharger App
+<a id="enableapiv2"></a>
+
+## Enable HTTP API v2 in go-eCharger App
 [screenshots are from the Android version]
 
 1. Start the go-eCharger App 
@@ -139,6 +141,41 @@ Once the __car__ status will switch from `idle` (=1) to something different the 
 
    ![step1](https://github.com/marq24/ha-goecharger-api2/raw/main/res/app002.png)
 5. __DO not forget__ to press the save Icon!
+
+<a id="notimplementedkeys"></a>
+
+## List of (currently) not handled API keys (27/127)
+
+Just as reference here is the list of API keys that the current implementation of the integration will __not__ handle:
+
+- atp: nextTripPlanData (debug)
+- awc: awattar country (Austria=0, Germany=1)
+- ccu: charge controller update progress (null if no update is in progress)
+- cch: color_charging, format: #RRGGBB
+- cfi: color_finished, format: #RRGGBB
+- cid: color_idle, format: #RRGGBB
+- cwc: color_waitcar, format: #RRGGBB
+- clp: current limit presets, max. 5 entries
+- del: set this to 0-9 to clear card (erases card name, energy and rfid id)
+- delw: set this to 0-9 to delete sta config (erases ssid, key, ...)
+- ferm: effectiveRoundingMode
+- fna: friendlyName
+- ido: Inverter data override
+- loc: local time
+- log: load_group_id
+- lrn: set this to 0-9 to learn last read card id
+- oct: firmware update trigger (must specify a branch from ocu)
+- pvopt_averagePAkku: average Power from/to battery
+- pvopt_averagePGrid: average Power from/to grid
+- pvopt_averagePPv: average Power from PV
+- sch_satur: scheduler_saturday, control enum values: Disabled=0, Inside=1, Outside=2
+- sch_sund: scheduler_sunday, control enum values: Disabled=0, Inside=1, Outside=2
+- sch_week: scheduler_weekday, control enum values: Disabled=0, Inside=1, Outside=2
+- tof: timezone offset in minutes
+- utc: utc time
+- wsc: WiFi STA error count
+- wsm: WiFi STA error message
+
 
 ## Want to report an issue?
 

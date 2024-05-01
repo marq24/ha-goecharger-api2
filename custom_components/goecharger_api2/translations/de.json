@@ -26,7 +26,7 @@
       "user": {
         "description": "Wenn Du Hilfe bei der Einrichtung benötigst, findest du sie hier: https://github.com/marq24/ha-goecharger-api2.\n\nWichtiger Hinweis: Der APIv2 Zugriff muss zuvor in den Go-eCharger App Einstellungen aktiviert werden",
         "data": {
-          "limit_to_11kw": "11-kW-Limit setzen (nur für 22-kW-Varianten) – alle relevanten Einstellungen werden auf maximal 16A beschränkt (statt der möglichen 32A))",
+          "limit_to_11kw": "11-kW-Limit setzen (nur für 22-kW-Varianten) – alle relevanten Einstellungen werden auf maximal 16A beschränkt (statt der möglichen 32A)",
           "scan_interval": "Aktualisierungsintervall in Sekunden"
         }
       }
