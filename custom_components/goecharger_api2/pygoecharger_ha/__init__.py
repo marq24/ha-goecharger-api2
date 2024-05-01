@@ -11,7 +11,7 @@ from custom_components.goecharger_api2.pygoecharger_ha.const import (
     FILTER_SYSTEMS,
     FILTER_VERSIONS,
     FILTER_MIN_STATES,
-    FILTER_MIN_PLUS_IDS_STATES,
+    FILTER_IDS_ADDON,
     FILTER_TIMES_ADDON,
     FILTER_ALL_STATES,
     FILTER_ALL_CONFIG,
@@ -67,10 +67,9 @@ class GoeChargerApiV2Bridge:
     async def read_all_states(self):
         # ok we are in idle state - so we do not need all states... [but 5 minutes (=300sec) do a full update]
         if "car" in self._states and CAR_VALUES.IDLE.value == self._states["car"] and self._LAST_FULL_STATE_UPDATE_TS + 300 > time():
+            filter = FILTER_MIN_STATES
             if self._REQUEST_IDS_DATA:
-                filter = FILTER_MIN_PLUS_IDS_STATES
-            else:
-                filter = FILTER_MIN_STATES
+                filter = filter + FILTER_IDS_ADDON
 
             # check waht additional times do frequent upddate?!
             filter = filter+FILTER_TIMES_ADDON
@@ -119,7 +118,7 @@ class GoeChargerApiV2Bridge:
     async def _read_filtered_data(self, filters: str, log_info: str) -> dict:
         args = {"filter": filters}
         req_field_count = len(args['filter'].split(','))
-        _LOGGER.info(f"going to request {req_field_count} keys from go-eCharger@{self.host}")
+        _LOGGER.debug(f"going to request {req_field_count} keys from go-eCharger@{self.host}")
         async with self.web_session.get(f"http://{self.host}/api/status", params=args) as res:
             try:
                 res.raise_for_status()
@@ -129,7 +128,7 @@ class GoeChargerApiV2Bridge:
                         if r_json is not None and len(r_json) > 0:
                             resp_field_count = len(r_json)
                             if resp_field_count >= req_field_count:
-                                _LOGGER.info(f"read {resp_field_count} values from go-eCharger@{self.host}")
+                                _LOGGER.debug(f"read {resp_field_count} values from go-eCharger@{self.host}")
                             else:
                                 missing_fields_in_reponse = []
                                 requested_fields = args['filter'].split(',')
@@ -137,7 +136,7 @@ class GoeChargerApiV2Bridge:
                                     if a_req_key not in r_json:
                                         missing_fields_in_reponse.append(a_req_key)
 
-                                _LOGGER.warning(
+                                _LOGGER.info(
                                     f"[missing fields: {len(missing_fields_in_reponse)} -> {missing_fields_in_reponse}] - not all requested fields where present in the response from from go-eCharger@{self.host}")
                             return r_json
 

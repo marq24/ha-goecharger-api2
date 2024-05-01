@@ -22,6 +22,8 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry, 
 
 class GoeChargerNumber(GoeChargerBaseEntity, NumberEntity):
     def __init__(self, coordinator: GoeChargerDataUpdateCoordinator, description: ExtNumberEntityDescription):
+        if description.check_16a_limit and coordinator.limit_to16a:
+            description.native_max_value = 16
         super().__init__(coordinator=coordinator, description=description)
 
     @property

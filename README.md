@@ -16,6 +16,7 @@ Support for all go-eCharger Wallboxes supporting the APIv2 - __of course__ the A
   
   Please note that the configuration data will be read only every 24hours from the hardware (to save data) - but you can update the sensors any time with an 'update' button.
 
+- Owners of a 22kW variant can force 16A only for all (can be enabled via the integration settings and require a restart of the integration to apply the settings)
 
 ## Disclaimer
 
@@ -116,6 +117,7 @@ So the integration have some _sort of hibernation-mode_ in which only the follow
  - __modelStatus__: wallbox status
  - __err__: possible error status
  - __nrg__: power values
+ - __trx__: authorization required/unlocked (with Card ID)
  - __tma__: temperature values
  
 and when you make use of the PV Surplus Charging fature additionally the values for: 
@@ -132,10 +134,10 @@ Once the __car__ status will switch from `idle` (=1) to something different the 
 2. Select '_Internet_'
 3. Enable '_Advanced Settings_' as shown here:
 
-   '![step1](https://github.com/marq24/ha-goecharger-api2/raw/main/app001.png)
+   '![step1](https://github.com/marq24/ha-goecharger-api2/raw/main/res/app001.png)
 4. Toggle the '_Access to /api/status and /api/set API_' (_Allow local HTTP API v2_) as shown here:
 
-   ![step1](https://github.com/marq24/ha-goecharger-api2/raw/main/app002.png)
+   ![step1](https://github.com/marq24/ha-goecharger-api2/raw/main/res/app002.png)
 5. __DO not forget__ to press the save Icon!
 
 ## Want to report an issue?

@@ -26,7 +26,8 @@
       "user": {
         "description": "Wenn Du Hilfe bei der Einrichtung benötigst, findest du sie hier: https://github.com/marq24/ha-goecharger-api2.\n\nWichtiger Hinweis: Der APIv2 Zugriff muss zuvor in den Go-eCharger App Einstellungen aktiviert werden",
         "data": {
-          "polling_interval": "Aktualisierungsintervall in Sekunden"
+          "limit_to_11kw": "11-kW-Limit setzen (nur für 22-kW-Varianten) – alle relevanten Einstellungen werden auf maximal 16A beschränkt (statt der möglichen 32A))",
+          "scan_interval": "Aktualisierungsintervall in Sekunden"
         }
       }
     }
@@ -38,7 +39,7 @@
       "fields": {
         "pgrid":  {"name": "Leistung vom/aus dem Netz (in Watt)", "description": "Negative Werte bedeuten Export in das Stromnetz, positive Werte bedeuten Verbrauch aus dem Netz."},
         "ppv":    {"name": "Leistung der PV (in Watt)", "description": "Die aktuelle PV-Produktion."},
-        "paccu":  {"name": "Leistung von/aud der Batterie (in Watt)", "description": "Negative Werte bedeuten, dass die Batterie geladen wird, positive Werte bedeuten, dass Strom aus der Batterie verbraucht wird."}
+        "pakku":  {"name": "Leistung von/aud der Batterie (in Watt)", "description": "Negative Werte bedeuten, dass die Batterie geladen wird, positive Werte bedeuten, dass Strom aus der Batterie verbraucht wird."}
       }
     }
   },
@@ -151,6 +152,23 @@
           "2": "US Daylight Zeit"
         }
       },
+      "trx": {
+        "name": "Laden freigeben",
+        "state": {
+          "null": "Autorisierung notwendig",
+          "0": "entsperrt",
+          "1": "entsperrt mit Karten-ID1",
+          "2": "entsperrt mit Karten-ID2",
+          "3": "entsperrt mit Karten-ID3",
+          "4": "entsperrt mit Karten-ID4",
+          "5": "entsperrt mit Karten-ID5",
+          "6": "entsperrt mit Karten-ID6",
+          "7": "entsperrt mit Karten-ID7",
+          "8": "entsperrt mit Karten-ID8",
+          "9": "entsperrt mit Karten-ID9",
+          "10": "entsperrt mit Karten-ID10"
+        }
+      } ,
       "ust": {
         "name": "Kable Entriegelung",
         "state": {
@@ -248,7 +266,7 @@
     },
     "switch": {
       "acp": {"name": "Ladepausen zulassen (Fahrzeug Kompatibilität)"},
-      "acs": {"name": "Autorisierung (Karte) benötigt"},
+      "acs": {"name": "Autorisierung (Karte) notwendig"},
       "ara": {"name": "Next-Trip: Weiter im Eco-Modus laden"},
       "awe": {"name": "Mit günstigen Strompreisen laden"},
       "cwe": {"name": "Cloud-Websocket aktiviert"},

@@ -2,14 +2,15 @@ import asyncio
 import json
 import logging
 from datetime import timedelta
-from typing import Any
+from typing import Any, Final
 
+from homeassistant.components.number import NumberDeviceClass
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_TYPE, CONF_ID, CONF_SCAN_INTERVAL
 from homeassistant.core import Config, Event, SupportsResponse
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as config_val
+from homeassistant.helpers import config_validation as config_val, entity_registry as entity_reg
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
@@ -25,6 +26,7 @@ from .const import (
     PLATFORMS,
     STARTUP_MESSAGE,
     SERVICE_SET_PV_DATA,
+    CONF_11KWLIMIT
 )
 from .service import GoeChargerApiV2Service
 
@@ -72,6 +74,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     hass.services.async_register(DOMAIN, SERVICE_SET_PV_DATA, service.set_pv_data,
                                  supports_response=SupportsResponse.OPTIONAL)
 
+    if coordinator.check_for_max_of_16a:
+        asyncio.create_task(coordinator.check_for_16a_limit(hass, config_entry.entry_id))
+
     # ok we are done...
     return True
 
@@ -98,6 +103,62 @@ async def async_reload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     if await async_unload_entry(hass, config_entry):
         await asyncio.sleep(2)
         await async_setup_entry(hass, config_entry)
+
+
+@staticmethod
+async def check_and_write_to_16a(hass: HomeAssistant, config_entry_id: str, bridge: GoeChargerApiV2Bridge):
+    _LOGGER.info(f"checking entities")
+    tags = []
+    if hass is not None:
+        a_entity_reg = entity_reg.async_get(hass)
+        if a_entity_reg is not None:
+            MAX_A: Final = 16
+            # we query from the HA entity registry all entities that are created by this
+            # 'config_entry' -> we use here just default api calls [no more hacks!]
+            key_list = []
+            for entity in entity_reg.async_entries_for_config_entry(registry=a_entity_reg,
+                                                                    config_entry_id=config_entry_id):
+                if entity.original_device_class == NumberDeviceClass.CURRENT:
+                    if "max" in entity.capabilities:
+                        if entity.capabilities["max"] == MAX_A:
+                            key_list.append(entity.translation_key)
+
+            if len(key_list) > 0:
+                final_key_list = []
+                final_dics = {}
+                for a_key in key_list:
+                    if '_' in a_key:
+                        res = a_key.split('_')
+                        if res[0] not in final_dics:
+                            final_dics[res[0]] = []
+                        final_dics[res[0]].append(res[1])
+                        a_key = res[0]
+
+                    if a_key not in final_key_list:
+                        final_key_list.append(a_key)
+
+                try:
+                    res = await bridge._read_filtered_data(filters=",".join(final_key_list), log_info="16A checker")
+                    keys_to_patch = []
+                    for a_res_key in res.keys():
+                        res_obj = res[a_res_key]
+                        if isinstance(res_obj, int):
+                            if res_obj > MAX_A:
+                                keys_to_patch.append(a_res_key)
+                                res[a_res_key] = MAX_A
+                        elif isinstance(res_obj, dict):
+                            vals_to_check = final_dics.get(a_res_key)
+                            for val in vals_to_check:
+                                if res_obj[val] > MAX_A:
+                                    res[a_res_key][val] = MAX_A
+                                    if a_res_key not in keys_to_patch:
+                                        keys_to_patch.append(a_res_key)
+
+                    for a_key in keys_to_patch:
+                        _LOGGER.info(f"reduce {a_res_key} to 16A -> writing {res[a_key]}")
+                        await bridge.write_value_to_key(a_res_key, res[a_key])
+                except Exception as e:
+                    _LOGGER.error(f"Error while forcing 16A settings:", e)
 
 
 class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
@@ -188,8 +249,35 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             "name": NAME,
             "model": self._config_entry.data.get(CONF_TYPE),
             "sw_version": self.bridge._versions[Tag.FWV.key]
+            # hw_version
         }
-        # hw_version
+
+        # fetching the available cards that are enabled
+        self.available_cards_idx = []
+        idx = 1
+        for a_card in self.bridge._versions[Tag.CARDS.key]:
+            if a_card["cardId"]:
+                self.available_cards_idx.append(str(idx))
+            idx = idx + 1
+
+        _LOGGER.info(f"active cards {self.available_cards_idx}")
+
+        # check for the 16A limiter...
+        self.check_for_max_of_16a = self._config_entry.options.get(CONF_11KWLIMIT, False)
+
+        self.limit_to16a = (self.check_for_max_of_16a
+                            or self.bridge._versions[Tag.VAR.key] == 11
+                            or self.data[Tag.ADI.key])
+
+        if (self.limit_to16a):
+            _LOGGER.info(f"LIMIT to 16A is active")
+
+    async def check_for_16a_limit(self, hass, entry_id):
+        _LOGGER.debug(f"check relevant entities for 16A limit... in 15sec")
+        await asyncio.sleep(15)
+
+        _LOGGER.debug(f"check relevant entities for 16A limit NOW!")
+        await check_and_write_to_16a(hass=hass, config_entry_id=entry_id, bridge=self.bridge)
 
 
 class GoeChargerBaseEntity(Entity):

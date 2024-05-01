@@ -2,14 +2,14 @@ import logging
 
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.const import CONF_ID, CONF_HOST, CONF_TYPE, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_ID, CONF_HOST, CONF_MODEL, CONF_TYPE, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bridge
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from .const import (
-    DOMAIN,
+    DOMAIN, CONF_11KWLIMIT
 )
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -25,7 +25,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self._errors = {}
         self._type = ""
-        self._variant = ""
+        self._model = ""
         self._serial = ""
 
     async def async_step_user(self, user_input=None):
@@ -39,7 +39,8 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             valid = await self._test_host(host=user_input[CONF_HOST])
             if valid:
-                user_input[CONF_TYPE] = f"{self._type} [{self._variant}]"
+                user_input[CONF_MODEL] = self._model.split(' ')[0]
+                user_input[CONF_TYPE] = f"{self._type} [{self._model}]"
                 user_input[CONF_ID] = self._serial
                 user_input[CONF_SCAN_INTERVAL] = max(5, user_input[CONF_SCAN_INTERVAL])
                 title = f"go-eCharger API v2 [{self._serial}]"
@@ -71,7 +72,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await client.read_versions()
                 #self._oem = ret[Tag.OEM.key]
                 self._type = str(ret[Tag.TYP.key]).replace('_', ' ')
-                self._variant = f"{ret[Tag.VAR.key]} kW"
+                self._model = f"{ret[Tag.VAR.key]} kW"
                 self._serial = ret[Tag.SSE.key]
                 _LOGGER.info(f"successfully validated host -> result: {ret}")
                 return True
@@ -106,12 +107,22 @@ class GoeChargerApiV2OptionsFlowHandler(config_entries.OptionsFlow):
             self.options.update(user_input)
             return await self._update_options()
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema({
-                vol.Required(CONF_SCAN_INTERVAL, default=self.options.get(CONF_SCAN_INTERVAL, 5)): int
-            }),
-        )
+        # is this the 11kW or the 22kW Version?
+        if int(self.options.get(CONF_MODEL)) == 11:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema({
+                    vol.Required(CONF_SCAN_INTERVAL, default=self.options.get(CONF_SCAN_INTERVAL, 5)): int
+                })
+            )
+        else:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema({
+                    vol.Required(CONF_11KWLIMIT, default=self.options.get(CONF_11KWLIMIT, False)): bool,
+                    vol.Required(CONF_SCAN_INTERVAL, default=self.options.get(CONF_SCAN_INTERVAL, 5)): int
+                })
+            )
 
     async def _update_options(self):
         return self.async_create_entry(title=self.config_entry.title, data=self.options)

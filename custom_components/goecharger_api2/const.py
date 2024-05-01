@@ -30,7 +30,7 @@ If you have any issues with this you need to open an issue here:
 """
 
 SERVICE_SET_PV_DATA: Final = "set_pv_data"
-
+CONF_11KWLIMIT: Final = "limit_to_11kw"
 
 @dataclass
 class ExtBinarySensorEntityDescription(BinarySensorEntityDescription):
@@ -49,6 +49,7 @@ class ExtNumberEntityDescription(NumberEntityDescription):
     handle_as_float: bool | None = None
     factor: int | None = None
     idx: int | str | None = None
+    check_16a_limit: bool | None = None
 
 @dataclass
 class ExtSelectEntityDescription(SelectEntityDescription):
@@ -186,6 +187,7 @@ NUMBER_SENSORS = [
     # ama
     ExtNumberEntityDescription(
         key=Tag.AMA.key,
+        check_16a_limit=True,
         native_max_value=32,
         native_min_value=6,
         native_step=1,
@@ -199,6 +201,7 @@ NUMBER_SENSORS = [
     # amp
     ExtNumberEntityDescription(
         key=Tag.AMP.key,
+        check_16a_limit=True,
         native_max_value=32,
         native_min_value=6,
         native_step=1,
@@ -319,6 +322,7 @@ NUMBER_SENSORS = [
     # lof
     ExtNumberEntityDescription(
         key=Tag.LOF.key,
+        check_16a_limit=True,
         native_max_value=32,
         native_min_value=6,
         native_step=1,
@@ -351,6 +355,7 @@ NUMBER_SENSORS = [
     ExtNumberEntityDescription(
         key=Tag.LOT.key,
         idx="amp",
+        check_16a_limit=True,
         native_max_value=32,
         native_min_value=6,
         native_step=1,
@@ -363,6 +368,7 @@ NUMBER_SENSORS = [
     ExtNumberEntityDescription(
         key=Tag.LOT.key,
         idx="dyn",
+        check_16a_limit=True,
         native_max_value=32,
         native_min_value=6,
         native_step=1,
@@ -375,6 +381,7 @@ NUMBER_SENSORS = [
     ExtNumberEntityDescription(
         key=Tag.LOT.key,
         idx="sta",
+        check_16a_limit=True,
         native_max_value=32,
         native_min_value=6,
         native_step=1,
@@ -400,6 +407,7 @@ NUMBER_SENSORS = [
     # mca
     ExtNumberEntityDescription(
         key=Tag.MCA.key,
+        check_16a_limit=True,
         native_max_value=32,
         native_min_value=6,
         native_step=1,
@@ -621,6 +629,14 @@ SELECT_SENSORS = [
         entity_category=EntityCategory.CONFIG,
         device_class=None,
         icon="mdi:button-pointer",
+        entity_registry_enabled_default=True
+    ),
+    ExtSelectEntityDescription(
+        key=Tag.TRX.key,
+        options=["null", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
+        entity_category=EntityCategory.CONFIG,
+        device_class=None,
+        icon="mdi:shield-lock-open-outline",
         entity_registry_enabled_default=True
     ),
     ExtSelectEntityDescription(

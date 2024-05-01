@@ -26,7 +26,8 @@
       "user": {
         "description": "If you need help setting it up, you can find it here: https://github.com/marq24/ha-goecharger-api2.",
         "data": {
-          "polling_interval": "Polling Interval in seconds"
+          "limit_to_11kw": "Apply 11kW limit (for 22kW variants only) - will restrict all relevant settings to a max of 16A (instead of 32A)",
+          "scan_interval": "Polling Interval in seconds"
         }
       }
     }
@@ -38,7 +39,7 @@
       "fields": {
         "pgrid":  {"name": "Power from/to grid (in Watt)", "description": "Negative values means export to the grid, positive value means importing from grid."},
         "ppv":    {"name": "Power from PV (in Watt)", "description": "The current PV production"},
-        "paccu":  {"name": "Power from/to battery (in Watt)", "description": "Negative values means charging the battery, positive value means consuming power from the battery."}
+        "pakku":  {"name": "Power from/to battery (in Watt)", "description": "Negative values means charging the battery, positive value means consuming power from the battery."}
       }
     }
   },
@@ -151,6 +152,23 @@
           "2": "US Daylight Time"
         }
       },
+      "trx": {
+        "name": "Authorize Loading",
+        "state": {
+          "null": "Authorization required",
+          "0": "Unlocked",
+          "1": "Unlocked with Card ID1",
+          "2": "Unlocked with Card ID2",
+          "3": "Unlocked with Card ID3",
+          "4": "Unlocked with Card ID4",
+          "5": "Unlocked with Card ID5",
+          "6": "Unlocked with Card ID6",
+          "7": "Unlocked with Card ID7",
+          "8": "Unlocked with Card ID8",
+          "9": "Unlocked with Card ID9",
+          "10": "Unlocked with Card ID10"
+        }
+      } ,
       "ust": {
         "name": "Cable unlock Mode",
         "state": {

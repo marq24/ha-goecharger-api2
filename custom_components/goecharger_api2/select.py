@@ -5,6 +5,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import HomeAssistantType
 
+from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity
 from .const import DOMAIN, SELECT_SENSORS, ExtSelectEntityDescription
 
@@ -23,6 +24,9 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry, 
 
 class GoeChargerSelect(GoeChargerBaseEntity, SelectEntity):
     def __init__(self, coordinator: GoeChargerDataUpdateCoordinator, description: ExtSelectEntityDescription):
+        if description.key == Tag.TRX.key:
+            options = ["null", "0"]
+            description.options = options + coordinator.available_cards_idx
         super().__init__(coordinator=coordinator, description=description)
 
     @property
@@ -30,7 +34,12 @@ class GoeChargerSelect(GoeChargerBaseEntity, SelectEntity):
         try:
             value = self.coordinator.data[self.data_key]
             if value is None or value == "":
-                value = 'unknown'
+                # special handling for tra 'transaction' API key...
+                # where None means, that Auth is required
+                if self.data_key == Tag.TRX.key:
+                    value = "null"
+                else:
+                    value = 'unknown'
             if isinstance(value, int):
                 value = str(value)
         except KeyError:
@@ -41,6 +50,9 @@ class GoeChargerSelect(GoeChargerBaseEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         try:
-            await self.coordinator.async_write_key(self.data_key, int(option), self)
+            if str(option) == "null":
+                await self.coordinator.async_write_key(self.data_key, None, self)
+            else:
+                await self.coordinator.async_write_key(self.data_key, int(option), self)
         except ValueError:
             return "unavailable"
