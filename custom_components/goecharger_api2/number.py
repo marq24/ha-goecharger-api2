@@ -2,8 +2,8 @@ import logging
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity
 from .const import DOMAIN, NUMBER_SENSORS, ExtNumberEntityDescription
@@ -53,6 +53,7 @@ class GoeChargerNumber(GoeChargerBaseEntity, NumberEntity):
         return value
 
     async def async_set_native_value(self, value) -> None:
+        # _LOGGER.info(f"set_native {self.data_key} {value} idx? {self.entity_description.idx}) factor: {self.entity_description.factor} float? {self.entity_description.handle_as_float}")
         try:
             if self.entity_description.idx is not None:
                 # we have to write all values of the object... [not only the set one]
@@ -70,12 +71,9 @@ class GoeChargerNumber(GoeChargerBaseEntity, NumberEntity):
                     # we will write all numbers as integer's [no decimal's/fractions!!!]
                     obj[self.entity_description.idx] = int(value)
 
-                _LOGGER.error(f"object: {obj}")
                 await self.coordinator.async_write_key(self.data_key, obj, self)
 
             else:
-                value = self.coordinator.data[self.data_key]
-
                 if int(value) == 0 and self.entity_description.write_zero_as_null is not None and self.entity_description.write_zero_as_null:
                     await self.coordinator.async_write_key(self.data_key, None, self)
                 elif self.entity_description.factor is not None and self.entity_description.factor > 0:
