@@ -487,9 +487,9 @@ NUMBER_SENSORS = [
     # pgt
     ExtNumberEntityDescription(
         key=Tag.PGT.key,
-        native_max_value=100000,
-        native_min_value=0,
-        native_step=10,
+        native_max_value=5000,
+        native_min_value=-5000,
+        native_step=1,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -1372,12 +1372,36 @@ SENSOR_SENSORS = [
         icon="mdi:solar-power",
         entity_registry_enabled_default=True
     ),
-
-    # pvopt_averagePAkku
-    # pvopt_averagePGrid
-    # pvopt_averagePPv
-    # TODO:HERE
-
+    ExtSensorEntityDescription(
+        key=Tag.PVOPT_AVERAGEPAKKU.key,
+        suggested_display_precision=2,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        icon="mdi:home-battery-outline",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.PVOPT_AVERAGEPGRID.key,
+        suggested_display_precision=2,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        icon="mdi:transmission-tower-export",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.PVOPT_AVERAGEPPV.key,
+        suggested_display_precision=2,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        icon="mdi:solar-power",
+        entity_registry_enabled_default=True
+    ),
     # rbc
     ExtSensorEntityDescription(
         key=Tag.RBC.key,

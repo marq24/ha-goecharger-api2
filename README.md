@@ -144,7 +144,7 @@ Once the __car__ status will switch from `idle` (=1) to something different the 
 
 <a id="notimplementedkeys"></a>
 
-## List of (currently) not handled API keys (27/172)
+## List of (currently) not handled API keys (24/172)
 
 Just as reference here is the list of API keys that the current implementation of the integration will __not__ handle:
 
@@ -165,9 +165,6 @@ Just as reference here is the list of API keys that the current implementation o
 - log: load_group_id
 - lrn: set this to 0-9 to learn last read card id
 - oct: firmware update trigger (must specify a branch from ocu)
-- pvopt_averagePAkku: average Power from/to battery
-- pvopt_averagePGrid: average Power from/to grid
-- pvopt_averagePPv: average Power from PV
 - sch_satur: scheduler_saturday, control enum values: Disabled=0, Inside=1, Outside=2
 - sch_sund: scheduler_sunday, control enum values: Disabled=0, Inside=1, Outside=2
 - sch_week: scheduler_weekday, control enum values: Disabled=0, Inside=1, Outside=2

@@ -255,7 +255,7 @@
       "ppv": {"name": "Power PV"},
       "pvopt_averagepakku": {"name": "average Power from battery"},
       "pvopt_averagepgrid": {"name": "average Power from grid"},
-      "pvopt_averageppv": {"name": "average Power from PV"},
+      "pvopt_averageppv": {"name": "average Power PV"},
       "rbc": {"name": "Reboot Counter"},
       "rfb": {"name": "Relay Feedback"},
       "rssi": {"name": "WiFi RSSI signal strength"},

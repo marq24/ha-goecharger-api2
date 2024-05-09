@@ -255,7 +255,7 @@
       "ppv": {"name": "Leistung PV"},
       "pvopt_averagepakku": {"name": "⌀ Leistung von Batterie"},
       "pvopt_averagepgrid": {"name": "⌀ Leistung aus Netz"},
-      "pvopt_averageppv": {"name": "⌀ Leistung von PV"},
+      "pvopt_averageppv": {"name": "⌀ Leistung PV"},
       "rbc": {"name": "Reboot-Zähler"},
       "rfb": {"name": "Rückmeldung Relay"},
       "rssi": {"name": "WiFi RSSI Signalstärke"},
