@@ -26,6 +26,7 @@ from .const import (
     PLATFORMS,
     STARTUP_MESSAGE,
     SERVICE_SET_PV_DATA,
+    SERVICE_STOP_CHARGING,
     CONF_11KWLIMIT
 )
 from .service import GoeChargerApiV2Service
@@ -73,6 +74,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     service = GoeChargerApiV2Service(hass, config_entry, coordinator)
     hass.services.async_register(DOMAIN, SERVICE_SET_PV_DATA, service.set_pv_data,
                                  supports_response=SupportsResponse.OPTIONAL)
+    hass.services.async_register(DOMAIN, SERVICE_STOP_CHARGING, service.stop_charging,
+                                 supports_response=SupportsResponse.OPTIONAL)
 
     if coordinator.check_for_max_of_16a:
         asyncio.create_task(coordinator.check_for_16a_limit(hass, config_entry.entry_id))
@@ -94,6 +97,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
             hass.data[DOMAIN].pop(config_entry.entry_id)
 
         hass.services.async_remove(DOMAIN, SERVICE_SET_PV_DATA)
+        hass.services.async_remove(DOMAIN, SERVICE_STOP_CHARGING)
 
     return unload_ok
 

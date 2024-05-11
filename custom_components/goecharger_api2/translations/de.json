@@ -41,6 +41,10 @@
         "ppv":    {"name": "Leistung der PV (in Watt)", "description": "Die aktuelle PV-Produktion."},
         "pakku":  {"name": "Leistung von/aud der Batterie (in Watt)", "description": "Negative Werte bedeuten, dass die Batterie geladen wird, positive Werte bedeuten, dass Strom aus der Batterie verbraucht wird."}
       }
+    },
+    "stop_charging": {
+      "name": "Laden stoppen (für 5 Minuten)",
+      "description": "Stellt sicher, dass der go-eCharger den Ladevorgang stoppt. Nach 5 Minuten wird in den Standardmodus zurückgekehrt"
     }
   },
   "entity": {

@@ -30,6 +30,7 @@ If you have any issues with this you need to open an issue here:
 """
 
 SERVICE_SET_PV_DATA: Final = "set_pv_data"
+SERVICE_STOP_CHARGING: Final = "stop_charging"
 CONF_11KWLIMIT: Final = "limit_to_11kw"
 
 @dataclass

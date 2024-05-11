@@ -47,3 +47,7 @@ set_pv_data:
           max: 50000
           unit_of_measurement: "W"
           mode: "box"
+
+stop_charging:
+  name: Force changing OFF (for 5 minutes)
+  description: Will ensure that the go-eCharger will stop charging. After 5 minutes the charger will return to default mode
