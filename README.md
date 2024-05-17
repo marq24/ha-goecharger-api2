@@ -4,7 +4,7 @@
 
 Support for all go-eCharger Wallboxes supporting the APIv2 - __of course__ the APIv2 have to be enabled via the go-eCharger mobile app, __before__ you can use this integration [[see instructions](#enable-http-api-v2-in-go-echarger-app)].
 
-[![hacs_badge][hacsbadge]][hacs] [![BuyMeCoffee][buymecoffeebadge]][buymecoffee] [![PayPal][paypalbadge]][paypal]
+[![hacs_badge][hacsbadge]][hacs] [![BuyMeCoffee][buymecoffeebadge]][buymecoffee] [![PayPal][paypalbadge]][paypal] [![hainstall][hainstallbadge]][hainstall]
 
 ## Main features
  
@@ -74,9 +74,16 @@ Please note, that some of the available sensors are __not__ enabled by default.
 
 When you use this integration you do not need any additional hardware (go-eController) in order to allow PV surplus charging. The only thing that is required to add a HA automation fetching the data from your grid & solar power entities.
 
-__Once you have enabled the automation, you obviously also need to enable the 'Use PV surplus charging' setting of your go-eCharger!__
-
 Please note, that __only__ the `pgrid` value is required - the other two fields/sensors are just _optional_.
+
+### Do not forget this important settings
+
+Once you have enabled the automation, you also need to:
+
+- __Select the 'logic mode': 'Awattar [Eco]' [API-Key 'lmo']__ (Logik/Modus: ECO-Modus)
+- __enable the 'Use PV surplus' [API-Key 'fup']__
+
+in the setting of your go-eCharger - this can be done via the integration!
 
 ### Example automation
 
@@ -101,6 +108,19 @@ action:
       ppv:  "{{states('sensor.senec_solar_generated_power')}}"
       pakku: "{{states('sensor.senec_battery_state_power')}}"
 mode: single
+```
+
+### In case when your (grid) sensor need to be inverted
+
+In some cases (when using other solar system integrations) you might run into the situation, that the grid sensor value is positive when you are exporting power to the grid (and negative when you import power from the grid). In this case you need to ___invert___ the value of your grid sensor. In HA this can be done very easy via the so called 'pipe' functionality inside templates.
+
+Here is a simple example (just inserted a `| float * -1`) - which takes the sensor value and _convert_ it to a floating point number (from a string) and then multiply it with `-1`)
+```
+action:
+  - service: goecharger_api2.set_pv_data
+    data:
+      pgrid: "{{states('sensor.other_grid_state_power')|float*-1}}"
+      ...
 ```
 
 ### Force stop charging when PV power is too low
@@ -243,3 +263,7 @@ Please consider [using my personal Tibber invitation link to join Tibber today](
 
 [paypal]: https://paypal.me/marq24
 [paypalbadge]: https://img.shields.io/badge/paypal-me-blue.svg?style=for-the-badge&logo=paypal&logoColor=ccc
+
+[hainstall]: https://my.home-assistant.io/redirect/config_flow_start/?domain=goecharger_api2
+
+[hainstallbadge]: https://img.shields.io/badge/dynamic/json?style=for-the-badge&logo=home-assistant&logoColor=ccc&label=usage&suffix=%20installs&cacheSeconds=15600&url=https://analytics.home-assistant.io/custom_integrations.json&query=$.goecharger_api2.total
