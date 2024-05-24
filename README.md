@@ -4,7 +4,7 @@
 
 Support for all go-eCharger Wallboxes supporting the APIv2 - __of course__ the APIv2 have to be enabled via the go-eCharger mobile app, __before__ you can use this integration [[see instructions](#enable-http-api-v2-in-go-echarger-app)].
 
-[![hacs_badge][hacsbadge]][hacs] [![BuyMeCoffee][buymecoffeebadge]][buymecoffee] [![PayPal][paypalbadge]][paypal]
+[![hacs_badge][hacsbadge]][hacs] [![BuyMeCoffee][buymecoffeebadge]][buymecoffee] [![PayPal][paypalbadge]][paypal] [![hainstall][hainstallbadge]][hainstall]
 
 ## Main features
  
@@ -74,9 +74,16 @@ Please note, that some of the available sensors are __not__ enabled by default.
 
 When you use this integration you do not need any additional hardware (go-eController) in order to allow PV surplus charging. The only thing that is required to add a HA automation fetching the data from your grid & solar power entities.
 
-__Once you have enabled the automation, you obviously also need to enable the 'Use PV surplus charging' setting of your go-eCharger!__
-
 Please note, that __only__ the `pgrid` value is required - the other two fields/sensors are just _optional_.
+
+### Do not forget this important settings
+
+Once you have enabled the automation, you also need to:
+
+- __Select the 'logic mode': 'Awattar [Eco]' [API-Key 'lmo']__ (Logik/Modus: ECO-Modus)
+- __enable the 'Use PV surplus' [API-Key 'fup']__
+
+in the setting of your go-eCharger - this can be done via the integration!
 
 ### Example automation
 
@@ -101,6 +108,19 @@ action:
       ppv:  "{{states('sensor.senec_solar_generated_power')}}"
       pakku: "{{states('sensor.senec_battery_state_power')}}"
 mode: single
+```
+
+### In case when your (grid) sensor need to be inverted
+
+In some cases (when using other solar system integrations) you might run into the situation, that the grid sensor value is positive when you are exporting power to the grid (and negative when you import power from the grid). In this case you need to ___invert___ the value of your grid sensor. In HA this can be done very easy via the so called 'pipe' functionality inside templates.
+
+Here is a simple example (just inserted a `| float * -1`) - which takes the sensor value and _convert_ it to a floating point number (from a string) and then multiply it with `-1`)
+```
+action:
+  - service: goecharger_api2.set_pv_data
+    data:
+      pgrid: "{{states('sensor.other_grid_state_power')|float*-1}}"
+      ...
 ```
 
 ### Force stop charging when PV power is too low
@@ -206,6 +226,8 @@ Just as reference here is the list of API keys that the current implementation o
 
 Please use the [GitHub Issues](https://github.com/marq24/ha-goecharger-api2/issues) for reporting any issues you encounter with this integration. Please be so kind before creating a new issues, check the closed ones, if your problem have been already reported (& solved).
 
+#### 1. Consider providing DEBUG Log output
+
 In order to speed up the support process you might like already prepare and provide DEBUG log output. In the case of a technical issue, I would need this DEBUG log output to be able to help/fix the issue. There is a short [tutorial/guide 'How to provide DEBUG log' here](https://github.com/marq24/ha-senec-v3/blob/master/docs/HA_DEBUG.md) - please take the time to quickly go through it.
 
 For this integration you need to add:
@@ -215,6 +237,22 @@ logger:
   logs:
     custom_components.goecharger_api2: debug
 ```
+
+#### 2. In case of implausible data
+
+It will happen, that the data that is displayed by this integration does not make much sense (to you) - aka 'the data is not plausible'. __Of course__ it could be the case, that something in this integration has been messed up - but so far - in all reported issues the root cause of implausible data was/is, that the go-eCharger device itself already provided this data [you can check this by directly requesting the attribute from the wallbox]
+
+Each sensor of this integration have an API-Key identifier in its entity ID. You can manually request values from your wallbox by using this __API key__ via a regular web browser.
+
+E.g. assuming the value of the sensor in question is `sensor.goe_123456_tpa` and your wallbox is reachable via the IP `192.168.22.10`, then you can request/read the 'original' value via the following link (where `tpa` is the API key):
+
+`http://192.168.22.10/api/status?filter=tpa`
+
+so the pattern is:
+
+`http://[wallbox-ip]/api/status?filter=[API-KEY]`
+
+If the plain data that will be returned in such a request is matching the data displayed by the integration, then I would kindly ask t get in contact with go-eCharger, since in such a case the integration is just the 'messenger'.
 
 ---
 
@@ -243,3 +281,7 @@ Please consider [using my personal Tibber invitation link to join Tibber today](
 
 [paypal]: https://paypal.me/marq24
 [paypalbadge]: https://img.shields.io/badge/paypal-me-blue.svg?style=for-the-badge&logo=paypal&logoColor=ccc
+
+[hainstall]: https://my.home-assistant.io/redirect/config_flow_start/?domain=goecharger_api2
+
+[hainstallbadge]: https://img.shields.io/badge/dynamic/json?style=for-the-badge&logo=home-assistant&logoColor=ccc&label=usage&suffix=%20installs&cacheSeconds=15600&url=https://analytics.home-assistant.io/custom_integrations.json&query=$.goecharger_api2.total
