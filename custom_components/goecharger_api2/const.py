@@ -62,6 +62,7 @@ class ExtSensorEntityDescription(SensorEntityDescription):
     idx: int | str | None = None
     factor: int | None = None
     lookup: bool | None = None
+    differential_base_key: str | None = None
 
 
 @dataclass
@@ -1106,16 +1107,33 @@ SENSOR_SENSORS = [
     ),
 
     # TIMES from here...
+
+    # rbt: is the reboot time - and "looks like", that all other timestamps
+    # use the rbt "as" start point [so other timestamp will need the rbt value
+    # to calculate the real value]
+    ExtSensorEntityDescription(
+        key=Tag.RBT.key,
+        factor=3600000, # time in full hours!
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=None,
+        icon="mdi:timer-outline",
+        entity_registry_enabled_default=True
+    ),
+
     # fsptws
-    # inva
-    # lbp
-    # lccfc
-    # lccfi
-    # lcctc
-    # lfspt
-    # lmsc
-    # lpsc
-    # rbt
+    ExtSensorEntityDescription(
+        key=Tag.FSPTWS.key,
+        differential_base_key=Tag.RBT.key,
+        factor=60000,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=None,
+        icon="mdi:timer-outline",
+        entity_registry_enabled_default=False
+    ),
     ExtSensorEntityDescription(
         key=Tag.FSPTWS.key,
         factor=60000,
@@ -1126,6 +1144,19 @@ SENSOR_SENSORS = [
         icon="mdi:timer-outline",
         entity_registry_enabled_default=False
     ),
+
+    # inva
+    ExtSensorEntityDescription(
+        key=Tag.INVA.key,
+        differential_base_key=Tag.RBT.key,
+        factor=1000,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=None,
+        icon="mdi:timer-outline",
+        entity_registry_enabled_default=True
+    ),
     ExtSensorEntityDescription(
         key=Tag.INVA.key,
         factor=1000,
@@ -1134,6 +1165,19 @@ SENSOR_SENSORS = [
         state_class=SensorStateClass.MEASUREMENT,
         device_class=None,
         icon="mdi:timer-outline",
+        entity_registry_enabled_default=False
+    ),
+
+    # lbp
+    ExtSensorEntityDescription(
+        key=Tag.LBP.key,
+        differential_base_key=Tag.RBT.key,
+        factor=60000,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=None,
+        icon="mdi:button-pointer",
         entity_registry_enabled_default=True
     ),
     ExtSensorEntityDescription(
@@ -1144,10 +1188,36 @@ SENSOR_SENSORS = [
         state_class=SensorStateClass.MEASUREMENT,
         device_class=None,
         icon="mdi:button-pointer",
-        entity_registry_enabled_default=True
+        entity_registry_enabled_default=False
+    ),
+
+    # lccfc
+    ExtSensorEntityDescription(
+        key=Tag.LCCFC.key,
+        differential_base_key=Tag.RBT.key,
+        factor=60000,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=None,
+        icon="mdi:timer-outline",
+        entity_registry_enabled_default=False
     ),
     ExtSensorEntityDescription(
         key=Tag.LCCFC.key,
+        factor=60000,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=None,
+        icon="mdi:timer-outline",
+        entity_registry_enabled_default=False
+    ),
+
+    # lccfi
+    ExtSensorEntityDescription(
+        key=Tag.LCCFI.key,
+        differential_base_key=Tag.RBT.key,
         factor=60000,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -1166,8 +1236,34 @@ SENSOR_SENSORS = [
         icon="mdi:timer-outline",
         entity_registry_enabled_default=False
     ),
+
+    # lcctc
     ExtSensorEntityDescription(
         key=Tag.LCCTC.key,
+        differential_base_key=Tag.RBT.key,
+        factor=60000,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=None,
+        icon="mdi:timer-outline",
+        entity_registry_enabled_default=False
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.LCCTC.key,
+        factor=60000,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=None,
+        icon="mdi:timer-outline",
+        entity_registry_enabled_default=False
+    ),
+
+    # lfspt
+    ExtSensorEntityDescription(
+        key=Tag.LFSPT.key,
+        differential_base_key=Tag.RBT.key,
         factor=60000,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -1186,8 +1282,11 @@ SENSOR_SENSORS = [
         icon="mdi:timer-outline",
         entity_registry_enabled_default=False
     ),
+
+    # lpsc
     ExtSensorEntityDescription(
-        key=Tag.LMSC.key,
+        key=Tag.LPSC.key,
+        differential_base_key=Tag.RBT.key,
         factor=1000,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -1204,18 +1303,33 @@ SENSOR_SENSORS = [
         state_class=SensorStateClass.MEASUREMENT,
         device_class=None,
         icon="mdi:timer-outline",
-        entity_registry_enabled_default=True
+        entity_registry_enabled_default=False
     ),
+
+    # lmsc -> last model status change
     ExtSensorEntityDescription(
-        key=Tag.RBT.key,
-        factor=3600000, # time in full hours!
+        key=Tag.LMSC.key,
+        differential_base_key=Tag.RBT.key,
+        factor=1000,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfTime.HOURS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=None,
         icon="mdi:timer-outline",
         entity_registry_enabled_default=True
     ),
+    # lmsc -> last model status change
+    ExtSensorEntityDescription(
+        key=Tag.LMSC.key,
+        factor=1000,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=None,
+        icon="mdi:timer-outline",
+        entity_registry_enabled_default=False
+    ),
+
 
     # So finally the normal sensor here...
     # acu

@@ -3,9 +3,9 @@ from datetime import datetime, time
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.core import HomeAssistant
 
 from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity
 from .const import DOMAIN, SENSOR_SENSORS, ExtSensorEntityDescription
@@ -45,8 +45,17 @@ class GoeChargerSensor(GoeChargerBaseEntity, SensorEntity, RestoreEntity):
                     else:
                         _LOGGER.warning(f"{self.data_key} not found in translations")
 
+                is_int_value = isinstance(value, int)
+
+                # the timestamp values of the go-eCharger are based on the reboot time stamp...
+                # so we have to subtract these values!
+                if is_int_value and self.entity_description.differential_base_key is not None:
+                    differential_base = self.coordinator.data[self.entity_description.differential_base_key]
+                    if differential_base is not None and int(differential_base) > 0:
+                        value = differential_base - int(value)
+
                 if self.entity_description.factor is not None and self.entity_description.factor > 0:
-                    if isinstance(value, int):
+                    if is_int_value:
                         value = int(value/self.entity_description.factor)
                     else:
                         value = value/self.entity_description.factor
