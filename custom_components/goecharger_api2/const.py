@@ -1652,14 +1652,14 @@ SWITCH_SENSORS = [
         entity_category=EntityCategory.CONFIG,
         device_class=None,
         icon="mdi:ab-testing",
-        entity_registry_enabled_default=False
+        entity_registry_enabled_default=True
     ),
     ExtSwitchEntityDescription(
         key=Tag.SUA.key,
         entity_category=EntityCategory.CONFIG,
         device_class=None,
         icon="mdi:ab-testing",
-        entity_registry_enabled_default=True
+        entity_registry_enabled_default=False
     ),
     ExtSwitchEntityDescription(
         key=Tag.UPO.key,
