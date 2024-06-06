@@ -1,5 +1,4 @@
 import asyncio
-import json
 import logging
 from datetime import timedelta
 from typing import Any, Final
@@ -45,13 +44,6 @@ async def async_setup(hass: HomeAssistant, config: Config):  # pylint: disable=u
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     if DOMAIN not in hass.data:
         value = "UNKOWN"
-        try:
-            basepath = __file__[:-11]
-            with open(f"{basepath}manifest.json") as f:
-                manifest = json.load(f)
-                value = manifest["version"]
-        except:
-            pass
         _LOGGER.info(STARTUP_MESSAGE)
         hass.data.setdefault(DOMAIN, {"manifest_version": value})
 
