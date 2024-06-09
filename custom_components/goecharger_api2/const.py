@@ -535,6 +535,75 @@ NUMBER_SENSORS = [
         icon="mdi:timer-outline",
         entity_registry_enabled_default=False
     ),
+
+    # random delays...
+    ExtNumberEntityDescription(
+        key=Tag.RDBS.key,
+        native_max_value=84000,  # 24hr = 1400min = 84000 Sec
+        native_min_value=0,
+        native_step=1,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=NumberDeviceClass.DURATION,
+        icon="mdi:timer-outline",
+        entity_registry_enabled_default=True
+    ),
+    ExtNumberEntityDescription(
+        key=Tag.RDES.key,
+        native_max_value=84000,  # 24hr = 1400min = 84000 Sec
+        native_min_value=0,
+        native_step=1,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=NumberDeviceClass.DURATION,
+        icon="mdi:timer-outline",
+        entity_registry_enabled_default=True
+    ),
+    ExtNumberEntityDescription(
+        key=Tag.RDBF.key,
+        native_max_value=84000,  # 24hr = 1400min = 84000 Sec
+        native_min_value=0,
+        native_step=1,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=NumberDeviceClass.DURATION,
+        icon="mdi:timer-outline",
+        entity_registry_enabled_default=True
+    ),
+    ExtNumberEntityDescription(
+        key=Tag.RDEF.key,
+        native_max_value=84000,  # 24hr = 1400min = 84000 Sec
+        native_min_value=0,
+        native_step=1,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=NumberDeviceClass.DURATION,
+        icon="mdi:timer-outline",
+        entity_registry_enabled_default=True
+    ),
+    ExtNumberEntityDescription(
+        key=Tag.RDRE.key,
+        native_max_value=84000,  # 24hr = 1400min = 84000 Sec
+        native_min_value=0,
+        native_step=1,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=NumberDeviceClass.DURATION,
+        icon="mdi:timer-outline",
+        entity_registry_enabled_default=True
+    ),
+    ExtNumberEntityDescription(
+        key=Tag.RDPL.key,
+        native_max_value=84000,  # 24hr = 1400min = 84000 Sec
+        native_min_value=0,
+        native_step=1,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=NumberDeviceClass.DURATION,
+        icon="mdi:timer-outline",
+        entity_registry_enabled_default=False
+    ),
+
     # sh
     ExtNumberEntityDescription(
         key=Tag.SH.key,
@@ -1330,6 +1399,30 @@ SENSOR_SENSORS = [
         entity_registry_enabled_default=False
     ),
 
+    # lcs -> last controller scan
+    ExtSensorEntityDescription(
+        key=Tag.LCS.key,
+        differential_base_key=Tag.RBT.key,
+        factor=1000,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=None,
+        icon="mdi:timer-outline",
+        entity_registry_enabled_default=True
+    ),
+    # lcs -> last controller scan
+    ExtSensorEntityDescription(
+        key=Tag.LCS.key,
+        factor=1000,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=None,
+        icon="mdi:timer-outline",
+        entity_registry_enabled_default=False
+    ),
+
 
     # So finally the normal sensor here...
     # acu
@@ -1597,6 +1690,13 @@ SWITCH_SENSORS = [
         entity_category=EntityCategory.CONFIG,
         device_class=None,
         icon="mdi:cash",
+        entity_registry_enabled_default=True
+    ),
+    ExtSwitchEntityDescription(
+        key=Tag.CMSE.key,
+        entity_category=EntityCategory.CONFIG,
+        device_class=None,
+        icon="mdi:home-search-outline",
         entity_registry_enabled_default=True
     ),
     ExtSwitchEntityDescription(

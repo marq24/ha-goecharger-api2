@@ -93,6 +93,12 @@
       "po": {"name": "Priority Offset"},
       "psh": {"name": "Phase switch hysteresis"},
       "psmd": {"name": "Force single phase duration"},
+      "rdbs": {"name":  "Random max. delay: Scheduler start"},
+      "rdes": {"name":  "Random max. delay: Scheduler end"},
+      "rdbf": {"name":  "Random max. delay: Flexible Tariff start"},
+      "rdef": {"name":  "Random max. delay: Flexible Tariff stop"},
+      "rdre": {"name":  "Random max. delay: after power outage"},
+      "rdpl": {"name":  "Random max. delay: Unknown"},
       "sh": {"name": "Stop hysteresis"},
       "spl3": {"name": "Three phase switch level"},
       "sumd": {"name": "Simulate unplugging duration"},
@@ -109,7 +115,7 @@
         }
       },
       "sdp": {
-        "name": "Button: Allow Force change",
+        "name": "Button: Allow Start charging (double press)",
         "state": {
           "0": "Always locked",
           "1": "Locked when car is connected",
@@ -176,7 +182,7 @@
       "ust": {
         "name": "Cable unlock Mode",
         "state": {
-          "0": "Normal",
+          "0": "Standard mode",
           "1": "Auto unlock",
           "2": "Always locked",
           "3": "Force unlock"
@@ -241,6 +247,7 @@
       "lfspt": {"name": "last force single phase toggle [RAW]"},
       "lpsc": {"name": "last pv surplus calculation [RAW]"},
       "lmsc": {"name": "last Status change [RAW]"},
+      "lcs": {"name": "last Controller scan [RAW]"},
 
       "fsptws_delta": {"name": "force single phase toggle wished since"},
       "inva_delta": {"name": "age of inverter data"},
@@ -251,6 +258,7 @@
       "lfspt_delta": {"name": "last force single phase toggle"},
       "lpsc_delta": {"name": "last pv surplus calculation"},
       "lmsc_delta": {"name": "last Status change"},
+      "lcs_delta": {"name": "last Controller scan"},
 
       "acu": {"name": "Maximum allowed current"},
       "amt": {"name": "Current temperature limit"},
@@ -284,6 +292,7 @@
       "acs": {"name": "Card Authorization required"},
       "ara": {"name": "Automatic Stop remain in Awattar"},
       "awe": {"name": "Use Awattar (Charge when price is low)"},
+      "cmse": {"name": "Controller-Scan always active"},
       "cwe": {"name": "Cloud Websocket enabled"},
       "esk": {"name": "Energy set kWh (only stored for app)"},
       "fup": {"name": "Use PV surplus"},

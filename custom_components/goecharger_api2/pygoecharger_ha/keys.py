@@ -383,6 +383,26 @@ class Tag(ApiKey, Enum):
     CAR_CONNECTED = ApiKey(key="car", cat=CAT.STATUS)
     INTERNAL_FORCE_CONFIG_READ = ApiKey(key="zfocore", cat=CAT.CONFIG)
 
+    # NOT-DOCUMENTED
+    # -> goe-Controller-Scan immer aktiviert
+    CMSE = ApiKey(key="cmse", cat=CAT.CONFIG)
+    # -> goe-Controller-Scan last scan time
+    LCS = ApiKey(key="lcs", cat=CAT.CONFIG)
+
+    #"rdbs": 1, Random Start LoadTimer
+    RDBS = ApiKey(key="rdbs", cat=CAT.CONFIG)
+    #"rdes": 2, Random End LoadTimer
+    RDES = ApiKey(key="rdes", cat=CAT.CONFIG)
+    #"rdbf": 3, Flex Start
+    RDBF = ApiKey(key="rdbf", cat=CAT.CONFIG)
+    #"rdef": 4, Flex End
+    RDEF = ApiKey(key="rdef", cat=CAT.CONFIG)
+    #"rdre": 5, after power off
+    RDRE = ApiKey(key="rdre", cat=CAT.CONFIG)
+    #"rdpl": 0, ????
+    RDPL = ApiKey(key="rdpl", cat=CAT.CONFIG)
+
+
     #########################
     # NOT USED FROM HERE ON #
     #########################

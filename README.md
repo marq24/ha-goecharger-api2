@@ -177,7 +177,24 @@ Once the __car__ status will switch from `idle` (=1) to something different the 
 
 <a id="enableapiv2"></a>
 
-## Enable HTTP API v2 in go-eCharger App
+## Enable HTTP API v2 in go-eCharger App [v4.x]
+[screenshots are from the Android version]
+
+1. Start the go-eCharger App
+2. Select '_Setting_' (lower main button bar)
+3. Select '_Connection_' section as shown here:
+
+   '![step1](https://github.com/marq24/ha-goecharger-api2/raw/main/res/app003.png)
+
+4. Select '_API Settings_' section as shown here:
+
+   '![step2](https://github.com/marq24/ha-goecharger-api2/raw/main/res/app004.png)
+5. Toggle the '_Allow local HTTP API v2_' as shown here:
+
+   ![step3](https://github.com/marq24/ha-goecharger-api2/raw/main/res/app005.png)
+
+
+## Enable HTTP API v2 in go-eCharger App [v3.x]
 [screenshots are from the Android version]
 
 1. Start the go-eCharger App 

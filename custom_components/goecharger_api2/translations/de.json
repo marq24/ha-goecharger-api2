@@ -93,6 +93,12 @@
       "po": {"name": "Priorität Offset"},
       "psh": {"name": "Nachwirkung Phasenwechsel"},
       "psmd": {"name": "Dauer 'Wechsel von/zu '1-phasigem Laden'"},
+      "rdbs": {"name":  "Zufällige max. Verzögerung: Ladetimer Start"},
+      "rdes": {"name":  "Zufällige max. Verzögerung: Ende des Ladetimers"},
+      "rdbf": {"name":  "Zufällige max. Verzögerung: Flexibler Tarif Begin"},
+      "rdef": {"name":  "Zufällige max. Verzögerung: Flexibler Tarif Ende"},
+      "rdre": {"name":  "Zufällige max. Verzögerung: Nach Stromausfall"},
+      "rdpl": {"name":  "Zufällige max. Verzögerung: Unbekannt"},
       "sh": {"name": "Nachwirkung Stopp"},
       "spl3": {"name": "Wechsel zu 3-phasigem Laden bei"},
       "sumd": {"name": "Simuliertes-Ausstecken 'Dauer'"},
@@ -109,7 +115,7 @@
         }
       },
       "sdp": {
-        "name": "Wallbox Schalter: Spannungsänderung zulassen",
+        "name": "Wallbox Schalter: Ladevorgang starten (zweimal drücken)",
         "state": {
           "0": "Immer gesperrt",
           "1": "Gesperrt wenn Fahrzeug verbunden",
@@ -176,8 +182,8 @@
       "ust": {
         "name": "Kable Entriegelung",
         "state": {
-          "0": "Normal",
-          "1": "Auto Entriegelung",
+          "0": "Standardmodus",
+          "1": "Automatisch entriegeln",
           "2": "Immer verriegelt",
           "3": "Entriegelung erzwingen"
         }
@@ -241,6 +247,7 @@
       "lfspt": {"name": "Letzter Wechsel von/zu '1-phasigem Laden' [ORIG.]"},
       "lpsc": {"name": "Letzte PV-Überschuss Berechnung [ORIG.]"},
       "lmsc": {"name": "Letzter Statuswechsel [ORIG.]"},
+      "lcs": {"name": "Letzter Controller-Scan [ORIG.]"},
 
       "fsptws_delta": {"name": "Wechsel von/zu '1-phasigem Laden angefordert seit"},
       "inva_delta": {"name": "Inverter-Daten 'Alter'"},
@@ -251,6 +258,7 @@
       "lfspt_delta": {"name": "Letzter Wechsel von/zu '1-phasigem Laden'"},
       "lpsc_delta": {"name": "Letzte PV-Überschuss Berechnung"},
       "lmsc_delta": {"name": "Letzter Statuswechsel"},
+      "lcs_delta": {"name": "Letzter Controller-Scan"},
 
       "acu": {"name": "Maximal zulässiger Strom"},
       "amt": {"name": "Aktuelles Temperaturlimit"},
@@ -284,6 +292,7 @@
       "acs": {"name": "Autorisierung (Karte) notwendig"},
       "ara": {"name": "Next-Trip: Weiter im Eco-Modus laden"},
       "awe": {"name": "Mit günstigen Strompreisen laden"},
+      "cmse": {"name": "Controller-Scan immer aktiviert"},
       "cwe": {"name": "Cloud-Websocket aktiviert"},
       "esk": {"name": "Lademenge (nur für App) setzen"},
       "fup": {"name": "Mit PV-Überschuss laden"},
