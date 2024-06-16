@@ -126,9 +126,9 @@ action:
       ...
 ```
 
-### Force stop charging when PV power is too low
+### _Optional_ - Force stop charging when PV power is too low
 
-Unfortunately, it is possible that the go-eCharger does not finish charging in ECO mode using the PV power (in a timely manner). To ensure that charging stops when there is no longer enough PV power, you can add the following automation:
+Unfortunately, it is possible [reported by a user] that the go-eCharger does not finish charging in ECO mode using the PV power (in a timely manner). If you run into the same situation, then you can ensure that charging stops when there is no longer enough PV power, by adding the following automation:
 
 You need to adjust the entity ids: `switch.goe_012345_fup`, `sensor.goe_012345_nrg_11` and `sensor.goe_012345_pvopt_averagepgrid` (replace the `012345` with your serial number) and your preferred threshold when this automation should be executed (the `above: -200` for the `pvopt_averagepgrid` means, that as soon as the average power you export to the grid is less than 200 watt the automation will be triggered).
 
