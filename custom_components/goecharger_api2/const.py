@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Final
 
-from homeassistant.components.binary_sensor import BinarySensorEntityDescription
+from homeassistant.components.binary_sensor import BinarySensorEntityDescription, BinarySensorDeviceClass
 from homeassistant.components.button import ButtonEntityDescription
 from homeassistant.components.number import NumberEntityDescription, NumberDeviceClass, NumberMode
 from homeassistant.components.select import SelectEntityDescription
@@ -78,7 +78,7 @@ BINARY_SENSORS = [
         key=Tag.CAR_CONNECTED.key,
         idx=0,
         entity_category=EntityCategory.DIAGNOSTIC,
-        device_class=None,
+        device_class=BinarySensorDeviceClass.PLUG,
         icon="mdi:car-connected",
         icon_off="mdi:car-off",
         entity_registry_enabled_default=True
@@ -141,7 +141,7 @@ BINARY_SENSORS = [
     ExtBinarySensorEntityDescription(
         key=Tag.ADI.key,
         entity_category=EntityCategory.DIAGNOSTIC,
-        device_class=None,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
         icon="mdi:ev-plug-type2",
         entity_registry_enabled_default=True
     ),
