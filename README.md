@@ -75,7 +75,9 @@ Please note, that some of the available sensors are __not__ enabled by default.
 
 ## Enable PV Surplus Charging via HA automation
 
-When you use this integration you do not need any additional hardware (go-eController) in order to allow PV surplus charging. The only thing that is required to add a HA automation fetching the data from your grid & solar power entities.
+When you use this integration you do not need any additional hardware (go-eController) in order to allow PV surplus charging. The only thing that is required to add a __Home Assistant automation__ fetching the data from your grid & solar power entities and provide this data to a service of this integration.
+
+__If you are not familiar with 'creating an automation in Home Assistant', then [you might like to start with a tutorial explaining the basics of automations in HA](https://www.home-assistant.io/getting-started/automation/).__ 
 
 Please note, that __only__ the `pgrid` value is required - the other two fields/sensors are just _optional_.
 
