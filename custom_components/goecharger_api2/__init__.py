@@ -5,7 +5,7 @@ from typing import Any, Final
 
 from homeassistant.components.number import NumberDeviceClass
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_TYPE, CONF_ID, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST, CONF_TYPE, CONF_ID, CONF_SCAN_INTERVAL, CONF_MODE, CONF_TOKEN
 from homeassistant.core import Config, Event, SupportsResponse
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -19,6 +19,8 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bridge, TRANSLATIONS
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from .const import (
+    LAN,
+    WAN,
     NAME,
     DOMAIN,
     MANUFACTURER,
@@ -161,9 +163,20 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, config_entry):
         lang = hass.config.language.lower()
         self.name = config_entry.title
-        self.bridge = GoeChargerApiV2Bridge(host=config_entry.options.get(CONF_HOST, config_entry.data.get(CONF_HOST)),
-                                            web_session=async_get_clientsession(hass),
-                                            lang=lang)
+        if CONF_MODE in config_entry.data and config_entry.data.get(CONF_MODE) == WAN:
+            self.mode = WAN
+            self.bridge = GoeChargerApiV2Bridge(host=None,
+                                                serial=config_entry.options.get(CONF_ID, config_entry.data.get(CONF_ID)),
+                                                token=config_entry.options.get(CONF_TOKEN, config_entry.data.get(CONF_TOKEN)),
+                                                web_session=async_get_clientsession(hass),
+                                                lang=lang)
+        else:
+            self.mode = LAN
+            self.bridge = GoeChargerApiV2Bridge(host=config_entry.options.get(CONF_HOST, config_entry.data.get(CONF_HOST)),
+                                                serial=None,
+                                                token=None,
+                                                web_session=async_get_clientsession(hass),
+                                                lang=lang)
 
         global SCAN_INTERVAL
         SCAN_INTERVAL = timedelta(seconds=config_entry.options.get(CONF_SCAN_INTERVAL,
@@ -234,19 +247,32 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def read_versions(self):
         await self.bridge.read_versions()
-        self._device_info_dict = {
-            "identifiers": {
-                ("DOMAIN", DOMAIN),
-                ("SERIAL", self._serial),
-                ("IP", self._config_entry.options.get(CONF_HOST, self._config_entry.data.get(CONF_HOST))),
-            },
-            "manufacturer": MANUFACTURER,
-            "suggested_area": "Garage",
-            "name": NAME,
-            "model": self._config_entry.data.get(CONF_TYPE),
-            "sw_version": self.bridge._versions[Tag.FWV.key]
-            # hw_version
-        }
+        if self.mode == LAN:
+            self._device_info_dict = {
+                "identifiers": {(
+                    DOMAIN,
+                    self._config_entry.data.get(CONF_HOST),
+                    self._config_entry.title)},
+                "manufacturer": MANUFACTURER,
+                "suggested_area": "Garage",
+                "name": self._config_entry.title,
+                "model": self._config_entry.data.get(CONF_TYPE),
+                "sw_version": self.bridge._versions[Tag.FWV.key]
+                # hw_version
+            }
+        else:
+            self._device_info_dict = {
+                "identifiers": {(
+                    DOMAIN,
+                    self._config_entry.data.get(CONF_TOKEN),
+                    self._config_entry.title)},
+                "manufacturer": MANUFACTURER,
+                "suggested_area": "Garage",
+                "name": self._config_entry.title,
+                "model": self._config_entry.data.get(CONF_TYPE),
+                "sw_version": self.bridge._versions[Tag.FWV.key]
+                # hw_version
+            }
 
         # fetching the available cards that are enabled
         self.available_cards_idx = []
@@ -295,7 +321,11 @@ class GoeChargerBaseEntity(Entity):
 
         self.entity_description = description
         self.coordinator = coordinator
-        self.entity_id = f"{DOMAIN}.goe_{self.coordinator._serial}_{self._attr_translation_key}"
+
+        if self.coordinator.mode == WAN:
+            self.entity_id = f"{DOMAIN}.goe_wan_{self.coordinator._serial}_{self._attr_translation_key}"
+        else:
+            self.entity_id = f"{DOMAIN}.goe_{self.coordinator._serial}_{self._attr_translation_key}"
 
     def _name_internal(self, device_class_name: str | None,
                        platform_translations: dict[str, Any], ) -> str | UndefinedType | None:

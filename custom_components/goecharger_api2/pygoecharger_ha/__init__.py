@@ -22,8 +22,15 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
 class GoeChargerApiV2Bridge:
-    def __init__(self, host: str, web_session, lang: str = "en") -> None:
-        self.host = host
+    def __init__(self, host: str, serial:str, token:str, web_session, lang: str = "en") -> None:
+        if host is not None:
+            self.host_url = f"http://{host}"
+            self.token = None
+        elif serial is not None and token is not None:
+            # the Cloud-API 2 endpoint!
+            self.host_url = f"https://{serial}.api.v3.go-e.io"
+            self.token = f"Bearer {token}"
+
         self.web_session = web_session
         self.lang_map = None
         if lang in TRANSLATIONS:
@@ -106,8 +113,12 @@ class GoeChargerApiV2Bridge:
     async def _read_filtered_data(self, filters: str, log_info: str) -> dict:
         args = {"filter": filters}
         req_field_count = len(args['filter'].split(','))
-        _LOGGER.debug(f"going to request {req_field_count} keys from go-eCharger@{self.host}")
-        async with self.web_session.get(f"http://{self.host}/api/status", params=args) as res:
+        _LOGGER.debug(f"going to request {req_field_count} keys from go-eCharger@{self.host_url}")
+        if self.token:
+            headers = {"Authorization": self.token}
+        else:
+            headers = None
+        async with self.web_session.get(f"{self.host_url}/api/status", headers=headers, params=args) as res:
             try:
                 res.raise_for_status()
                 if res.status == 200:
@@ -116,7 +127,7 @@ class GoeChargerApiV2Bridge:
                         if r_json is not None and len(r_json) > 0:
                             resp_field_count = len(r_json)
                             if resp_field_count >= req_field_count:
-                                _LOGGER.debug(f"read {resp_field_count} values from go-eCharger@{self.host}")
+                                _LOGGER.debug(f"read {resp_field_count} values from go-eCharger@{self.host_url}")
                             else:
                                 missing_fields_in_reponse = []
                                 requested_fields = args['filter'].split(',')
@@ -125,7 +136,7 @@ class GoeChargerApiV2Bridge:
                                         missing_fields_in_reponse.append(a_req_key)
 
                                 _LOGGER.info(
-                                    f"[missing fields: {len(missing_fields_in_reponse)} -> {missing_fields_in_reponse}] - not all requested fields where present in the response from from go-eCharger@{self.host}")
+                                    f"[missing fields: {len(missing_fields_in_reponse)} -> {missing_fields_in_reponse}] - not all requested fields where present in the response from from go-eCharger@{self.host_url}")
                             return r_json
 
                     except JSONDecodeError as json_exc:
@@ -143,8 +154,12 @@ class GoeChargerApiV2Bridge:
         return {}
 
     async def _read_all_data(self) -> dict:
-        _LOGGER.info(f"going to request ALL keys from go-eCharger@{self.host}")
-        async with self.web_session.get(f"http://{self.host}/api/status") as res:
+        _LOGGER.info(f"going to request ALL keys from go-eCharger@{self.host_url}")
+        if self.token:
+            headers = {"Authorization": self.token}
+        else:
+            headers = None
+        async with self.web_session.get(f"{self.host_url}/api/status", headers=headers) as res:
             try:
                 res.raise_for_status()
                 if res.status == 200:
@@ -184,8 +199,12 @@ class GoeChargerApiV2Bridge:
         else:
             args = {key: '"'+str(value)+'"'}
 
-        _LOGGER.info(f"going to write {args} to go-eCharger@{self.host}")
-        async with self.web_session.get(f"http://{self.host}/api/set", params=args) as res:
+        _LOGGER.info(f"going to write {args} to go-eCharger@{self.host_url}")
+        if self.token:
+            headers = {"Authorization": self.token}
+        else:
+            headers = None
+        async with self.web_session.get(f"{self.host_url}/api/set", headers=headers, params=args) as res:
             try:
                 if res.status == 200:
                     try:

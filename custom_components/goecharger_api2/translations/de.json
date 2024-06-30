@@ -1,33 +1,55 @@
 {
   "selector": {
-    "dummy": {
+    "stype": {
       "options": {
-        "d1":  "Montags",
-        "d2":  "Dienstags"
+        "lan": "LAN: Lokale API v2 Zugriff übe das lokale Netzwerk [http]",
+        "wan": "WAN: Cloud API v2 Zugriff über das Internet [https]"
       }
     }
   },
   "config": {
     "step": {
       "user": {
-        "description": "Wenn Du Hilfe bei der Einrichtung benötigst, findest du sie hier: https://github.com/marq24/ha-goecharger-api2.\n\nWichtiger Hinweis: Der APIv2 Zugriff muss zuvor in den Go-eCharger App Einstellungen aktiviert werden",
+        "description": "Bitte wähle den Kommunikationskanal [wähle WAN(Cloud) nur dann, wenn sich Deine Wallbox nicht im Heimnetzwerk befindet!]",
+        "data": {
+          "stype": "Wähle LAN(Lokales Netzwerk) oder WAN(Cloud/Internet)"
+        }
+      },
+      "user_lan": {
+        "description": "Wenn Du Hilfe bei der Einrichtung benötigst, findest du sie hier: https://github.com/marq24/ha-goecharger-api2.\n\nWichtiger Hinweis: Der lokale APIv2 Zugriff muss zuvor in den Go-eCharger App Einstellungen aktiviert werden",
         "data": {
           "host": "IP oder Hostname deiner go-eCharger Wallbox",
           "scan_interval": "Aktualisierungsintervall in Sekunden [min: 5sek]"
         }
+      },
+      "user_wan": {
+        "description": "Wenn Du Hilfe bei der Einrichtung benötigst, findest du sie hier: https://github.com/marq24/ha-goecharger-api2.\n\nWichtiger Hinweis: Der Cloud APIv2 Zugriff muss zuvor in den Go-eCharger App Einstellungen aktiviert werden",
+        "data": {
+          "serial": "Deine go-eCharger Wallbox Seriennummer",
+          "token": "Dein Cloud API v2 Key",
+          "scan_interval": "Aktualisierungsintervall in Sekunden [min: 30sek]"
+        }
       }
     },
     "error": {
-      "auth": "Unter dieser IP/Host konnte keine Wallbox erreicht werden"
+      "auth_lan": "Unter dieser IP/Host konnte keine Wallbox erreicht werden",
+      "auth_wan": "Mit dieser Seriennummer und dem API-Key konnte keine Wallbox erreicht werden"
     }
   },
   "options": {
     "step": {
-      "user": {
-        "description": "Wenn Du Hilfe bei der Einrichtung benötigst, findest du sie hier: https://github.com/marq24/ha-goecharger-api2.\n\nWichtiger Hinweis: Der APIv2 Zugriff muss zuvor in den Go-eCharger App Einstellungen aktiviert werden",
+      "user_lan": {
+        "description": "Lokal: Wenn Du Hilfe bei der Einrichtung benötigst, findest du sie hier: https://github.com/marq24/ha-goecharger-api2.\n\nWichtiger Hinweis: Der APIv2 Zugriff muss zuvor in den Go-eCharger App Einstellungen aktiviert werden",
         "data": {
           "limit_to_11kw": "11-kW-Limit setzen (nur für 22-kW-Varianten) – alle relevanten Einstellungen werden auf maximal 16A beschränkt (statt der möglichen 32A)",
-          "scan_interval": "Aktualisierungsintervall in Sekunden"
+          "scan_interval": "Aktualisierungsintervall in Sekunden [min: 5sek]"
+        }
+      },
+      "user_wan": {
+        "description": "Cloud: Wenn Du Hilfe bei der Einrichtung benötigst, findest du sie hier: https://github.com/marq24/ha-goecharger-api2.\n\nWichtiger Hinweis: Der APIv2 Zugriff muss zuvor in den Go-eCharger App Einstellungen aktiviert werden",
+        "data": {
+          "limit_to_11kw": "11-kW-Limit setzen (nur für 22-kW-Varianten) – alle relevanten Einstellungen werden auf maximal 16A beschränkt (statt der möglichen 32A)",
+          "scan_interval": "Aktualisierungsintervall in Sekunden [min: 30sek]"
         }
       }
     }

@@ -32,6 +32,8 @@ If you have any issues with this you need to open an issue here:
 SERVICE_SET_PV_DATA: Final = "set_pv_data"
 SERVICE_STOP_CHARGING: Final = "stop_charging"
 CONF_11KWLIMIT: Final = "limit_to_11kw"
+WAN: Final = "wan"
+LAN: Final = "lan"
 
 @dataclass
 class ExtBinarySensorEntityDescription(BinarySensorEntityDescription):
@@ -1646,6 +1648,7 @@ SENSOR_SENSORS = [
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
+        suggested_display_precision=2,
         entity_registry_enabled_default=True
     ),
     # wh
