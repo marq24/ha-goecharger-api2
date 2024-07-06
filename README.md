@@ -9,6 +9,10 @@ __Please note__, _that this integration is not official and not supported by the
 
 [![hacs_badge][hacsbadge]][hacs] [![github][ghsbadge]][ghs] [![BuyMeCoffee][buymecoffeebadge]][buymecoffee] [![PayPal][paypalbadge]][paypal] [![hainstall][hainstallbadge]][hainstall]
 
+## latest successfully testes go-eCharger Firmware Version: 56.2
+
+The latest go-eCharger firmware 56.8 have not been fully tested with this integration (yet) - So if you have issues with this integration after you updated your go-eCharger firmware higher than 56.2 - as [reported here: #11](https://github.com/marq24/ha-goecharger-api2/issues/11) - then please be so kind and downgrade the firmware again. TIA
+
 ## Main features
  
  - __All documented fields__ [in the official go-eCharger GitHub repository](https://github.com/goecharger/go-eCharger-API-v2/blob/main/apikeys-en.md) are supported by this integration (with very few exceptions) [[see list of currently not handled API keys](#list-of-currently-not-handled-api-keys-27172)]
@@ -85,8 +89,9 @@ Please note, that __only__ the `pgrid` value is required - the other two fields/
 
 Once you have enabled the automation, you also need to:
 
-- __Select the 'logic mode': 'Awattar [Eco]' [API-Key 'lmo']__ (Logik/Modus: ECO-Modus)
-- __enable the 'Use PV surplus' [API-Key 'fup']__
+- __Select the 'logic mode': 'Awattar [Eco]' [API-Key 'lmo']__<br/>[Logik/Modus: ECO-Modus]
+- __enable the 'Use PV surplus' [API-Key 'fup']__<br/>[Mit PV-Überschuss laden]
+- __enable the 'Allow Charge Pause (car compatibility)'  [API-Key 'acp']__<br/>[Ladepausen zulassen (Fahrzeug Kompatibilität)]
 
 in the setting of your go-eCharger - this can be done via the integration!
 
@@ -130,7 +135,7 @@ action:
 
 ### _Optional_ - Force stop charging when PV power is too low
 
-Unfortunately, it is possible [reported by a user] that the go-eCharger does not finish charging in ECO mode using the PV power (in a timely manner). If you run into the same situation, then you can ensure that charging stops when there is no longer enough PV power, by adding the following automation:
+Unfortunately, it might happen [reported by a user] that the go-eCharger __does not finish charging in ECO mode__ using the PV power (in a timely manner). If you run into the same situation, then you can ensure that charging stops when there is no longer enough PV power, by adding the following automation:
 
 You need to adjust the entity ids: `switch.goe_012345_fup`, `sensor.goe_012345_nrg_11` and `sensor.goe_012345_pvopt_averagepgrid` (replace the `012345` with your serial number) and your preferred threshold when this automation should be executed (the `above: -200` for the `pvopt_averagepgrid` means, that as soon as the average power you export to the grid is less than 200 watt the automation will be triggered).
 
