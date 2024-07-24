@@ -963,6 +963,7 @@ SENSOR_SENSORS = [
     #     icon="mdi:gauge",
     #     entity_registry_enabled_default=False
     # ),
+
     # ccw -> object
     ExtSensorEntityDescription(
         key=Tag.CCW.key,
@@ -974,6 +975,18 @@ SENSOR_SENSORS = [
         icon="mdi:wifi",
         entity_registry_enabled_default=False
     ),
+
+    # cll -> object!
+    ExtSensorEntityDescription(
+        key=Tag.CLL.key,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=None,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=None,
+        icon="mdi:list-status",
+        entity_registry_enabled_default=True
+    ),
+
 
     # LOOKUP-Values [always two Sensors!]
     # car

@@ -307,7 +307,9 @@
       "tpa": {"name": "30 Sek. ⌀ Totale-Leistung"},
       "wh": {"name": "Lademenge seit Fahrzeug angeschlossen"},
       "wsc": {"name": "WiFi STA Fehler Anzahl"},
-      "wsm": {"name": "WiFi STA Fehler Meldung"}
+      "wsm": {"name": "WiFi STA Fehler Meldung"},
+
+      "cll": {"name": "Ladestrom Limitliste"}
     },
     "switch": {
       "acp": {"name": "Ladepausen zulassen (Fahrzeug Kompatibilität)"},

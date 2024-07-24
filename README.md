@@ -133,6 +133,19 @@ action:
       ...
 ```
 
+### Having multiple go-eChargers in your HA installation?
+
+When you have more than one go-eCharger in your HA installation, you must use the service name `goecharger_api2.set_pv_data_012345` (replace the `012345` with the serial number of your go-eCharger) - so you need to add `_` and your serial number to the service name!
+
+```
+action:
+  - service: goecharger_api2.set_pv_data_012345
+    ...
+```
+
+_Please note, that this is __only__ required, if you have multiple go-eChargers configured via this integration your HA installation._
+
+
 ### _Optional_ - Force stop charging when PV power is too low
 
 Unfortunately, it might happen [reported by a user] that the go-eCharger __does not finish charging in ECO mode__ using the PV power (in a timely manner). If you run into the same situation, then you can ensure that charging stops when there is no longer enough PV power, by adding the following automation:

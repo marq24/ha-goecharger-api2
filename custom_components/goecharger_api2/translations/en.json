@@ -307,7 +307,9 @@
       "tpa": {"name": "30 seconds total power average"},
       "wh": {"name": "Energy since car connected"},
       "wsc": {"name": "WiFi STA error count"},
-      "wsm": {"name": "WiFi STA error message"}
+      "wsm": {"name": "WiFi STA error message"},
+
+      "cll": {"name": "Current Limits"}
     },
     "switch": {
       "acp": {"name": "Allow Charge Pause (car compatibility)"},

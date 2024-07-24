@@ -72,8 +72,6 @@ class Tag(ApiKey, Enum):
     CARDS = ApiKey(key="cards", cat=CAT.CONFIG, writeable=True)
     # cable_current_limit in A
     CBL = ApiKey(key="cbl", cat=CAT.STATUS)
-    # color_charging, format: #RRGGBB
-    CCH = ApiKey(key="cch", cat=CAT.CONFIG, writeable=True)
     # car consumption (only stored for app)
     CCO = ApiKey(key="cco", cat=CAT.CONFIG)
     # chargectrl recommended version
@@ -84,16 +82,22 @@ class Tag(ApiKey, Enum):
     CCW = ApiKey(key="ccw", cat=CAT.STATUS)
     # charging duration info (null=no charging in progress, type=0 counter going up, type=1 duration in ms)
     CDI = ApiKey(key="cdi", cat=CAT.STATUS)
-    # color_finished, format: #RRGGBB
-    CFI = ApiKey(key="cfi", cat=CAT.CONFIG, writeable=True)
-    # color_idle, format: #RRGGBB
-    CID = ApiKey(key="cid", cat=CAT.CONFIG, writeable=True)
+
+    # cll | R | TYPE | Status | Current limits list
+    # "cll": {
+    #     "accessControl": 0,
+    #     "currentLimitMax": 22,
+    #     "minChargingCurrent": 6,
+    #     "requestedCurrent": 6,
+    #     "temperatureCurrentLimit": 32,
+    #     "unsymetryCurrentLimit": 32
+    # },
+    CLL = ApiKey(key="cll", cat=CAT.STATUS)
+
     # current limit presets, max. 5 entries
     CLP = ApiKey(key="clp", cat=CAT.CONFIG, writeable=True)
     # Cable unlock status (Unknown=0, Unlocked=1, UnlockFailed=2, Locked=3, LockFailed=4, LockUnlockPowerout=5)
     CUS = ApiKey(key="cus", cat=CAT.STATUS)
-    # color_waitcar, format: #RRGGBB
-    CWC = ApiKey(key="cwc", cat=CAT.CONFIG, writeable=True)
     # cloud websocket enabled"
     CWE = ApiKey(key="cwe", cat=CAT.CONFIG, writeable=True)
     # set this to 0-9 to clear card (erases card name, energy and rfid id)
@@ -216,48 +220,7 @@ class Tag(ApiKey, Enum):
     NMO = ApiKey(key="nmo", cat=CAT.CONFIG, writeable=True)
     # energy array, U (L1, L2, L3, N), I (L1, L2, L3), P (L1, L2, L3, N, Total), pf (L1, L2, L3, N)
     NRG = ApiKey(key="nrg", cat=CAT.STATUS)
-    # OCPP connected and accepted
-    OCPPA = ApiKey(key="ocppa", cat=CAT.STATUS)
-    # OCPP connected and accepted (timestamp in milliseconds since reboot) Subtract from reboot time (rbt) to get number of milliseconds since connected
-    OCPPAA = ApiKey(key="ocppaa", cat=CAT.STATUS)
-    # OCPP connected
-    OCPPC = ApiKey(key="ocppc", cat=CAT.STATUS)
-    # OCPP connected (timestamp in milliseconds since reboot) Subtract from reboot time (rbt) to get number of milliseconds since connected
-    OCPPCA = ApiKey(key="ocppca", cat=CAT.STATUS)
-    # OCPP client cert
-    OCPPCC = ApiKey(key="ocppcc", cat=CAT.CONFIG, writeable=True)
-    # OCPP client key
-    OCPPCK = ApiKey(key="ocppck", cat=CAT.CONFIG, writeable=True)
-    # OCPP skipCertCommonNameCheck
-    OCPPCN = ApiKey(key="ocppcn", cat=CAT.CONFIG, writeable=True)
-    # OCPP dummy card id (used when no card has been used and charging is already allowed / starting)
-    OCPPD = ApiKey(key="ocppd", cat=CAT.CONFIG, writeable=True)
-    # OCPP enabled
-    OCPPE = ApiKey(key="ocppe", cat=CAT.CONFIG, writeable=True)
-    # OCPP use global CA Store
-    OCPPG = ApiKey(key="ocppg", cat=CAT.CONFIG, writeable=True)
-    # OCPP heartbeat interval (can also be read/written with GetConfiguration and ChangeConfiguration)
-    OCPPH = ApiKey(key="ocpph", cat=CAT.CONFIG, writeable=True)
-    # OCPP meter values sample interval (can also be read/written with GetConfiguration and ChangeConfiguration)
-    OCPPI = ApiKey(key="ocppi", cat=CAT.CONFIG, writeable=True)
-    # OCPP clock aligned data interval (can also be read/written with GetConfiguration and ChangeConfiguration)
-    OCPPAI = ApiKey(key="ocppai", cat=CAT.CONFIG, writeable=True)
-    # OCPP last error
-    OCPPLE = ApiKey(key="ocpple", cat=CAT.STATUS)
-    # OCPP last error (timestamp in milliseconds since reboot) Subtract from reboot time (rbt) to get number of milliseconds since connected
-    OCPPLEA = ApiKey(key="ocpplea", cat=CAT.STATUS)
-    # OCPP rotate phases on charger
-    OCPPR = ApiKey(key="ocppr", cat=CAT.CONFIG, writeable=True)
-    # OCPP remote logging (usually only enabled by go-e support to allow debugging)
-    OCPPRL = ApiKey(key="ocpprl", cat=CAT.CONFIG, writeable=True)
-    # OCPP started
-    OCPPS = ApiKey(key="ocpps", cat=CAT.STATUS)
-    # OCPP server cert
-    OCPPSC = ApiKey(key="ocppsc", cat=CAT.CONFIG, writeable=True)
-    # OCPP skipServerVerification
-    OCPPSS = ApiKey(key="ocppss", cat=CAT.CONFIG, writeable=True)
-    # OCPP server url
-    OCPPU = ApiKey(key="ocppu", cat=CAT.CONFIG, writeable=True)
+
     # firmware update trigger (must specify a branch from ocu)
     OCT = ApiKey(key="oct", cat=CAT.OTHER, writeable=True, writeonly=True)
     # list of available firmware branches
@@ -389,23 +352,106 @@ class Tag(ApiKey, Enum):
     # -> goe-Controller-Scan last scan time
     LCS = ApiKey(key="lcs", cat=CAT.CONFIG)
 
+    # TODO: add #X keys...
+    # rdbs | R/W | TYPE | Config | randomDelayStartScheduledCharging in seconds
     #"rdbs": 1, Random Start LoadTimer
     RDBS = ApiKey(key="rdbs", cat=CAT.CONFIG)
+    # rdbse | R/W | TYPE | Config | randomDelayStartScheduledChargingEndsAt (set to null to abort current randomDelayStartScheduledCharging)
+    #X RDBSE = ApiKey(key="rdbse", cat=CAT.CONFIG)
+
+    # rdes | R/W | TYPE | Config | randomDelayStopScheduledCharging in seconds
     #"rdes": 2, Random End LoadTimer
     RDES = ApiKey(key="rdes", cat=CAT.CONFIG)
+    # rdese | R/W | TYPE | Config | randomDelayStopScheduledChargingEndsAt (set to null to abort current randomDelayStopScheduledCharging)
+    #X RDESE = ApiKey(key="rdese", cat=CAT.CONFIG)
+
+    # rdbf | R/W | TYPE | Config | randomDelayStartFlexibleTariffCharging in seconds
     #"rdbf": 3, Flex Start
     RDBF = ApiKey(key="rdbf", cat=CAT.CONFIG)
+    # rdbfe | R/W | TYPE | Config | randomDelayStartFlexibleTariffChargingEndsAt (set to null to abort current randomDelayStartFlexibleTariffCharging)
+    #X RDBFE = ApiKey(key="rdbfe", cat=CAT.CONFIG)
+
+    # rdef | R/W | TYPE | Config | randomDelayStopFlexibleTariffCharging in seconds
     #"rdef": 4, Flex End
     RDEF = ApiKey(key="rdef", cat=CAT.CONFIG)
+    # rdefe | R/W | TYPE | Config | randomDelayStopFlexibleTariffChargingEndsAt (set to null to abort current randomDelayStopFlexibleTariffCharging)
+    #X RDEFE = ApiKey(key="rdefe", cat=CAT.CONFIG)
+
+    # rdre | R/W | TYPE | Config | randomDelayReconnection in seconds
     #"rdre": 5, after power off
     RDRE = ApiKey(key="rdre", cat=CAT.CONFIG)
+    # rdree | R/W | TYPE | Config | randomDelayReconnectionEndsAt (set to null to abort current randomDelayReconnection)
+    #X RDREE = ApiKey(key="rdree", cat=CAT.CONFIG)
+
+    # rdpl | R/W | TYPE | Config | randomDelayWhenPluggingCar in seconds
     #"rdpl": 0, ????
     RDPL = ApiKey(key="rdpl", cat=CAT.CONFIG)
+    # rdple | R/W | TYPE | Config | randomDelayWhenPluggingCarEndsAt (set to null to abort current randomDelayWhenPluggingCar)
+    #X RDPLE = ApiKey(key="rdple", cat=CAT.CONFIG)
 
 
     #########################
     # NOT USED FROM HERE ON #
     #########################
+    # color_charging, format: #RRGGBB
+    CCH = ApiKey(key="cch", cat=CAT.CONFIG, writeable=True)
+    # color_idle, format: #RRGGBB
+    CID = ApiKey(key="cid", cat=CAT.CONFIG, writeable=True)
+    # color_finished, format: #RRGGBB
+    CFI = ApiKey(key="cfi", cat=CAT.CONFIG, writeable=True)
+    # color_waitcar, format: #RRGGBB
+    CWC = ApiKey(key="cwc", cat=CAT.CONFIG, writeable=True)
+    # more Color keys added 2024/07/15
+    #################################
+    # ccd | R | TYPE | Status | Connected controller data cch | R/W | TYPE | Config | color_charging, format: #RRGGBB
+    # t0h | R/W | TYPE | Config | led strip T0H
+    # t0l | R/W | TYPE | Config | led strip T0L
+    # t1h | R/W | TYPE | Config | led strip T1H
+    # t1l | R/W | TYPE | Config | led strip T1L
+
+
+    # OCPP connected and accepted
+    OCPPA = ApiKey(key="ocppa", cat=CAT.STATUS)
+    # OCPP connected and accepted (timestamp in milliseconds since reboot) Subtract from reboot time (rbt) to get number of milliseconds since connected
+    OCPPAA = ApiKey(key="ocppaa", cat=CAT.STATUS)
+    # OCPP connected
+    OCPPC = ApiKey(key="ocppc", cat=CAT.STATUS)
+    # OCPP connected (timestamp in milliseconds since reboot) Subtract from reboot time (rbt) to get number of milliseconds since connected
+    OCPPCA = ApiKey(key="ocppca", cat=CAT.STATUS)
+    # OCPP client cert
+    OCPPCC = ApiKey(key="ocppcc", cat=CAT.CONFIG, writeable=True)
+    # OCPP client key
+    OCPPCK = ApiKey(key="ocppck", cat=CAT.CONFIG, writeable=True)
+    # OCPP skipCertCommonNameCheck
+    OCPPCN = ApiKey(key="ocppcn", cat=CAT.CONFIG, writeable=True)
+    # OCPP dummy card id (used when no card has been used and charging is already allowed / starting)
+    OCPPD = ApiKey(key="ocppd", cat=CAT.CONFIG, writeable=True)
+    # OCPP enabled
+    OCPPE = ApiKey(key="ocppe", cat=CAT.CONFIG, writeable=True)
+    # OCPP use global CA Store
+    OCPPG = ApiKey(key="ocppg", cat=CAT.CONFIG, writeable=True)
+    # OCPP heartbeat interval (can also be read/written with GetConfiguration and ChangeConfiguration)
+    OCPPH = ApiKey(key="ocpph", cat=CAT.CONFIG, writeable=True)
+    # OCPP meter values sample interval (can also be read/written with GetConfiguration and ChangeConfiguration)
+    OCPPI = ApiKey(key="ocppi", cat=CAT.CONFIG, writeable=True)
+    # OCPP clock aligned data interval (can also be read/written with GetConfiguration and ChangeConfiguration)
+    OCPPAI = ApiKey(key="ocppai", cat=CAT.CONFIG, writeable=True)
+    # OCPP last error
+    OCPPLE = ApiKey(key="ocpple", cat=CAT.STATUS)
+    # OCPP last error (timestamp in milliseconds since reboot) Subtract from reboot time (rbt) to get number of milliseconds since connected
+    OCPPLEA = ApiKey(key="ocpplea", cat=CAT.STATUS)
+    # OCPP rotate phases on charger
+    OCPPR = ApiKey(key="ocppr", cat=CAT.CONFIG, writeable=True)
+    # OCPP remote logging (usually only enabled by go-e support to allow debugging)
+    OCPPRL = ApiKey(key="ocpprl", cat=CAT.CONFIG, writeable=True)
+    # OCPP started
+    OCPPS = ApiKey(key="ocpps", cat=CAT.STATUS)
+    # OCPP server cert
+    OCPPSC = ApiKey(key="ocppsc", cat=CAT.CONFIG, writeable=True)
+    # OCPP skipServerVerification
+    OCPPSS = ApiKey(key="ocppss", cat=CAT.CONFIG, writeable=True)
+    # OCPP server url
+    OCPPU = ApiKey(key="ocppu", cat=CAT.CONFIG, writeable=True)
 
     # OCPP aktiviert
     #OCPPE = ApiKey(key="ocppe", cat=CAT.CONFIG, writeable=True)
@@ -450,6 +496,17 @@ class Tag(ApiKey, Enum):
     # OCPP server cert
     #OCPPSC = ApiKey(key="ocppsc", cat=CAT.CONFIG, writeable=True)
 
+    # more OCPP keys added 2024/07/15
+    #################################
+    # ocppao | R/W | TYPE | Status | OCPP AllowOfflineTxForUnknownId
+    # ocppcm | R/W | TYPE | Status | OCPP LocalAuthListEnabled
+    # ocppcs | R | TYPE | Status | OCPP connector status (0=Available, 1=Preparing, 2=Charging, 3=SuspendedEVSE, 4=SuspendedEV, 5=Finishing, 6=Reserved, 7=Unavailable, 8=Faulted)
+    # ocppf | R/W | TYPE | Config | OCPP fallback current
+    # ocppla | R/W | TYPE | Status | OCPP LocalAuthListEnabled
+    # ocpplo | R/W | TYPE | Status | OCPP LocalAuthorizeOffline
+    # ocppti | R/W | TYPE | Status | OCPP transaction id
+
+
     # MQTT aktiviert
     MCE = ApiKey(key="mce", cat=CAT.CONFIG, writeable=True)
     # MQTT broker url
@@ -481,6 +538,12 @@ class Tag(ApiKey, Enum):
     # MQTT server cert
     MSC = ApiKey(key="msc", cat=CAT.CONFIG, writeable=True)
 
+    # more MQTT keys added 2024/07/15
+    #################################
+    # mhe | R/W | TYPE | Config | MQTT enable homeassistant discovery
+    # mht | R/W | TYPE | Config | MQTT homeassistant topic prefix (set to null to reset back to the default)
+
+
     # modbus slave aktiviert
     MEN = ApiKey(key="men", cat=CAT.CONFIG, writeable=True)
     # modbus slave port (erfordert Neustart)
@@ -493,3 +556,70 @@ class Tag(ApiKey, Enum):
     MRO = ApiKey(key="mro", cat=CAT.STATUS)
     # modbus slave Schreib-Operationen
     MWO = ApiKey(key="mwo", cat=CAT.STATUS)
+
+
+    # NEW API keys 2024/07/15:
+    #############################
+
+    # avgfhz | R | TYPE | Status | Stromnetz average frequency (~50Hz)
+    # awpl | W | TYPE | Status | awattar price list, timestamps are measured in unix-time, seconds since 1970
+    # bar | R/W | TYPE | Config | Button Allow WiFi AP reset (0=AlwaysLock, 1=LockWhenCarIsConnected, 2=LockWhenCarIsCharging, 3=NeverLock)
+    # cle | R | TYPE | Status | Cloud last error
+    # clea | R | TYPE | Status | Cloud last error (age)
+
+
+    # cmmr | R | TYPE | Config | controllerMdnsMaxResults
+    # cmp | R | TYPE | Config | controllerMdnsProto
+    # cms | R | TYPE | Config | controllerMdnsService
+    # cmse | R | TYPE | Config | controllerMdnsScanEnabled, set to false to completely disable any MDNS searches (debugging)
+
+    # csa | R | TYPE | Status | controller scan active
+    # ct | R/W | TYPE | Config | car type, free text string (max. 64 characters)
+    # ctrls | R | TYPE | Status | Controllers search result
+    # data | R | TYPE | Status | grafana token from cloud for app
+    # di1 | R/W | TYPE | Config | digital Input 1-phase
+    # die | R/W | TYPE | Config | digital Input Enabled
+    # dii | R/W | TYPE | Config | digital Input Inverted
+    # dll | R | TYPE | Status | download link for app csv export
+    # dsrc | R | TYPE | Status | inverter data source
+    # gmtr | R/W | TYPE | Config | gridMonitoringTimeReconnection in seconds
+    # gsa | R/W | TYPE | Status | gridMonitoring last failure
+    # hai | R/W | TYPE | Config | httpApiEnabled (allows /api/status and /api/set requests)
+    # hla | R/W | TYPE | Config | httpLegacyApiEnabled (allows /status and /mqtt requests)
+    # la1 | R/W | TYPE | Config | limit adapter 1-phase (in A)
+    # la3 | R/W | TYPE | Config | limit adapter 3-phase (in A)
+    # lbl | R | TYPE | Config | lastButtonHoldLong
+    # lcs | R | TYPE | Status | last controller scan timestamp in milliseconds since boot time
+    # lopr | R/W | TYPE | Config | load balancing protected
+    # lrc | R | TYPE | Status | last rfid card index
+    # lri | R | TYPE | Status | last rfid id (only available when sendRfid)
+    # lrr | R | TYPE | Status | last rfid read (milliseconds since boot)
+    # lto | R | TYPE | Status | local time offset in milliseconds, tab + rbt + lto = local time
+    # lwf | R | TYPE | Status | last wifi connect failed (milliseconds since boot)
+
+    # pco | R | TYPE | Config | controllerCloudKey
+    # pdi | R/W | TYPE | Config | protect Digital Input
+    # pgr | R/W | TYPE | Config | protect Grid Requirements
+
+    # rde | R/W | TYPE | Config | send rfid serial to cloud/api/mqtt (enable lri api key to show rfid numbers)
+
+    # rmaf | R/W | TYPE | Config | reconnectionMaximumFrequency in Hz
+    # rmav | R/W | TYPE | Config | reconnectionMaximumVoltage in Volt
+    # rmif | R/W | TYPE | Config | reconnectionMinimumFrequency in Hz
+    # rmiv | R/W | TYPE | Config | reconnectionMinimumVoltage in Volt
+
+    # rsa | R/W | TYPE | Status | rampup started at
+    # rsre | R/W | TYPE | Config | rampupAtStartAndReconnectionEnabled
+    # rsrr | R/W | TYPE | Config | rampupAtStartAndReconnectionRate in %/s
+    # smd | R | TYPE | Status | smart meter data
+    # tab | R | TYPE | Status | time at boot in utc in milliseconds, add rbt to get to current utc time
+    # tcl | R/W | TYPE | Config | temporary current limit (does not change the user current limit, will be reset after 10min if not updated regulary)
+    # tsi | R | TYPE | Status | transaction start rfidid (only available when sendRfid)
+    # tzt | R/W | TYPE | Config | timezone type, freetext string for app selection
+    # ufa | R/W | TYPE | Config | Underfrequency Control activation threshold
+    # ufe | R/W | TYPE | Config | Underfrequency Control enabled
+    # ufm | R/W | TYPE | Config | Underfrequency Control mode (TypeNominal=0, TypeActual=1)
+    # ufs | R/W | TYPE | Config | Underfrequency Control stop frequency
+    # wbw | R | TYPE | Config | WiFi Bandwidth (for both AP and STA) WIFI_BW_HT20=1, WIFI_BW_HT40=2
+    # wda | R/W | TYPE | Config | disable AccessPoint when cloud is connected
+    # wsl | R | TYPE | Status | WiFi STA error messages log

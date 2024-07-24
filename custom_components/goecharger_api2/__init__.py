@@ -36,7 +36,8 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
 CONFIG_SCHEMA = config_val.removed(DOMAIN, raise_if_present=False)
-
+_SERVICE_SET_PV_DATA = SERVICE_SET_PV_DATA
+_SERVICE_STOP_CHARGING = SERVICE_STOP_CHARGING
 
 async def async_setup(hass: HomeAssistant, config: Config):  # pylint: disable=unused-argument
     """Set up this integration using YAML is not supported."""
@@ -44,6 +45,9 @@ async def async_setup(hass: HomeAssistant, config: Config):  # pylint: disable=u
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+    global _SERVICE_SET_PV_DATA
+    global _SERVICE_STOP_CHARGING
+
     if DOMAIN not in hass.data:
         value = "UNKOWN"
         _LOGGER.info(STARTUP_MESSAGE)
@@ -64,10 +68,23 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         config_entry.add_update_listener(async_reload_entry)
 
     # initialize our service...
+    all_integration_configs = hass.config_entries.async_entries(domain=DOMAIN,include_disabled=True, include_ignore=True)
+    if all_integration_configs is not None:
+        _LOGGER.debug(f"{len(all_integration_configs)} -> {all_integration_configs}")
+    else:
+        _LOGGER.error(f"all_integration_configs is NONE - this could/should not be the case!")
+
+    if all_integration_configs is not None and len(all_integration_configs) > 1:
+        _SERVICE_SET_PV_DATA = f"{SERVICE_SET_PV_DATA}_{config_entry.data.get(CONF_ID)}"
+        _SERVICE_STOP_CHARGING = f"{SERVICE_STOP_CHARGING}_{config_entry.data.get(CONF_ID)}"
+    else:
+        _SERVICE_SET_PV_DATA = SERVICE_SET_PV_DATA
+        _SERVICE_STOP_CHARGING = SERVICE_STOP_CHARGING
+
     service = GoeChargerApiV2Service(hass, config_entry, coordinator)
-    hass.services.async_register(DOMAIN, SERVICE_SET_PV_DATA, service.set_pv_data,
+    hass.services.async_register(DOMAIN, _SERVICE_SET_PV_DATA, service.set_pv_data,
                                  supports_response=SupportsResponse.OPTIONAL)
-    hass.services.async_register(DOMAIN, SERVICE_STOP_CHARGING, service.stop_charging,
+    hass.services.async_register(DOMAIN, _SERVICE_STOP_CHARGING, service.stop_charging,
                                  supports_response=SupportsResponse.OPTIONAL)
 
     if coordinator.check_for_max_of_16a:
@@ -86,8 +103,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
             coordinator.clear_data()
             hass.data[DOMAIN].pop(config_entry.entry_id)
 
-        hass.services.async_remove(DOMAIN, SERVICE_SET_PV_DATA)
-        hass.services.async_remove(DOMAIN, SERVICE_STOP_CHARGING)
+        hass.services.async_remove(DOMAIN, _SERVICE_SET_PV_DATA)
+        hass.services.async_remove(DOMAIN, _SERVICE_STOP_CHARGING)
 
     return unload_ok
 

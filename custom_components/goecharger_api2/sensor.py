@@ -1,5 +1,7 @@
 import logging
+import re
 from datetime import datetime, time
+from typing import Final
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -7,6 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity
 from .const import DOMAIN, SENSOR_SENSORS, ExtSensorEntityDescription
 
@@ -22,10 +25,18 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
         entities.append(entity)
     add_entity_cb(entities)
 
+CC_P1: Final = re.compile(r"(.)([A-Z][a-z]+)")
+CC_P2: Final = re.compile(r"([a-z0-9])([A-Z])")
 
 class GoeChargerSensor(GoeChargerBaseEntity, SensorEntity, RestoreEntity):
+
     def __init__(self, coordinator: GoeChargerDataUpdateCoordinator, description: ExtSensorEntityDescription):
         super().__init__(coordinator=coordinator, description=description)
+
+    @staticmethod
+    def _camel_to_snake(a_key: str):
+        a_key = re.sub(CC_P1, r'\1 \2', a_key)
+        return re.sub(CC_P2, r'\1 \2', a_key).lower()
 
     @property
     def state(self):
@@ -33,6 +44,18 @@ class GoeChargerSensor(GoeChargerBaseEntity, SensorEntity, RestoreEntity):
         try:
             if self.entity_description.idx is not None:
                 value = self.coordinator.data[self.data_key][self.entity_description.idx]
+            elif self.data_key == Tag.CLL.key:
+                # very special handling for the cll attribute - which is actually a json object that might should
+                # be parsed to separate sensors - but for now we just create a string list
+                value = ""
+                for a_key in self.coordinator.data[self.data_key]:
+                    a_map_key = f"{self.data_key.lower()}_{a_key.lower()}"
+                    if  a_map_key in self.coordinator.lang_map:
+                        value = f"{value}, {self.coordinator.lang_map[a_map_key]}: {self.coordinator.data[self.data_key][a_key]}"
+                    else:
+                        value = f"{value}, {self._camel_to_snake(a_key)}: {self.coordinator.data[self.data_key][a_key]}"
+
+                value = value[2:]
             else:
                 value = self.coordinator.data[self.data_key]
 

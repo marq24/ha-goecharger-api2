@@ -78,7 +78,7 @@ class GoeChargerApiV2Bridge:
             if self._REQUEST_IDS_DATA:
                 filter = filter + FILTER_IDS_ADDON
 
-            # check waht additional times do frequent upddate?!
+            # check what additional times do frequent upddate?!
             filter = filter+FILTER_TIMES_ADDON
 
             idle_states = await self._read_filtered_data(filters=filter, log_info="read_idle_states")

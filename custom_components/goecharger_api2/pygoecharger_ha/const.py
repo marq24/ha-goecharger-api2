@@ -9,13 +9,13 @@ FILTER_IDS_ADDON: Final = ",pakku,ppv,pgrid"
 # rbt: is the reboot time - and "looks like", that all other timestamps use the rbt "as" start point
 FILTER_TIMES_ADDON: Final = ",rbt,fsptws,inva,lbp,lccfc,lccfi,lcctc,lfspt,lmsc,lpsc,lcs"
 
-FILTER_ALL_STATES: Final = "acu,adi,amt,atp,awcp,car,cbl,ccu,ccw,cdi,cus,deltaa,deltap,err,eto,ffb,fhz,fsp,fsptws,inva,lbp,lccfc,lccfi,lcctc,lck,lfspt,lmsc,loa,lpsc,mcpea,mmp,modelStatus,nif,nrg,pakku,pgrid,pha,pnp,ppv,pvopt_averagePAkku,pvopt_averagePGrid,pvopt_averagePPv,pwm,rbc,rbt,rfb,rssi,rst,tlf,tls,tma,tpa,trx,wh,wsms,wst"
+FILTER_ALL_STATES: Final = "acu,adi,amt,atp,awcp,car,cbl,ccu,ccw,cdi,cll,cus,deltaa,deltap,err,eto,ffb,fhz,fsp,fsptws,inva,lbp,lccfc,lccfi,lcctc,lck,lfspt,lmsc,loa,lpsc,mcpea,mmp,modelStatus,nif,nrg,pakku,pgrid,pha,pnp,ppv,pvopt_averagePAkku,pvopt_averagePGrid,pvopt_averagePPv,pwm,rbc,rbt,rfb,rssi,rst,tlf,tls,tma,tpa,trx,wh,wsms,wst"
 FILTER_ALL_CONFIG: Final = "acp,acs,ama,amp,ara,ate,att,awc,awe,awp,bac,cch,cco,cfi,cid,clp,cmse,cwc,cwe,dwo,esk,fmt,fna,frc,frm,fst,fup,fzf,hsa,lbr,lmo,loe,lof,log,lop,lot,loty,lse,map,mca,mci,mcpd,mptwt,mpwst,nmo,pgt,po,psh,psm,psmd,rdbf,rdbs,rdef,rdes,rdre,rdpl,sch_satur,sch_sund,sch_week,sdp,sh,spl3,su,sua,sumd,tds,tof,upo,ust,zfo"
 
 FILTER_NOT_USED: Final = "mcc,mcca,mce,mcr,mcs,mcu,men,mlr,mlra,mqcn,mqg,mqss,msb,msp,msr,mtp,ocppai,ocppi,rdbfe,rdbse,rdefe,rdese,rdree,rdple"
 
 # found api-keys that are not documented (yet) ?!
-FILTER_UNKNOWN_COMON: Final = "aus,ccd,cle,clea,cll,cmmr,cmp,cms,csa,ct,ctrls,data,di1,die,dii,dll,hai,hla,isgo,la1,la3,lbl,lopr,lrc,lri,lrr,lwf,ocppao,ocppcm,ocppcs,ocppf,ocppla,ocpplo,ocppti,pdi,pgr,rde,smd,tcl,tsi,tzt,ufa,ufe,ufm,ufs,wbw,wda,wsl"
+FILTER_UNKNOWN_COMON: Final = "aus,ccd,cle,clea,cmmr,cmp,cms,csa,ct,ctrls,data,di1,die,dii,dll,hai,hla,isgo,la1,la3,lbl,lopr,lrc,lri,lrr,lwf,ocppao,ocppcm,ocppcs,ocppf,ocppla,ocpplo,ocppti,pdi,pgr,rde,smd,tcl,tsi,tzt,ufa,ufe,ufm,ufs,wbw,wda,wsl"
 FILTER_UNKNOWN_FW56_2_BETA: Final = "bar,gmtr,gsa,mhe,mht,pco,rmaf,rmav,rmif,rmiv,rsa,rsre,rsrr"
 FILTER_UNKNOWN_FW56_1: Final = "avgfhz,simo"
 
@@ -184,7 +184,14 @@ TRANSLATIONS: Final = {
             8: "verbinde",
             9: "trenne",
             10: "Kein Schild/No shield"
-        }
+        },
+
+        "cll_accesscontrol": "Autorisierung",
+        "cll_currentlimitmax": "Max. Ladestrom",
+        "cll_minchargingcurrent": "Min. Ladestrom",
+        "cll_requestedcurrent": "Angeforderter Ladestrom",
+        "cll_temperaturecurrentlimit": "Temperatur Stromlimit",
+        "cll_unsymetrycurrentlimit": "Asymmetrie Stromlimit"
     },
     "en": {
         "car": {
@@ -308,6 +315,13 @@ TRANSLATIONS: Final = {
             8: "Connecting",
             9: "Disconnecting",
             10: "No shield"
-        }
+        },
+
+        "cll_accesscontrol": "Access Control",
+        "cll_currentlimitmax": "Max charging Current",
+        "cll_minchargingcurrent": "Min. charging Current",
+        "cll_requestedcurrent": "Requested Current",
+        "cll_temperaturecurrentlimit": "Temperature Current-limit",
+        "cll_unsymetrycurrentlimit": "Unsymetry Current-limit"
     }
 }
