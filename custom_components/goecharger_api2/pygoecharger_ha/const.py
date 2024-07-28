@@ -187,11 +187,12 @@ TRANSLATIONS: Final = {
         },
 
         "cll_accesscontrol": "Autorisierung",
+        "cll_cablecurrentlimit": "Stromlimit Kabel",
         "cll_currentlimitmax": "Max. Ladestrom",
         "cll_minchargingcurrent": "Min. Ladestrom",
         "cll_requestedcurrent": "Angeforderter Ladestrom",
-        "cll_temperaturecurrentlimit": "Temperatur Stromlimit",
-        "cll_unsymetrycurrentlimit": "Asymmetrie Stromlimit"
+        "cll_temperaturecurrentlimit": "Stromlimit Temperatur",
+        "cll_unsymetrycurrentlimit": "Stromlimit Asymmetrie"
     },
     "en": {
         "car": {
@@ -318,10 +319,11 @@ TRANSLATIONS: Final = {
         },
 
         "cll_accesscontrol": "Access Control",
+        "cll_cablecurrentlimit": "Current-limit Cable",
         "cll_currentlimitmax": "Max charging Current",
         "cll_minchargingcurrent": "Min. charging Current",
         "cll_requestedcurrent": "Requested Current",
-        "cll_temperaturecurrentlimit": "Temperature Current-limit",
-        "cll_unsymetrycurrentlimit": "Unsymetry Current-limit"
+        "cll_temperaturecurrentlimit": "Current-limit Temperature",
+        "cll_unsymetrycurrentlimit": "Current-limit Unsymetry"
     }
 }
