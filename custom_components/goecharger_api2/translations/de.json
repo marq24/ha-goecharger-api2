@@ -59,6 +59,7 @@
       "name": "PV-Daten an Wallbox senden (um dem go-eCharger das Laden mit PV-Überschuss zu ermöglichen)",
       "description": "Dies ist ein einfacher Proxy-Dienst, damit wir die Automatisierung etwas einfacher konfigurieren können",
       "fields": {
+        "configid": {"name":  "Der zu verwendende go-eCharger", "description": "Die ConfigEntryID der Integration - Aktiviere dieses Feld nur, wenn Du mehr als einen go-eCharger in Deiner HA-Installation konfiguriert hast."},
         "pgrid":  {"name": "Leistung vom/aus dem Netz (in Watt)", "description": "Negative Werte bedeuten Export in das Stromnetz, positive Werte bedeuten Verbrauch aus dem Netz."},
         "ppv":    {"name": "Leistung der PV (in Watt)", "description": "Die aktuelle PV-Produktion."},
         "pakku":  {"name": "Leistung von/aud der Batterie (in Watt)", "description": "Negative Werte bedeuten, dass die Batterie geladen wird, positive Werte bedeuten, dass Strom aus der Batterie verbraucht wird."}
@@ -66,7 +67,10 @@
     },
     "stop_charging": {
       "name": "Laden stoppen (für 5 Minuten)",
-      "description": "Stellt sicher, dass der go-eCharger den Ladevorgang stoppt. Nach 5 Minuten wird in den Standardmodus zurückgekehrt"
+      "description": "Stellt sicher, dass der go-eCharger den Ladevorgang stoppt. Nach 5 Minuten wird in den Standardmodus zurückgekehrt",
+      "fields": {
+        "configid": {"name":  "Der zu verwendende go-eCharger", "description": "Die ConfigEntryID der Integration - Aktiviere dieses Feld nur, wenn Du mehr als einen go-eCharger in Deiner HA-Installation konfiguriert hast."}
+      }
     }
   },
   "entity": {

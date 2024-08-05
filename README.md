@@ -135,11 +135,15 @@ action:
 
 ### Having multiple go-eChargers in your HA installation?
 
-When you have more than one go-eCharger in your HA installation, you must use the service name `goecharger_api2.set_pv_data_012345` (replace the `012345` with the serial number of your go-eCharger) - so you need to add `_` and your serial number to the service name!
+When you have more than one go-eCharger in your HA installation, you must provide an additional attribute `configid` in order to let the service know which charger should be used! This configid is the ConfigEntryId of the Integration for your multiple chargers and can look like this `01J4GR20JPFQ7M888Q4C9YAR31`.
+
+The simples way to find the corresponding ConfigEntryId's of your multiple configured go-eCharger integrations is by using the GUI of the Service, activate the optional selection field, select the charger and then switch (from GUI) to YAML-Mode mode - this will show you the configid you must use.
 
 ```
 action:
-  - service: goecharger_api2.set_pv_data_012345
+  - service: goecharger_api2.set_pv_data
+    data:
+      configid: 01J4GR20JPFQ7M888Q4C9YAR31
     ...
 ```
 

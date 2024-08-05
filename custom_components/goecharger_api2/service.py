@@ -2,22 +2,31 @@ import asyncio
 import datetime
 import logging
 
-from homeassistant.core import ServiceCall
+from homeassistant.core import ServiceCall, HomeAssistant
+from homeassistant.config_entries import ConfigEntry
 
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
+_COORDINATOR_PER_CONFIGENTRYID_MAP = {}
 
 class GoeChargerApiV2Service():
-    def __init__(self, hass, config, coordinator):  # pylint: disable=unused-argument
+    def __init__(self, hass: HomeAssistant, config: ConfigEntry, coordinator):  # pylint: disable=unused-argument
         """Initialize the sensor."""
         self._hass = hass
         self._config = config
-        self._coordinator = coordinator
+        _COORDINATOR_PER_CONFIGENTRYID_MAP[config.entry_id] = coordinator
         self._stop_in_progress = False
 
     async def set_pv_data(self, call: ServiceCall):
+        config_id = call.data.get('configid', None)
+        if config_id is None:
+            coordinator = next(iter(_COORDINATOR_PER_CONFIGENTRYID_MAP.values()))
+        else:
+            coordinator = _COORDINATOR_PER_CONFIGENTRYID_MAP[config_id]
+        _LOGGER.debug(f"Provided config_id: {config_id} -> using {coordinator.name} serial: {coordinator._serial}")
+
         pgrid = call.data.get('pgrid', None)
         ppv = call.data.get('ppv', 0)
         pakku = call.data.get('pakku', 0)
@@ -34,7 +43,7 @@ class GoeChargerApiV2Service():
             }
             _LOGGER.debug(f"Service set PV data: {payload}")
             try:
-                resp = await self._coordinator.async_write_key(Tag.IDS.key, payload)
+                resp = await coordinator.async_write_key(Tag.IDS.key, payload)
                 if call.return_response:
                     return {
                         "success": "true",
@@ -54,14 +63,21 @@ class GoeChargerApiV2Service():
             self._stop_in_progress = True
             _LOGGER.debug(f"Force STOP_CHARGING")
 
+            config_id = call.data.get('configid', None)
+            if config_id is None:
+                coordinator = next(iter(_COORDINATOR_PER_CONFIGENTRYID_MAP.values()))
+            else:
+                coordinator = _COORDINATOR_PER_CONFIGENTRYID_MAP[config_id]
+            _LOGGER.debug(f"Provided config_id: {config_id} -> using {coordinator.name} serial: {coordinator._serial}")
+
             try:
-                resp = await self._coordinator.async_write_key(Tag.FRC.key, 1)
+                resp = await coordinator.async_write_key(Tag.FRC.key, 1)
                 if Tag.FRC.key in resp:
                     _LOGGER.debug(f"STOP_CHARGING: waiting for 5 minutes...")
                     await asyncio.sleep(300)
                     _LOGGER.debug(f"STOP_CHARGING: 5 minutes are over... disable charging LOCK again")
 
-                    resp = await self._coordinator.async_write_key(Tag.FRC.key, 0)
+                    resp = await coordinator.async_write_key(Tag.FRC.key, 0)
 
                     self._stop_in_progress = False
                     if call.return_response:

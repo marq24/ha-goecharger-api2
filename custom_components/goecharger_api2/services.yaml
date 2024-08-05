@@ -8,6 +8,13 @@ set_pv_data:
   # Different fields that your service accepts
   fields:
     # Key of the field
+    configid:
+      name: Specify the go-eCharger
+      description: The ConfigEntryID of this Integration - Only activate this field, if you have more then one go-eCharger configured in your home assistant installation.
+      required: false
+      selector:
+        config_entry:
+          integration: "goecharger_api2"
     pgrid:
       # Field name as shown in UI
       name: Power from/to Grid (in Watt)
@@ -51,3 +58,11 @@ set_pv_data:
 stop_charging:
   name: Force changing OFF (for 5 minutes)
   description: Will ensure that the go-eCharger will stop charging. After 5 minutes the charger will return to default mode
+  fields:
+    configid:
+      name: Specify the go-eCharger
+      description: The ConfigEntryID of this Integration - Only activate this field, if you have more then one go-eCharger configured in your home assistant installation.
+      required: false
+      selector:
+        config_entry:
+          integration: "goecharger_api2"

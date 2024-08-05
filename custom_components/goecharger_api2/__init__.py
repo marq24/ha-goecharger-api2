@@ -37,21 +37,10 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(seconds=10)
 CONFIG_SCHEMA = config_val.removed(DOMAIN, raise_if_present=False)
 
+
 async def async_setup(hass: HomeAssistant, config: Config):  # pylint: disable=unused-argument
     """Set up this integration using YAML is not supported."""
     return True
-
-
-def get_service_names(hass, config_entry):
-    all_integration_configs = hass.config_entries.async_entries(domain=DOMAIN,include_disabled=True, include_ignore=True)
-    if all_integration_configs is not None and len(all_integration_configs) > 1:
-        _SERVICE_SET_PV_DATA = f"{SERVICE_SET_PV_DATA}_{config_entry.data.get(CONF_ID)}"
-        _SERVICE_STOP_CHARGING = f"{SERVICE_STOP_CHARGING}_{config_entry.data.get(CONF_ID)}"
-    else:
-        _SERVICE_SET_PV_DATA = SERVICE_SET_PV_DATA
-        _SERVICE_STOP_CHARGING = SERVICE_STOP_CHARGING
-
-    return _SERVICE_SET_PV_DATA, _SERVICE_STOP_CHARGING
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
@@ -75,11 +64,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         config_entry.add_update_listener(async_reload_entry)
 
     # initialize our service...
-    service_names = get_service_names(hass, config_entry)
     service = GoeChargerApiV2Service(hass, config_entry, coordinator)
-    hass.services.async_register(DOMAIN, service_names[0], service.set_pv_data,
+    hass.services.async_register(DOMAIN, SERVICE_SET_PV_DATA, service.set_pv_data,
                                  supports_response=SupportsResponse.OPTIONAL)
-    hass.services.async_register(DOMAIN, service_names[1], service.stop_charging,
+    hass.services.async_register(DOMAIN, SERVICE_STOP_CHARGING, service.stop_charging,
                                  supports_response=SupportsResponse.OPTIONAL)
 
     if coordinator.check_for_max_of_16a:
@@ -89,19 +77,28 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     return True
 
 
+def check_unload_services(hass: HomeAssistant):
+    active_integration_configs = hass.config_entries.async_entries(domain=DOMAIN, include_disabled=False,
+                                                                   include_ignore=False)
+    if active_integration_configs is not None and len(active_integration_configs) > 0:
+        return False
+    else:
+        return True
+
+
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
     if unload_ok:
-        service_names = get_service_names(hass, config_entry)
-
         if DOMAIN in hass.data and config_entry.entry_id in hass.data[DOMAIN]:
             coordinator = hass.data[DOMAIN][config_entry.entry_id]
             coordinator.clear_data()
             hass.data[DOMAIN].pop(config_entry.entry_id)
 
-        hass.services.async_remove(DOMAIN, service_names[0])
-        hass.services.async_remove(DOMAIN, service_names[1])
+        # ONLY remove the SERVICES, if this is the LAST ACTIVE config_entry that will be unloaded!
+        if check_unload_services(hass):
+            hass.services.async_remove(DOMAIN, SERVICE_SET_PV_DATA)
+            hass.services.async_remove(DOMAIN, SERVICE_STOP_CHARGING)
 
     return unload_ok
 
@@ -176,17 +173,20 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         if CONF_MODE in config_entry.data and config_entry.data.get(CONF_MODE) == WAN:
             self.mode = WAN
             self.bridge = GoeChargerApiV2Bridge(host=None,
-                                                serial=config_entry.options.get(CONF_ID, config_entry.data.get(CONF_ID)),
-                                                token=config_entry.options.get(CONF_TOKEN, config_entry.data.get(CONF_TOKEN)),
+                                                serial=config_entry.options.get(CONF_ID,
+                                                                                config_entry.data.get(CONF_ID)),
+                                                token=config_entry.options.get(CONF_TOKEN,
+                                                                               config_entry.data.get(CONF_TOKEN)),
                                                 web_session=async_get_clientsession(hass),
                                                 lang=lang)
         else:
             self.mode = LAN
-            self.bridge = GoeChargerApiV2Bridge(host=config_entry.options.get(CONF_HOST, config_entry.data.get(CONF_HOST)),
-                                                serial=None,
-                                                token=None,
-                                                web_session=async_get_clientsession(hass),
-                                                lang=lang)
+            self.bridge = GoeChargerApiV2Bridge(
+                host=config_entry.options.get(CONF_HOST, config_entry.data.get(CONF_HOST)),
+                serial=None,
+                token=None,
+                web_session=async_get_clientsession(hass),
+                lang=lang)
 
         global SCAN_INTERVAL
         SCAN_INTERVAL = timedelta(seconds=config_entry.options.get(CONF_SCAN_INTERVAL,
