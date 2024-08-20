@@ -95,6 +95,8 @@ Once you have enabled the automation, you also need to:
 
 in the setting of your go-eCharger - this can be done via the integration!
 
+__Please note: in order to be able to enable 'Use PV surplus' in the go-eCharger Application you must also configure the "Flexibler Energietarif" [specify "Preisgrenze", "Country", "Anbieter", "Tarif" and so on] even though the "Flexibler Energietarif" switch is "OFF"__ Probably a bug in the go-echarger software?
+
 ### Example automation
 
 Please note that this example is for a for SENEC.Home System - if you are using 'my' SENEC.Home Integration you can use the code below 1:1 - in any other case: __You must adjust/replace the sensor identifiers!!!__. So if you are not a SENEC.Home user please replace the following:
@@ -137,7 +139,7 @@ action:
 
 When you have more than one go-eCharger in your HA installation, you must provide an additional attribute `configid` in order to let the service know which charger should be used! This configid is the ConfigEntryId of the Integration for your multiple chargers and can look like this `01J4GR20JPFQ7M888Q4C9YAR31`.
 
-The simples way to find the corresponding ConfigEntryId's of your multiple configured go-eCharger integrations is by using the GUI of the Service, activate the optional selection field, select the charger and then switch (from GUI) to YAML-Mode mode - this will show you the configid you must use.
+The simples way to find the corresponding ConfigEntryId's of your multiple configured go-eCharger integrations is by using the GUI of the Service, activate the optional selection field, select the charger and then switch (from GUI) to YAML-Mode mode - this will show you the configid you must use. [[See this image for details](https://raw.githubusercontent.com/marq24/ha-goecharger-api2/main/res/configid.png)]
 
 ```
 action:

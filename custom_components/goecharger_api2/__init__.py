@@ -9,7 +9,7 @@ from homeassistant.const import CONF_HOST, CONF_TYPE, CONF_ID, CONF_SCAN_INTERVA
 from homeassistant.core import Config, Event, SupportsResponse
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as config_val, entity_registry as entity_reg
+from homeassistant.helpers import config_validation as config_val, entity_registry as entity_reg, device_registry as device_reg
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
@@ -72,6 +72,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     if coordinator.check_for_max_of_16a:
         asyncio.create_task(coordinator.check_for_16a_limit(hass, config_entry.entry_id))
+
+    asyncio.create_task(coordinator.cleanup_device_registry(hass))
 
     # ok we are done...
     return True
@@ -165,6 +167,24 @@ async def check_and_write_to_16a(hass: HomeAssistant, config_entry_id: str, brid
                 except Exception as e:
                     _LOGGER.error(f"Error while forcing 16A settings:", e)
 
+@staticmethod
+async def check_device_registry(hass: HomeAssistant):
+    _LOGGER.info(f"check device registry...")
+    if hass is not None:
+        a_device_reg = device_reg.async_get(hass)
+        if a_device_reg is not None:
+            key_list = []
+            for a_device_entry in list(a_device_reg.devices.values()):
+                if hasattr(a_device_entry, "identifiers"):
+                    ident_value = a_device_entry.identifiers
+                    if f"{ident_value}".__contains__(DOMAIN) and len(next(iter(ident_value))) != 4:
+                        _LOGGER.debug(f"found a OLD {DOMAIN} DeviceEntry: {a_device_entry}")
+                        key_list.append(a_device_entry.id)
+
+            if len(key_list) > 0:
+                _LOGGER.info(f"NEED TO DELETE old {DOMAIN} DeviceEntries: {key_list}")
+                for a_device_entry_id in key_list:
+                    a_device_reg.async_remove_device(device_id=a_device_entry_id)
 
 class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, config_entry):
@@ -172,13 +192,12 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         self.name = config_entry.title
         if CONF_MODE in config_entry.data and config_entry.data.get(CONF_MODE) == WAN:
             self.mode = WAN
-            self.bridge = GoeChargerApiV2Bridge(host=None,
-                                                serial=config_entry.options.get(CONF_ID,
-                                                                                config_entry.data.get(CONF_ID)),
-                                                token=config_entry.options.get(CONF_TOKEN,
-                                                                               config_entry.data.get(CONF_TOKEN)),
-                                                web_session=async_get_clientsession(hass),
-                                                lang=lang)
+            self.bridge = GoeChargerApiV2Bridge(
+                host=None,
+                serial=config_entry.options.get(CONF_ID, config_entry.data.get(CONF_ID)),
+                token=config_entry.options.get(CONF_TOKEN, config_entry.data.get(CONF_TOKEN)),
+                web_session=async_get_clientsession(hass),
+                lang=lang)
         else:
             self.mode = LAN
             self.bridge = GoeChargerApiV2Bridge(
@@ -266,6 +285,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             self._device_info_dict = {
                 "identifiers": {(
                     DOMAIN,
+                    self._serial,
                     self._config_entry.data.get(CONF_HOST),
                     self._config_entry.title)},
                 "manufacturer": MANUFACTURER,
@@ -279,6 +299,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             self._device_info_dict = {
                 "identifiers": {(
                     DOMAIN,
+                    self._serial,
                     self._config_entry.data.get(CONF_TOKEN),
                     self._config_entry.title)},
                 "manufacturer": MANUFACTURER,
@@ -312,9 +333,14 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
     async def check_for_16a_limit(self, hass, entry_id):
         _LOGGER.debug(f"check relevant entities for 16A limit... in 15sec")
         await asyncio.sleep(15)
-
         _LOGGER.debug(f"check relevant entities for 16A limit NOW!")
         await check_and_write_to_16a(hass=hass, config_entry_id=entry_id, bridge=self.bridge)
+
+    async def cleanup_device_registry(self, hass: HomeAssistant):
+        _LOGGER.debug(f"check device registry for orphan {DOMAIN} entries... in 20sec")
+        await asyncio.sleep(20)
+        _LOGGER.debug(f"check device registry for orphan {DOMAIN} entries NOW!")
+        await check_device_registry(hass=hass)
 
 
 class GoeChargerBaseEntity(Entity):
