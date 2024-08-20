@@ -283,6 +283,8 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
 
         if self.mode == LAN:
             self._device_info_dict = {
+                # be carefully when adjusting the 'identifiers' -> since this will create probably new DeviceEntries
+                # and there exists also code which CLEAN all Devices that does not have 4 (four) identifier values!!
                 "identifiers": {(
                     DOMAIN,
                     self._serial,
@@ -297,6 +299,8 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             }
         else:
             self._device_info_dict = {
+                # be carefully when adjusting the 'identifiers' -> since this will create probably new DeviceEntries
+                # and there exists also code which CLEAN all Devices that does not have 4 (four) identifier values!!
                 "identifiers": {(
                     DOMAIN,
                     self._serial,
