@@ -3,13 +3,12 @@ import re
 from datetime import datetime, time
 from typing import Final
 
-from homeassistant.components.sensor import SensorEntity
+from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
+from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-
-from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity
 from .const import DOMAIN, SENSOR_SENSORS, ExtSensorEntityDescription
 
@@ -40,7 +39,17 @@ class GoeChargerSensor(GoeChargerBaseEntity, SensorEntity, RestoreEntity):
 
     @property
     def state(self):
-        """Return the state of the sensor."""
+        # for SensorDeviceClass.DATE we will use out OWN 'state' render impl
+        if self.entity_description.device_class == SensorDeviceClass.DATE:
+            value = self.native_value
+            if value is None:
+                value = "unknown"
+            return  value
+        else:
+            return SensorEntity.state.fget(self)
+
+    @property
+    def native_value(self):
         try:
             if self.entity_description.idx is not None:
                 value = self.coordinator.data[self.data_key][self.entity_description.idx]
@@ -59,49 +68,50 @@ class GoeChargerSensor(GoeChargerBaseEntity, SensorEntity, RestoreEntity):
             else:
                 value = self.coordinator.data[self.data_key]
 
-            if value is None or value == "":
-                value = "unknown"
-            else:
-                if self.entity_description.lookup is not None:
-                    if self.data_key.lower() in self.coordinator.lang_map:
-                        value = self.coordinator.lang_map[self.data_key.lower()][value]
+                if value is None or len(str(value)) == 0:
+                    value = None
+                else:
+                    if self.entity_description.lookup is not None:
+                        if self.data_key.lower() in self.coordinator.lang_map:
+                            value = self.coordinator.lang_map[self.data_key.lower()][value]
+                        else:
+                            _LOGGER.warning(f"{self.data_key} not found in translations")
                     else:
-                        _LOGGER.warning(f"{self.data_key} not found in translations")
+                        # self.entity_description.lookup values are always 'strings' - so there we should not
+                        # have an additional features like 'factor' or  'differential_base_key'
+                        is_int_value = isinstance(value, int)
 
-                is_int_value = isinstance(value, int)
+                        # the timestamp values of the go-eCharger are based on the reboot time stamp...
+                        # so we have to subtract these values!
+                        if is_int_value and self.entity_description.differential_base_key is not None:
+                            differential_base = self.coordinator.data[self.entity_description.differential_base_key]
+                            if differential_base is not None and int(differential_base) > 0:
+                                value = differential_base - int(value)
 
-                # the timestamp values of the go-eCharger are based on the reboot time stamp...
-                # so we have to subtract these values!
-                if is_int_value and self.entity_description.differential_base_key is not None:
-                    differential_base = self.coordinator.data[self.entity_description.differential_base_key]
-                    if differential_base is not None and int(differential_base) > 0:
-                        value = differential_base - int(value)
+                        if self.entity_description.factor is not None and self.entity_description.factor > 0:
+                            if is_int_value:
+                                value = int(value/self.entity_description.factor)
+                            else:
+                                value = value/self.entity_description.factor
 
-                if self.entity_description.factor is not None and self.entity_description.factor > 0:
-                    if is_int_value:
-                        value = int(value/self.entity_description.factor)
-                    else:
-                        value = value/self.entity_description.factor
-
-                if isinstance(value, datetime):
-                    return value.isoformat(sep=' ', timespec="minutes")
-                elif isinstance(value, time):
-                    return value.isoformat(timespec="minutes")
-                elif self.entity_description.suggested_display_precision is not None:
-                    value = round(float(value), self.entity_description.suggested_display_precision)
+                        if isinstance(value, datetime):
+                            return value.isoformat(sep=' ', timespec="minutes")
+                        elif isinstance(value, time):
+                            return value.isoformat(timespec="minutes")
+                        elif isinstance(value, bool):
+                            if value is True:
+                                value = "on"
+                            elif value is False:
+                                value = "off"
 
         except IndexError:
             if self.entity_description.lookup is not None:
                 _LOGGER.debug(f"lc-key: {self.data_key.lower()} value: {value} -> {self.coordinator.lang_map[self.data_key.lower()]}")
             else:
                 _LOGGER.debug(f"lc-key: {self.data_key.lower()} caused IndexError")
-            value = "unknown"
-        except KeyError:
-            value = "unknown"
-        except TypeError:
-            return "unknown"
-        if value is True:
-            value = "on"
-        elif value is False:
-            value = "off"
+            value = None
+        except (KeyError, TypeError):
+            value = None
+
+        # final return statement...
         return value

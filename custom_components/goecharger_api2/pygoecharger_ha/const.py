@@ -16,6 +16,8 @@ FILTER_NOT_USED: Final = "mcc,mcca,mce,mcr,mcs,mcu,men,mlr,mlra,mqcn,mqg,mqss,ms
 
 # found api-keys that are not documented (yet) ?!
 FILTER_UNKNOWN_COMON: Final = "aus,ccd,cle,clea,cmmr,cmp,cms,csa,ct,ctrls,data,di1,die,dii,dll,hai,hla,isgo,la1,la3,lbl,lopr,lrc,lri,lrr,lwf,ocppao,ocppcm,ocppcs,ocppf,ocppla,ocpplo,ocppti,pdi,pgr,rde,smd,tcl,tsi,tzt,ufa,ufe,ufm,ufs,wbw,wda,wsl"
+
+FILTER_UNKNOWN_FW59_X_BETA: Final = "bar,dsrc,evt,gmtr,gsa,lto,mhe,mht,ocppdp,ocppmp,ocpptp,orsch,pco,rdbfe,rdbse,rdefe,rdese,rdple,rdree,rmaf,rmav,rmif,rmiv,rsa,rsre,rsrr,tab"
 FILTER_UNKNOWN_FW56_2_BETA: Final = "bar,gmtr,gsa,mhe,mht,pco,rmaf,rmav,rmif,rmiv,rsa,rsre,rsrr"
 FILTER_UNKNOWN_FW56_1: Final = "avgfhz,simo"
 
