@@ -89,10 +89,10 @@ class GoeChargerSensor(GoeChargerBaseEntity, SensorEntity, RestoreEntity):
                                 value = differential_base - int(value)
 
                         if self.entity_description.factor is not None and self.entity_description.factor > 0:
-                            if is_int_value:
-                                value = int(value/self.entity_description.factor)
+                            if(self.entity_description.handle_as_float is not None and self.entity_description.handle_as_float):
+                                value = float(float(value) / self.entity_description.factor)
                             else:
-                                value = value/self.entity_description.factor
+                                value = int(int(value) / self.entity_description.factor)
 
                         if isinstance(value, datetime):
                             return value.isoformat(sep=' ', timespec="minutes")

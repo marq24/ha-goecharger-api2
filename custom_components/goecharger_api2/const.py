@@ -61,6 +61,7 @@ class ExtSelectEntityDescription(SelectEntityDescription):
 @dataclass
 class ExtSensorEntityDescription(SensorEntityDescription):
     idx: int | str | None = None
+    handle_as_float: bool | None = None
     factor: int | None = None
     lookup: bool | None = None
     differential_base_key: str | None = None
@@ -218,8 +219,8 @@ NUMBER_SENSORS = [
     # ate
     ExtNumberEntityDescription(
         key=Tag.ATE.key,
-        factor=1000,
         handle_as_float=True,
+        factor=1000,
         native_max_value=100,
         native_min_value=1,
         native_step=0.01,
@@ -271,8 +272,8 @@ NUMBER_SENSORS = [
     # dwo
     ExtNumberEntityDescription(
         key=Tag.DWO.key,
-        factor=1000,
         handle_as_float=True,
+        factor=1000,
         write_zero_as_null=True,
         native_max_value=1000,
         native_min_value=0,
@@ -1487,6 +1488,7 @@ SENSOR_SENSORS = [
     # eto
     ExtSensorEntityDescription(
         key=Tag.ETO.key,
+        handle_as_float=True,
         factor=1000,
         suggested_display_precision=2,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -1666,6 +1668,7 @@ SENSOR_SENSORS = [
     # wh
     ExtSensorEntityDescription(
         key=Tag.WH.key,
+        handle_as_float=True,
         factor=1000,
         suggested_display_precision=2,
         entity_category=EntityCategory.DIAGNOSTIC,
