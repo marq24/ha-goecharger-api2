@@ -36,16 +36,19 @@ Please be aware, that we are developing this integration to best of our knowledg
 
 ## Installation
 
-### via HACS
+### Step I: Install the integration
+
+#### Option 1: via HACS
 
 1. Add a custom integration repository to HACS: [https://github.com/marq24/ha-goecharger-api2](https://github.com/marq24/ha-goecharger-api2)
-1. Install the custom integration
-1. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "go-eCharger APIv2 Connect"
-1. Setup the go-eCharger custom integration as described below
+2. Once the repository is added, use the search bar and type `go-eCharger APIv2 Connect`
+3. Use the 3-dots at the right of the list entry (not at the top bar!) to download/install the custom integration - the latest release version is automatically selected. Only select a different version if you have specific reasons.
+4. After you presses download and the process has completed, you must __Restart Home Assistant__ to install all dependencies 
+5. Setup the go-eCharger custom integration as described below (see _Step II: Adding or enabling the integration_)
 
   <!--1. In HACS Store, search for [***marq24/ha-goecharger-api2***]-->
 
-### manual steps
+#### Option 2: manual steps
 
 1. Using the tool of choice open the directory (folder) for your HA configuration (where you find `configuration.yaml`).
 2. If you do not have a `custom_components` directory (folder) there, you need to create it.
@@ -53,17 +56,19 @@ Please be aware, that we are developing this integration to best of our knowledg
 4. Download _all_ the files from the `custom_components/goecharger_api2/` directory (folder) in this repository.
 5. Place the files you downloaded in the new directory (folder) you created.
 6. Restart Home Assistant
-7. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "go-eCharger APIv2 Connect"
+7. Setup the go-eCharger custom integration as described below (see _Step II: Adding or enabling the integration_)
 
-## Adding or enabling the integration
+### Step II: Adding or enabling the integration
 
-### My Home Assistant (2021.3+)
+__You must have installed the integration (manually or via HACS before)!__
 
-Just click the following Button to start the configuration automatically:
+#### Option 1: My Home Assistant (2021.3+)
+
+Just click the following Button to start the configuration automatically (for the rest see _Option 2: Manually steps by step_):
 
 [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=goecharger_api2)
 
-### Manual steps
+#### Option 2: Manually steps by step
 
 Use the following steps for a manual configuration by adding the custom integration using the web interface and follow instruction on screen:
 
