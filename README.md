@@ -157,6 +157,25 @@ action:
 _Please note, that this is __only__ required, if you have multiple go-eChargers configured via this integration your HA installation._
 
 
+### Finally: Verify if the wallbox receive your data from the automation
+
+After you have your automation up and running you might want to verify that everything is correctly connected together.
+
+#### Via Integration sensors
+Search for the Integration Sensors `_pgrid`, `_ppv` & `_pakku` and check the values - or check the `pvopt_average` sensors for the current calculates average values.  
+
+#### Via direct accessing the API (via browser)
+Simply replace in the URLs the `[wallbox-ip]` with the ip-address or hostname of your go-eCharger.
+
+`http://[wallbox-ip]/api/status?filter=pakku,ppv,pgrid`
+
+Please note, that the wallbox drop the stored data after 5 seconds - so if the automation is not running/sending data to the wallbox these values become 'null'.  
+
+So you might like to check also the average values (to verify if the wallbox received in the recent past some data):
+
+`http://[wallbox-ip]/api/status?filter=pvopt_averagePAkku,pvopt_averagePGrid,pvopt_averagePPv`
+
+
 ### _Optional_ - Force stop charging when PV power is too low
 
 Unfortunately, it might happen [reported by a user] that the go-eCharger __does not finish charging in ECO mode__ using the PV power (in a timely manner). If you run into the same situation, then you can ensure that charging stops when there is no longer enough PV power, by adding the following automation:
