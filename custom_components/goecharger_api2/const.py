@@ -61,7 +61,6 @@ class ExtSelectEntityDescription(SelectEntityDescription):
 @dataclass
 class ExtSensorEntityDescription(SensorEntityDescription):
     idx: int | str | None = None
-    handle_as_float: bool | None = None
     factor: int | None = None
     lookup: bool | None = None
     differential_base_key: str | None = None
@@ -219,13 +218,12 @@ NUMBER_SENSORS = [
     # ate
     ExtNumberEntityDescription(
         key=Tag.ATE.key,
-        handle_as_float=True,
-        factor=1000,
-        native_max_value=100,
-        native_min_value=1,
-        native_step=0.01,
+        native_max_value=100000,
+        native_min_value=0,
+        native_step=10,
         entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=NumberDeviceClass.ENERGY,
         icon="mdi:lightning-bolt",
         entity_registry_enabled_default=True
@@ -263,6 +261,7 @@ NUMBER_SENSORS = [
         native_max_value=50,
         native_min_value=0.01,
         native_step=0.01,
+        mode=NumberMode.BOX,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=NumberDeviceClass.ENERGY,
@@ -272,14 +271,13 @@ NUMBER_SENSORS = [
     # dwo
     ExtNumberEntityDescription(
         key=Tag.DWO.key,
-        handle_as_float=True,
-        factor=1000,
         write_zero_as_null=True,
-        native_max_value=1000,
+        native_max_value=1000000,
         native_min_value=0,
-        native_step=0.01,
+        native_step=10,
         entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=NumberDeviceClass.ENERGY,
         icon="mdi:lightning-bolt",
         entity_registry_enabled_default=True
@@ -970,7 +968,7 @@ SENSOR_SENSORS = [
         idx="ssid",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         icon="mdi:wifi",
         entity_registry_enabled_default=False
@@ -1488,11 +1486,10 @@ SENSOR_SENSORS = [
     # eto
     ExtSensorEntityDescription(
         key=Tag.ETO.key,
-        handle_as_float=True,
-        factor=1000,
-        suggested_display_precision=2,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=2,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
         icon="mdi:lightning-bolt",
@@ -1548,7 +1545,7 @@ SENSOR_SENSORS = [
         key=Tag.NIF.key,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         icon="mdi:navigation-variant-outline",
         entity_registry_enabled_default=False
@@ -1668,11 +1665,10 @@ SENSOR_SENSORS = [
     # wh
     ExtSensorEntityDescription(
         key=Tag.WH.key,
-        handle_as_float=True,
-        factor=1000,
-        suggested_display_precision=2,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=2,
         state_class=SensorStateClass.TOTAL,
         icon="mdi:lightning-bolt",
         device_class=SensorDeviceClass.ENERGY,

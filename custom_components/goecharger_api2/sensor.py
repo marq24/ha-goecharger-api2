@@ -83,15 +83,13 @@ class GoeChargerSensor(GoeChargerBaseEntity, SensorEntity, RestoreEntity):
 
                         # the timestamp values of the go-eCharger are based on the reboot time stamp...
                         # so we have to subtract these values!
-                        if is_int_value and self.entity_description.differential_base_key is not None:
-                            differential_base = self.coordinator.data[self.entity_description.differential_base_key]
-                            if differential_base is not None and int(differential_base) > 0:
-                                value = differential_base - int(value)
+                        if is_int_value:
+                            if self.entity_description.differential_base_key is not None:
+                                differential_base = self.coordinator.data[self.entity_description.differential_base_key]
+                                if differential_base is not None and int(differential_base) > 0:
+                                    value = differential_base - int(value)
 
-                        if self.entity_description.factor is not None and self.entity_description.factor > 0:
-                            if(self.entity_description.handle_as_float is not None and self.entity_description.handle_as_float):
-                                value = float(float(value) / self.entity_description.factor)
-                            else:
+                            if self.entity_description.factor is not None and self.entity_description.factor > 0:
                                 value = int(int(value) / self.entity_description.factor)
 
                         if isinstance(value, datetime):
