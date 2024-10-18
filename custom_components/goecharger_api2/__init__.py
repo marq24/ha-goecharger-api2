@@ -3,21 +3,21 @@ import logging
 from datetime import timedelta
 from typing import Any, Final
 
+from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bridge, TRANSLATIONS, INTG_TYPE
+from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from homeassistant.components.number import NumberDeviceClass
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_TYPE, CONF_ID, CONF_SCAN_INTERVAL, CONF_MODE, CONF_TOKEN
 from homeassistant.core import Config, Event, SupportsResponse
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as config_val, entity_registry as entity_reg, device_registry as device_reg
+from homeassistant.helpers import config_validation as config_val, entity_registry as entity_reg, \
+    device_registry as device_reg
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.update_coordinator import UpdateFailed
-
-from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bridge, TRANSLATIONS
-from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from .const import (
     LAN,
     WAN,
@@ -28,7 +28,8 @@ from .const import (
     STARTUP_MESSAGE,
     SERVICE_SET_PV_DATA,
     SERVICE_STOP_CHARGING,
-    CONF_11KWLIMIT
+    CONF_11KWLIMIT,
+    CONF_INTEGRATION_TYPE
 )
 from .service import GoeChargerApiV2Service
 
@@ -64,11 +65,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         config_entry.add_update_listener(async_reload_entry)
 
     # initialize our service...
-    service = GoeChargerApiV2Service(hass, config_entry, coordinator)
-    hass.services.async_register(DOMAIN, SERVICE_SET_PV_DATA, service.set_pv_data,
-                                 supports_response=SupportsResponse.OPTIONAL)
-    hass.services.async_register(DOMAIN, SERVICE_STOP_CHARGING, service.stop_charging,
-                                 supports_response=SupportsResponse.OPTIONAL)
+    if coordinator.intg_type == INTG_TYPE.CHARGER.value:
+        service = GoeChargerApiV2Service(hass, config_entry, coordinator)
+        hass.services.async_register(DOMAIN, SERVICE_SET_PV_DATA, service.set_pv_data,
+                                     supports_response=SupportsResponse.OPTIONAL)
+        hass.services.async_register(DOMAIN, SERVICE_STOP_CHARGING, service.stop_charging,
+                                     supports_response=SupportsResponse.OPTIONAL)
 
     if coordinator.check_for_max_of_16a:
         asyncio.create_task(coordinator.check_for_16a_limit(hass, config_entry.entry_id))
@@ -186,13 +188,21 @@ async def check_device_registry(hass: HomeAssistant):
                 for a_device_entry_id in key_list:
                     a_device_reg.async_remove_device(device_id=a_device_entry_id)
 
+
 class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, config_entry):
         lang = hass.config.language.lower()
         self.name = config_entry.title
+
+        # are we a charger or a controller ?! (by default we are obvious a go-eCharger)
+        self.intg_type = INTG_TYPE.CHARGER.value
+        if CONF_INTEGRATION_TYPE in config_entry.data and config_entry.data.get(CONF_INTEGRATION_TYPE) == INTG_TYPE.CONTROLLER.value:
+            self.intg_type = INTG_TYPE.CONTROLLER.value
+
         if CONF_MODE in config_entry.data and config_entry.data.get(CONF_MODE) == WAN:
             self.mode = WAN
             self.bridge = GoeChargerApiV2Bridge(
+                intg_type=self.intg_type,
                 host=None,
                 serial=config_entry.options.get(CONF_ID, config_entry.data.get(CONF_ID)),
                 token=config_entry.options.get(CONF_TOKEN, config_entry.data.get(CONF_TOKEN)),
@@ -201,6 +211,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         else:
             self.mode = LAN
             self.bridge = GoeChargerApiV2Bridge(
+                intg_type=self.intg_type,
                 host=config_entry.options.get(CONF_HOST, config_entry.data.get(CONF_HOST)),
                 serial=None,
                 token=None,
@@ -267,15 +278,18 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         if entity is not None:
             entity.async_schedule_update_ha_state(force_refresh=True)
 
-        # since we do not force an update when setting PV surplus data, we 'patch' internally our values
-        if key == Tag.IDS.key:
-            self.data = self.bridge._versions | self.bridge._states | self.bridge._config
-            self.async_update_listeners()
+        if self.intg_type == INTG_TYPE.CHARGER.value:
+            # since we do not force an update when setting PV surplus data, we 'patch' internally our values
+            if key == Tag.IDS.key:
+                self.data = self.bridge._versions | self.bridge._states | self.bridge._config
+                self.async_update_listeners()
 
         return result
 
     async def read_versions(self):
         await self.bridge.read_versions()
+
+        # charger and controller have both FWV tag...
         if Tag.FWV.key in self.bridge._versions:
             sw_version = self.bridge._versions[Tag.FWV.key]
         else:
@@ -314,25 +328,33 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                 # hw_version
             }
 
-        # fetching the available cards that are enabled
-        self.available_cards_idx = []
-        idx = 1
-        for a_card in self.bridge._versions[Tag.CARDS.key]:
-            if a_card["cardId"]:
-                self.available_cards_idx.append(str(idx))
-            idx = idx + 1
+        # additional charger stuff...
+        if self.intg_type == INTG_TYPE.CHARGER.value:
+            # fetching the available cards that are enabled
+            self.available_cards_idx = []
+            idx = 1
+            for a_card in self.bridge._versions[Tag.CARDS.key]:
+                if a_card["cardId"]:
+                    self.available_cards_idx.append(str(idx))
+                idx = idx + 1
 
-        _LOGGER.info(f"active cards {self.available_cards_idx}")
+            _LOGGER.info(f"active cards {self.available_cards_idx}")
 
-        # check for the 16A limiter...
-        self.check_for_max_of_16a = self._config_entry.options.get(CONF_11KWLIMIT, False)
+            # check for the 16A limiter...
+            self.check_for_max_of_16a = self._config_entry.options.get(CONF_11KWLIMIT, False)
 
-        self.limit_to16a = (self.check_for_max_of_16a
-                            or self.bridge._versions[Tag.VAR.key] == 11
-                            or self.data[Tag.ADI.key])
+            self.limit_to16a = (self.check_for_max_of_16a
+                                or self.bridge._versions[Tag.VAR.key] == 11
+                                or self.data[Tag.ADI.key])
 
-        if (self.limit_to16a):
-            _LOGGER.info(f"LIMIT to 16A is active")
+            if (self.limit_to16a):
+                _LOGGER.info(f"LIMIT to 16A is active")
+        else:
+            # no additional controller stuff... but we need to init some variables
+            self.available_cards_idx = []
+            self.check_for_max_of_16a = False
+            self.limit_to16a = False
+            pass
 
     async def check_for_16a_limit(self, hass, entry_id):
         _LOGGER.debug(f"check relevant entities for 16A limit... in 15sec")
@@ -355,7 +377,20 @@ class GoeChargerBaseEntity(Entity):
         # make sure that we keep the CASE of the key!
         self.data_key = description.key
 
-        if hasattr(description, "idx") and description.idx is not None:
+        # tuple_idx must have description.translation_key !
+        if hasattr(description, "tuple_idx") and description.tuple_idx is not None:
+            if description.translation_key is not None:
+                self._attr_translation_key = description.translation_key.lower()
+            else:
+                if len(description.tuple_idx) > 1:
+                    subKey1 = description.tuple_idx[0]
+                    subKey2 = description.tuple_idx[1]
+                    self._attr_translation_key = f"{self.data_key}_{subKey1}_{subKey2}".lower()
+                elif len(description.tuple_idx) > 0:
+                    subKey1 = description.tuple_idx[0]
+                    self._attr_translation_key = f"{self.data_key}_{subKey1}".lower()
+
+        elif hasattr(description, "idx") and description.idx is not None:
             self._attr_translation_key = f"{self.data_key.lower()}_{description.idx}"
         elif hasattr(description, "lookup") and description.lookup is not None:
             self._attr_translation_key = f"{self.data_key.lower()}_value"

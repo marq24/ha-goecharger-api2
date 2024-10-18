@@ -7,6 +7,7 @@ from aiohttp import ClientResponseError
 
 from custom_components.goecharger_api2.pygoecharger_ha.const import (
     TRANSLATIONS,
+    INTG_TYPE,
     CAR_VALUES,
     FILTER_SYSTEMS,
     FILTER_VERSIONS,
@@ -15,6 +16,13 @@ from custom_components.goecharger_api2.pygoecharger_ha.const import (
     FILTER_TIMES_ADDON,
     FILTER_ALL_STATES,
     FILTER_ALL_CONFIG,
+
+    FILTER_CONTROLER_SYSTEMS,
+    FILTER_CONTROLER_VERSIONS,
+    FILTER_CONTROLER_MIN_STATES,
+    FILTER_CONTROLER_TIMES_ADDON,
+    FILTER_CONTROLER_ALL_STATES,
+    FILTER_CONTROLER_ALL_CONFIG,
 )
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag, IS_TRIGGER
 
@@ -22,7 +30,8 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
 class GoeChargerApiV2Bridge:
-    def __init__(self, host: str, serial:str, token:str, web_session, lang: str = "en") -> None:
+
+    def __init__(self, intg_type:str, host: str, serial:str, token:str, web_session, lang: str = "en") -> None:
         if host is not None:
             self.host_url = f"http://{host}"
             self.token = None
@@ -30,6 +39,29 @@ class GoeChargerApiV2Bridge:
             # the Cloud-API 2 endpoint!
             self.host_url = f"https://{serial}.api.v3.go-e.io"
             self.token = f"Bearer {token}"
+
+        if intg_type is not None and intg_type == INTG_TYPE.CONTROLLER.value:
+            self.isController = True
+            self.isCharger = False
+            self._logkey = "go-eController"
+            self._FILTER_SYSTEMS = FILTER_CONTROLER_SYSTEMS
+            self._FILTER_VERSIONS = FILTER_CONTROLER_VERSIONS
+            self._FILTER_MIN_STATES = FILTER_CONTROLER_MIN_STATES
+            self._FILTER_IDS_ADDON = ""
+            self._FILTER_TIMES_ADDON = FILTER_CONTROLER_TIMES_ADDON
+            self._FILTER_ALL_STATES = FILTER_CONTROLER_ALL_STATES
+            self._FILTER_ALL_CONFIG = FILTER_CONTROLER_ALL_CONFIG
+        else:
+            self.isCharger = True
+            self.isController = False
+            self._logkey = "go-eCharger"
+            self._FILTER_SYSTEMS = FILTER_SYSTEMS
+            self._FILTER_VERSIONS = FILTER_VERSIONS
+            self._FILTER_MIN_STATES = FILTER_MIN_STATES
+            self._FILTER_IDS_ADDON = FILTER_IDS_ADDON
+            self._FILTER_TIMES_ADDON = FILTER_TIMES_ADDON
+            self._FILTER_ALL_STATES = FILTER_ALL_STATES
+            self._FILTER_ALL_CONFIG = FILTER_ALL_CONFIG
 
         self.web_session = web_session
         self.lang_map = None
@@ -57,10 +89,10 @@ class GoeChargerApiV2Bridge:
         self._config = {}
 
     async def read_system(self) -> dict:
-        return await self._read_filtered_data(filters=FILTER_SYSTEMS, log_info="read_system")
+        return await self._read_filtered_data(filters=self._FILTER_SYSTEMS, log_info="read_system")
 
     async def read_versions(self):
-        self._versions = await self._read_filtered_data(filters=FILTER_VERSIONS, log_info="read_versions")
+        self._versions = await self._read_filtered_data(filters=self._FILTER_VERSIONS, log_info="read_versions")
 
     async def read_all(self) -> dict:
         await self.read_all_states();
@@ -72,14 +104,23 @@ class GoeChargerApiV2Bridge:
         return self._versions | self._states | self._config
 
     async def read_all_states(self):
-        # ok we are in idle state - so we do not need all states... [but 5 minutes (=300sec) do a full update]
-        if "car" in self._states and CAR_VALUES.IDLE.value == self._states["car"] and self._LAST_FULL_STATE_UPDATE_TS + 300 > time():
-            filter = FILTER_MIN_STATES
-            if self._REQUEST_IDS_DATA:
-                filter = filter + FILTER_IDS_ADDON
+        do_minimal_status_update: bool = False
+        if self.isCharger:
+            # ok we are in idle state - so we do not need all states... [but 5 minutes (=300sec) do a full update]
+            if Tag.CAR.key in self._states and self._states[Tag.CAR.key] == CAR_VALUES.IDLE.value:
+                if self._LAST_FULL_STATE_UPDATE_TS + 300 > time():
+                    do_minimal_status_update = True
+        elif self.isController:
+            if self._LAST_FULL_STATE_UPDATE_TS + 300 > time():
+                do_minimal_status_update = True
 
-            # check what additional times do frequent upddate?!
-            filter = filter+FILTER_TIMES_ADDON
+        if do_minimal_status_update:
+            filter = self._FILTER_MIN_STATES
+            if self.isCharger and self._REQUEST_IDS_DATA:
+                filter = filter + self._FILTER_IDS_ADDON
+
+            # check what additional times do frequent update?!
+            filter = filter+self._FILTER_TIMES_ADDON
 
             idle_states = await self._read_filtered_data(filters=filter, log_info="read_idle_states")
             if len(idle_states) > 0:
@@ -88,16 +129,17 @@ class GoeChargerApiV2Bridge:
 
                 # reset the '_REQUEST_IDS_DATA' flag (will be enabled again, if we post new PV data to the
                 # wallbox)
-                if self._REQUEST_IDS_DATA:
+                if self.isCharger and self._REQUEST_IDS_DATA:
                     self._REQUEST_IDS_DATA = False
 
-                # chck, if the car idle state have changed to something else
-                if Tag.CAR.key in self._states and self._states[Tag.CAR.key] != CAR_VALUES.IDLE.value:
+                # check, if the car idle state have changed to something else
+                if self.isCharger and Tag.CAR.key in self._states and self._states[Tag.CAR.key] != CAR_VALUES.IDLE.value:
                     # the car state is not 'idle' - so we should fetch all states...
+                    _LAST_FULL_STATE_UPDATE_TS = 0
                     await self.read_all_states()
 
         else:
-            self._states = await self._read_filtered_data(filters=FILTER_ALL_STATES, log_info="read_all_states")
+            self._states = await self._read_filtered_data(filters=self._FILTER_ALL_STATES, log_info="read_all_states")
             if len(self._states) > 0:
                 self._LAST_FULL_STATE_UPDATE_TS = time()
 
@@ -106,14 +148,18 @@ class GoeChargerApiV2Bridge:
         await self.read_all_config()
 
     async def read_all_config(self):
-        self._config = await self._read_filtered_data(filters=FILTER_ALL_CONFIG, log_info="read_all_config")
-        if len(self._config) > 0:
-            self._LAST_CONFIG_UPDATE_TS = time()
+        if len(self._FILTER_ALL_CONFIG) > 0:
+            self._config = await self._read_filtered_data(filters=self._FILTER_ALL_CONFIG, log_info="read_all_config")
+            if len(self._config) > 0:
+                self._LAST_CONFIG_UPDATE_TS = time()
+        else:
+            # no configuration filter yet...
+            pass
 
     async def _read_filtered_data(self, filters: str, log_info: str) -> dict:
         args = {"filter": filters}
         req_field_count = len(args['filter'].split(','))
-        _LOGGER.debug(f"going to request {req_field_count} keys from go-eCharger@{self.host_url}")
+        _LOGGER.debug(f"going to request {req_field_count} keys from {self._logkey}@{self.host_url}")
         if self.token:
             headers = {"Authorization": self.token}
         else:
@@ -127,7 +173,7 @@ class GoeChargerApiV2Bridge:
                         if r_json is not None and len(r_json) > 0:
                             resp_field_count = len(r_json)
                             if resp_field_count >= req_field_count:
-                                _LOGGER.debug(f"read {resp_field_count} values from go-eCharger@{self.host_url}")
+                                _LOGGER.debug(f"read {resp_field_count} values from {self._logkey}@{self.host_url}")
                             else:
                                 missing_fields_in_reponse = []
                                 requested_fields = args['filter'].split(',')
@@ -136,7 +182,7 @@ class GoeChargerApiV2Bridge:
                                         missing_fields_in_reponse.append(a_req_key)
 
                                 _LOGGER.info(
-                                    f"[missing fields: {len(missing_fields_in_reponse)} -> {missing_fields_in_reponse}] - not all requested fields where present in the response from from go-eCharger@{self.host_url}")
+                                    f"[missing fields: {len(missing_fields_in_reponse)} -> {missing_fields_in_reponse}] - not all requested fields where present in the response from from {self._logkey}@{self.host_url}")
                             return r_json
 
                     except JSONDecodeError as json_exc:
@@ -154,7 +200,7 @@ class GoeChargerApiV2Bridge:
         return {}
 
     async def _read_all_data(self) -> dict:
-        _LOGGER.info(f"going to request ALL keys from go-eCharger@{self.host_url}")
+        _LOGGER.info(f"going to request ALL keys from {self._logkey}@{self.host_url}")
         if self.token:
             headers = {"Authorization": self.token}
         else:
@@ -199,7 +245,7 @@ class GoeChargerApiV2Bridge:
         else:
             args = {key: '"'+str(value)+'"'}
 
-        _LOGGER.info(f"going to write {args} to go-eCharger@{self.host_url}")
+        _LOGGER.info(f"going to write {args} to {self._logkey}@{self.host_url}")
         if self.token:
             headers = {"Authorization": self.token}
         else:
@@ -216,7 +262,8 @@ class GoeChargerApiV2Bridge:
                                     self._LAST_CONFIG_UPDATE_TS = 0
                                     self._LAST_FULL_STATE_UPDATE_TS = 0
                                 else:
-                                    self._REQUEST_IDS_DATA = True
+                                    if self.isCharger:
+                                        self._REQUEST_IDS_DATA = True
                                 return {key: value}
                             else:
                                 return {"err": r_json}

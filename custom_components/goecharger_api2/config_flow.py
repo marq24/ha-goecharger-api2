@@ -2,16 +2,16 @@ import logging
 from typing import Final
 
 import voluptuous as vol
+
+from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bridge, INTG_TYPE
+from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from homeassistant import config_entries
 from homeassistant.const import CONF_ID, CONF_HOST, CONF_MODEL, CONF_TYPE, CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_MODE
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-
-from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bridge
-from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from .const import (
-    DOMAIN, CONF_11KWLIMIT, LAN, WAN
+    DOMAIN, CONF_11KWLIMIT, CONF_INTEGRATION_TYPE, LAN, WAN
 )
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -74,25 +74,38 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         #     return self.async_abort(reason="single_instance_allowed")
 
         if user_input is not None:
-            valid = await self._test_host(host=user_input[CONF_HOST], serial=None, token=None)
+            valid = await self._test_host(intg_type=user_input[CONF_INTEGRATION_TYPE], host=user_input[CONF_HOST], serial=None, token=None)
             if valid:
                 user_input[CONF_MODE] = LAN
-                user_input[CONF_MODEL] = self._model.split(' ')[0]
-                user_input[CONF_TYPE] = f"{self._type} [{self._model}] Local"
                 user_input[CONF_ID] = self._serial
-                user_input[CONF_SCAN_INTERVAL] = max(5, user_input[CONF_SCAN_INTERVAL])
-                title = f"go-eCharger API v2 [{self._serial}] Local"
+                user_input[CONF_SCAN_INTERVAL] = max(30, user_input[CONF_SCAN_INTERVAL])
+                user_input[CONF_MODEL] = self._model.split(' ')[0]
+                if(user_input[CONF_INTEGRATION_TYPE] == INTG_TYPE.CHARGER.value):
+                    user_input[CONF_TYPE] = f"{self._type} [{self._model}] Local"
+                    title = f"go-eCharger API v2 [{self._serial}] Local"
+                else:
+                    user_input[CONF_TYPE] = f"{self._type} Local"
+                    title = f"go-eController API v2 [{self._serial}] Local"
                 return self.async_create_entry(title=title, data=user_input)
             else:
                 self._errors["base"] = "auth_lan"
         else:
             user_input = {}
+            user_input[CONF_INTEGRATION_TYPE] = INTG_TYPE.CHARGER.value
             user_input[CONF_HOST] = ""
             user_input[CONF_SCAN_INTERVAL] = 5
 
         return self.async_show_form(
             step_id="user_lan",
             data_schema=vol.Schema({
+                vol.Required(CONF_INTEGRATION_TYPE, default=user_input.get(CONF_INTEGRATION_TYPE, INTG_TYPE.CHARGER.value)):
+                    selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[INTG_TYPE.CHARGER.value, INTG_TYPE.CONTROLLER.value],
+                            mode=selector.SelectSelectorMode.DROPDOWN,
+                            translation_key=CONF_INTEGRATION_TYPE,
+                        )
+                    ),
                 vol.Required(CONF_HOST, default=user_input.get(CONF_HOST)): str,
                 vol.Required(CONF_SCAN_INTERVAL, default=user_input.get(CONF_SCAN_INTERVAL)): int,
             }),
@@ -109,19 +122,24 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         #     return self.async_abort(reason="single_instance_allowed")
 
         if user_input is not None:
-            valid = await self._test_host(host=None, serial=user_input[CONF_ID], token=user_input[CONF_TOKEN])
+            valid = await self._test_host(intg_type=user_input[CONF_INTEGRATION_TYPE], host=None, serial=user_input[CONF_ID], token=user_input[CONF_TOKEN])
             if valid:
                 user_input[CONF_MODE] = WAN
-                user_input[CONF_MODEL] = self._model.split(' ')[0]
-                user_input[CONF_TYPE] = f"{self._type} [{self._model}] Cloud"
                 user_input[CONF_ID] = self._serial
                 user_input[CONF_SCAN_INTERVAL] = max(30, user_input[CONF_SCAN_INTERVAL])
-                title = f"go-eCharger API v2 [{self._serial}] Cloud"
+                user_input[CONF_MODEL] = self._model.split(' ')[0]
+                if(user_input[CONF_INTEGRATION_TYPE] == INTG_TYPE.CHARGER.value):
+                    user_input[CONF_TYPE] = f"{self._type} [{self._model}] Cloud"
+                    title = f"go-eCharger API v2 [{self._serial}] Cloud"
+                else:
+                    user_input[CONF_TYPE] = f"{self._type} Cloud"
+                    title = f"go-eController API v2 [{self._serial}] Cloud"
                 return self.async_create_entry(title=title, data=user_input)
             else:
                 self._errors["base"] = "auth_wan"
         else:
             user_input = {}
+            #user_input[CONF_INTEGRATION_TYPE] = INTG_TYPE.CHARGER.value
             user_input[CONF_ID] = "YOUR-SERIAL-HERE"
             user_input[CONF_TOKEN] = "YOUR-API-KEY-HERE"
             user_input[CONF_SCAN_INTERVAL] = 60
@@ -129,6 +147,14 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user_wan",
             data_schema=vol.Schema({
+                # vol.Required(CONF_INTEGRATION_TYPE, default=user_input.get(CONF_INTEGRATION_TYPE, INTG_TYPE.CHARGER.value)):
+                #     selector.SelectSelector(
+                #         selector.SelectSelectorConfig(
+                #             options=INTG_TYPE,
+                #             mode=selector.SelectSelectorMode.DROPDOWN,
+                #             translation_key=CONF_INTEGRATION_TYPE,
+                #         )
+                #     ),
                 vol.Required(CONF_ID, default=user_input.get(CONF_ID)): str,
                 vol.Required(CONF_TOKEN, default=user_input.get(CONF_TOKEN)): str,
                 vol.Required(CONF_SCAN_INTERVAL, default=user_input.get(CONF_SCAN_INTERVAL)): int,
@@ -137,10 +163,10 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=self._errors
         )
 
-    async def _test_host(self, host, serial, token):
+    async def _test_host(self, intg_type:str, host:str, serial:str, token:str):
         try:
             session = async_create_clientsession(self.hass)
-            client = GoeChargerApiV2Bridge(host=host, serial=serial, token=token, web_session=session,
+            client = GoeChargerApiV2Bridge(intg_type=intg_type, host=host, serial=serial, token=token, web_session=session,
                                            lang=self.hass.config.language.lower())
 
             ret = await client.read_system()
@@ -148,9 +174,15 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await client.read_versions()
                 # self._oem = ret[Tag.OEM.key]
                 self._type = str(ret[Tag.TYP.key]).replace('_', ' ')
-                self._model = f"{ret[Tag.VAR.key]} kW"
+                if intg_type == INTG_TYPE.CHARGER.value:
+                    self._model = f"{ret[Tag.VAR.key]} kW"
+                else:
+                    # there is no model info for a controller... so we hardcode it,
+                    # since it will be used anyhow only for 11/22kW Version detection...
+                    self._model = "eControl" #f"{ret[Tag.FNA.key]}"
+
                 self._serial = ret[Tag.SSE.key]
-                _LOGGER.info(f"successfully validated host -> result: {ret}")
+                _LOGGER.info(f"successfully validated host for '{intg_type}' -> result: {ret}")
                 return True
 
         except Exception as exc:
@@ -189,7 +221,7 @@ class GoeChargerApiV2OptionsFlowHandler(config_entries.OptionsFlow):
             return await self._update_options()
 
         # is this the 11kW or the 22kW Version?
-        if int(self.options.get(CONF_MODEL)) == 11:
+        if self.options.get(CONF_INTEGRATION_TYPE, INTG_TYPE.CHARGER.value) == INTG_TYPE.CONTROLLER.value or int(self.options.get(CONF_MODEL)) == 11:
             return self.async_show_form(
                 step_id=step_type,
                 data_schema=vol.Schema({
@@ -215,7 +247,7 @@ class GoeChargerApiV2OptionsFlowHandler(config_entries.OptionsFlow):
             return await self._update_options()
 
         # is this the 11kW or the 22kW Version?
-        if int(self.options.get(CONF_MODEL)) == 11:
+        if self.options.get(CONF_INTEGRATION_TYPE, INTG_TYPE.CHARGER.value) == INTG_TYPE.CONTROLLER.value or int(self.options.get(CONF_MODEL)) == 11:
             return self.async_show_form(
                 step_id=step_type,
                 data_schema=vol.Schema({

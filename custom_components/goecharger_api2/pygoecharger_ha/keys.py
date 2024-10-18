@@ -623,3 +623,269 @@ class Tag(ApiKey, Enum):
     # wbw | R | TYPE | Config | WiFi Bandwidth (for both AP and STA) WIFI_BW_HT20=1, WIFI_BW_HT40=2
     # wda | R/W | TYPE | Config | disable AccessPoint when cloud is connected
     # wsl | R | TYPE | Status | WiFi STA error messages log
+
+    ###################################
+    # CONTROLLER
+    ###################################
+    # https://github.com/goecharger/go-eController-API/blob/main/apikeys-en.md
+    # rst | W | TYPE | Unknown | Reset the controller
+    # RST = ApiKey(key="rst", cat=CAT.UNKNOWN, writeable=True)
+    # -> exist
+    # sse | R | TYPE | Constant | serial number
+    # SSE = ApiKey(key="sse", cat=CAT.STATUS)
+    # -> exist [no Sensor]
+    # typ | R | TYPE | Constant | Devicetype
+    # TYP = ApiKey(key="typ", cat=CAT.STATUS)
+    # -> exist [no Sensor]
+    # oem | R | TYPE | Constant | OEM manufacturer
+    # OEM = ApiKey(key="oem", cat=CAT.STATUS)
+    # -> exist [no Sensor]
+    # fna | R/W | TYPE | Config | friendlyName
+    # FNA = ApiKey(key="fna", cat=CAT.CONFIG, writeable=True)
+    # -> exist [no Sensor]
+
+    # hsa | W | TYPE | Config | httpStaAuthentication
+    # HSA = ApiKey(key="hsa", cat=CAT.CONFIG, writeable=True)
+    # oct | W | TYPE | Config | ota from cloud url trigger
+    # OCT = ApiKey(key="oct", cat=CAT.CONFIG, writeable=True)
+    # ccn | R/W | TYPE | Config | controller category names
+    CCN = ApiKey(key="ccn", cat=CAT.CONFIG, writeable=True)
+    # hai | R/W | TYPE | Config | httpApiEnabled (allows /api/status and /api/set requests)
+    HAI = ApiKey(key="hai", cat=CAT.CONFIG, writeable=True)
+    # wda | R/W | TYPE | Config | disable AccessPoint when cloud is connected
+    WDA = ApiKey(key="wda", cat=CAT.CONFIG, writeable=True)
+    # tse | R/W | TYPE | Config | time server enabled
+    # TSE = ApiKey(key="tse", cat=CAT.CONFIG, writeable=True)
+    # tof | R/W | TYPE | Config | timezone offset in minutes
+    # TOF = ApiKey(key="tof", cat=CAT.CONFIG, writeable=True)
+    # tds | R/W | TYPE | Config | timezone daylight saving mode, None=0, EuropeanSummerTime=1, UsDaylightTime=2
+    # TDS = ApiKey(key="tds", cat=CAT.CONFIG, writeable=True)
+    # awc | R/W | TYPE | Config | awattar country (Austria=0, Germany=1,...)
+    # AWC = ApiKey(key="awc", cat=CAT.CONFIG, writeable=True)
+    # awp | R/W | TYPE | Config | awattarMaxPrice in ct
+    # AWP = ApiKey(key="awp", cat=CAT.CONFIG, writeable=True)
+    # cwe | R/W | TYPE | Config | cloud websocket enabled
+    # CWE = ApiKey(key="cwe", cat=CAT.CONFIG, writeable=True)
+    # ocu | R | TYPE | Config | ota from cloud url, url to download new firmware code from
+    # OCU = ApiKey(key="ocu", cat=CAT.CONFIG)
+    # usn | R | TYPE | Config | voltage sensor names
+    USN = ApiKey(key="usn", cat=CAT.CONFIG)
+    # usv | R | TYPE | Status | voltage sensor values (use usn for sensor names)
+    USV = ApiKey(key="usv", cat=CAT.STATUS)
+    # isn | R | TYPE | Config | current sensor names
+    ISN = ApiKey(key="isn", cat=CAT.CONFIG)
+    # isv | R | TYPE | Config | current sensor values (use isn for sensors names)
+    ISV = ApiKey(key="isv", cat=CAT.CONFIG)
+    # ips | R/W | TYPE | Config | current phase selections (for every current sensor (api key isn) a phase selection, L1=0, L2=1, L3=2, N=3)
+    IPS = ApiKey(key="ips", cat=CAT.CONFIG, writeable=True)
+    # iim | R/W | TYPE | Config | invert current measurement (for every current sensor (api key isn) an invert flag)
+    IIM = ApiKey(key="iim", cat=CAT.CONFIG, writeable=True)
+    # mece | R/W | TYPE | Config | mecmeterEnabled
+    MECE = ApiKey(key="mece", cat=CAT.CONFIG, writeable=True)
+    # mecu | R/W | TYPE | Config | mecmeterUrl
+    MECU = ApiKey(key="mecu", cat=CAT.CONFIG, writeable=True)
+    # mme | R/W | TYPE | Config | modbus master enabled
+    MME = ApiKey(key="mme", cat=CAT.CONFIG, writeable=True)
+    # mmh | R/W | TYPE | Config | modbus master host
+    MMH = ApiKey(key="mmh", cat=CAT.CONFIG, writeable=True)
+    # mmp | R/W | TYPE | Config | modbus master port
+    # MMP = ApiKey(key="mmp", cat=CAT.CONFIG, writeable=True)
+    # men | R/W | TYPE | Config | modbus slave enabled
+    # MEN = ApiKey(key="men", cat=CAT.CONFIG, writeable=True)
+    # msp | R/W | TYPE | Config | modbus slave port (requires off/on toggle)
+    # MSP = ApiKey(key="msp", cat=CAT.CONFIG, writeable=True)
+    # msb | R/W | TYPE | Config | modbus slave swap bytes
+    # MSB = ApiKey(key="msb", cat=CAT.CONFIG, writeable=True)
+    # msr | R/W | TYPE | Config | modbus slave swap registers
+    # MSR = ApiKey(key="msr", cat=CAT.CONFIG, writeable=True)
+    # mce | R/W | TYPE | Config | MQTT enabled
+    # MCE = ApiKey(key="mce", cat=CAT.CONFIG, writeable=True)
+    # mcu | R/W | TYPE | Config | MQTT broker url
+    # MCU = ApiKey(key="mcu", cat=CAT.CONFIG, writeable=True)
+    # mcr | R/W | TYPE | Config | MQTT readonly (don't allow api writes from mqtt broker)
+    # MCR = ApiKey(key="mcr", cat=CAT.CONFIG, writeable=True)
+    # mtp | R/W | TYPE | Config | MQTT topic prefix (set to null to reset back to the default)
+    # MTP = ApiKey(key="mtp", cat=CAT.CONFIG, writeable=True)
+    # mqg | R/W | TYPE | Config | MQTT useGlobalCaStore
+    # MQG = ApiKey(key="mqg", cat=CAT.CONFIG, writeable=True)
+    # mqcn | R/W | TYPE | Config | MQTT skipCertCommonNameCheck
+    # MQCN = ApiKey(key="mqcn", cat=CAT.CONFIG, writeable=True)
+    # mqss | R/W | TYPE | Config | MQTT skipServerVerification
+    # MQSS = ApiKey(key="mqss", cat=CAT.CONFIG, writeable=True)
+    # wifis | R/W | TYPE | Config | wifi configurations with ssids and keys, if you only want to change the second entry, send an array with 1 empty and 1 filled wifi config object: [{}, {"ssid":"","key":""}]
+    # WIFIS = ApiKey(key="wifis", cat=CAT.CONFIG, writeable=True)
+    # utc | R/W | TYPE | Status | utc time
+    # UTC = ApiKey(key="utc", cat=CAT.STATUS, writeable=True)
+    # ccf | R/W | TYPE | Status | Controller category factors (outer array defines the current sensors, use isn for for current sensor names, the inner arrays are for each category, use ccn for the category names)
+    CCF = ApiKey(key="ccf", cat=CAT.STATUS, writeable=True)
+    # mecf | R/W | TYPE | Status | Mecmeter category factors (outer array defines the 3 mecmeter loads, the inner arrays are for each category, use ccn for the category names)
+    MECF = ApiKey(key="mecf", cat=CAT.STATUS, writeable=True)
+    # scan | R | TYPE | Status | wifi scan result (encryptionType: OPEN=0, WEP=1, WPA_PSK=2, WPA2_PSK=3, WPA_WPA2_PSK=4, WPA2_ENTERPRISE=5, WPA3_PSK=6, WPA2_WPA3_PSK=7)
+    # SCAN = ApiKey(key="scan", cat=CAT.STATUS)
+    # lwf | R | TYPE | Status | last wifi connect failed (milliseconds since boot)
+    LWF = ApiKey(key="lwf", cat=CAT.STATUS)
+    # scaa | R | TYPE | Status | wifi scan age
+    # SCAA = ApiKey(key="scaa", cat=CAT.STATUS)
+    # wst | R | TYPE | Status | WiFi STA status (IDLE_STATUS=0, NO_SSID_AVAIL=1, SCAN_COMPLETED=2, CONNECTED=3, CONNECT_FAILED=4, CONNECTION_LOST=5, DISCONNECTED=6, CONNECTING=7, DISCONNECTING=8, NO_SHIELD=9, WAITING_FOR_IP=10)
+    # WST = ApiKey(key="wst", cat=CAT.STATUS)
+    # wsc | R | TYPE | Status | WiFi STA error count
+    # WSC = ApiKey(key="wsc", cat=CAT.STATUS)
+    # wsm | R | TYPE | Status | WiFi STA error message
+    # WSM = ApiKey(key="wsm", cat=CAT.STATUS)
+    # wsl | R | TYPE | Status | WiFi STA error messages log
+    WSL = ApiKey(key="wsl", cat=CAT.STATUS)
+    # wsms | R | TYPE | Status | WiFi state machine state (None=0, Scanning=1, Connecting=2, Connected=3)
+    # WSMS = ApiKey(key="wsms", cat=CAT.STATUS)
+    # ccw | R | TYPE | Status | Currently connected WiFi
+    # CCW = ApiKey(key="ccw", cat=CAT.STATUS)
+    # wfb | R | TYPE | Status | WiFi failed mac addresses (bssids)
+    # WFB = ApiKey(key="wfb", cat=CAT.STATUS)
+    # wcb | R | TYPE | Status | WiFi current mac address (bssid connecting to)
+    # WCB = ApiKey(key="wcb", cat=CAT.STATUS)
+    # wpb | R | TYPE | Status | WiFi planned mac addresses (future bssids)
+    # WPB = ApiKey(key="wpb", cat=CAT.STATUS)
+    # nif | R | TYPE | Status | Default route
+    # NIF = ApiKey(key="nif", cat=CAT.STATUS)
+    # cce | R | TYPE | Status | Currently connected Ethernet
+    CCE = ApiKey(key="cce", cat=CAT.STATUS)
+    # dns | R | TYPE | Status | dns servers
+    # DNS = ApiKey(key="dns", cat=CAT.STATUS)
+    # rssi | R | TYPE | Status | RSSI signal strength
+    # RSSI = ApiKey(key="rssi", cat=CAT.STATUS)
+    # tsss | R | TYPE | Status | time server sync status (RESET=0, COMPLETED=1, IN_PROGRESS=2)
+    # TSSS = ApiKey(key="tsss", cat=CAT.STATUS)
+    # loc | R | TYPE | Status | local time
+    # LOC = ApiKey(key="loc", cat=CAT.STATUS)
+    # rbc | R | TYPE | Status | reboot_counter
+    # RBC = ApiKey(key="rbc", cat=CAT.STATUS)
+    # rbt | R | TYPE | Status | time since boot in milliseconds
+    # RBT = ApiKey(key="rbt", cat=CAT.STATUS)
+    # fwv | R | TYPE | Status | FW_VERSION
+    # FWV = ApiKey(key="fwv", cat=CAT.STATUS)
+    # awcp | R | TYPE | Status | awattar current price
+    # AWCP = ApiKey(key="awcp", cat=CAT.STATUS)
+    # awpl | W | TYPE | Status | awattar price list, timestamps are measured in unix-time, seconds since 1970
+    AWPL = ApiKey(key="awpl", cat=CAT.STATUS, writeable=True)
+    # clea | R | TYPE | Status | Cloud last error (age)
+    CLEA = ApiKey(key="clea", cat=CAT.STATUS)
+    # cle | R | TYPE | Status | Cloud last error
+    CLE = ApiKey(key="cle", cat=CAT.STATUS)
+    # data | R | TYPE | Status | grafana token from cloud for app
+    DATA = ApiKey(key="data", cat=CAT.STATUS)
+    # dll | R | TYPE | Status | download link for app csv export
+    DLL = ApiKey(key="dll", cat=CAT.STATUS)
+    # mcs | R | TYPE | Status | MQTT started
+    # MCS = ApiKey(key="mcs", cat=CAT.STATUS)
+    # mcc | R | TYPE | Status | MQTT connected
+    # MCC = ApiKey(key="mcc", cat=CAT.STATUS)
+    # mcca | R | TYPE | Status | MQTT connected (age)
+    # MCCA = ApiKey(key="mcca", cat=CAT.STATUS)
+    # mlr | R | TYPE | Status | MQTT last error
+    # MLR = ApiKey(key="mlr", cat=CAT.STATUS)
+    # mlra | R | TYPE | Status | MQTT last error (age)
+    # MLRA = ApiKey(key="mlra", cat=CAT.STATUS)
+    # ccp | R | TYPE | Status | controller category powers
+    CCP = ApiKey(key="ccp", cat=CAT.STATUS)
+    # cec | R | TYPE | Status | controller energy counters
+    CEC = ApiKey(key="cec", cat=CAT.STATUS)
+    # cpc | R | TYPE | Status | controller category phase currents
+    CPC = ApiKey(key="cpc", cat=CAT.STATUS)
+    # bri | R | TYPE | Status | brightness sensor
+    BRI = ApiKey(key="bri", cat=CAT.STATUS)
+    # mecd | R | TYPE | Status | Mecmeter current data
+    MECD = ApiKey(key="mecd", cat=CAT.STATUS)
+
+    # delw | W | TYPE | Unknown | set this to 0-9 to delete sta config (erases ssid, key, ...)
+    # DELW = ApiKey(key="delw", cat=CAT.UNKNOWN, writeable=True)
+
+    # host | R | TYPE | Status | configured hostname
+    # HOST = ApiKey(key="host", cat=CAT.STATUS)
+    # -> exist as KEY but does not EXIST in GOe API responses :-/
+
+
+
+    # hsa | W | TYPE | Config | httpStaAuthentication
+    # oct | W | TYPE | Config | ota from cloud url trigger
+    # ccn | R/W | TYPE | Config | controller category names
+    # hai | R/W | TYPE | Config | httpApiEnabled (allows /api/status and /api/set requests)
+    # wda | R/W | TYPE | Config | disable AccessPoint when cloud is connected
+    # tse | R/W | TYPE | Config | time server enabled
+    # tof | R/W | TYPE | Config | timezone offset in minutes
+    # tds | R/W | TYPE | Config | timezone daylight saving mode, None=0, EuropeanSummerTime=1, UsDaylightTime=2
+    # awc | R/W | TYPE | Config | awattar country (Austria=0, Germany=1,...)
+    # awp | R/W | TYPE | Config | awattarMaxPrice in ct
+    # cwe | R/W | TYPE | Config | cloud websocket enabled
+    # ocu | R | TYPE | Config | ota from cloud url, url to download new firmware code from
+    # usn | R | TYPE | Config | voltage sensor names
+    # usv | R | TYPE | Status | voltage sensor values (use usn for sensor names)
+    # isn | R | TYPE | Config | current sensor names
+    # isv | R | TYPE | Config | current sensor values (use isn for sensors names)
+    # ips | R/W | TYPE | Config | current phase selections (for every current sensor (api key isn) a phase selection, L1=0, L2=1, L3=2, N=3)
+    # iim | R/W | TYPE | Config | invert current measurement (for every current sensor (api key isn) an invert flag)
+    # mece | R/W | TYPE | Config | mecmeterEnabled
+    # mecu | R/W | TYPE | Config | mecmeterUrl
+
+    # mme | R/W | TYPE | Config | modbus master enabled
+    # mmh | R/W | TYPE | Config | modbus master host
+    # mmp | R/W | TYPE | Config | modbus master port
+    # men | R/W | TYPE | Config | modbus slave enabled
+    # msp | R/W | TYPE | Config | modbus slave port (requires off/on toggle)
+    # msb | R/W | TYPE | Config | modbus slave swap bytes
+    # msr | R/W | TYPE | Config | modbus slave swap registers
+
+    # mce | R/W | TYPE | Config | MQTT enabled
+    # mcu | R/W | TYPE | Config | MQTT broker url
+    # mcr | R/W | TYPE | Config | MQTT readonly (don't allow api writes from mqtt broker)
+    # mtp | R/W | TYPE | Config | MQTT topic prefix (set to null to reset back to the default)
+    # mqg | R/W | TYPE | Config | MQTT useGlobalCaStore
+    # mqcn | R/W | TYPE | Config | MQTT skipCertCommonNameCheck
+    # mqss | R/W | TYPE | Config | MQTT skipServerVerification
+
+    # wifis | R/W | TYPE | Config | wifi configurations with ssids and keys, if you only want to change the second entry, send an array with 1 empty and 1 filled wifi config object: [{}, {"ssid":"","key":""}]
+
+    # utc | R/W | TYPE | Status | utc time
+    # ccf | R/W | TYPE | Status | Controller category factors (outer array defines the current sensors, use isn for for current sensor names, the inner arrays are for each category, use ccn for the category names)
+    # mecf | R/W | TYPE | Status | Mecmeter category factors (outer array defines the 3 mecmeter loads, the inner arrays are for each category, use ccn for the category names)
+
+    # scan | R | TYPE | Status | wifi scan result (encryptionType: OPEN=0, WEP=1, WPA_PSK=2, WPA2_PSK=3, WPA_WPA2_PSK=4, WPA2_ENTERPRISE=5, WPA3_PSK=6, WPA2_WPA3_PSK=7)
+    # lwf | R | TYPE | Status | last wifi connect failed (milliseconds since boot)
+    # scaa | R | TYPE | Status | wifi scan age
+    # wst | R | TYPE | Status | WiFi STA status (IDLE_STATUS=0, NO_SSID_AVAIL=1, SCAN_COMPLETED=2, CONNECTED=3, CONNECT_FAILED=4, CONNECTION_LOST=5, DISCONNECTED=6, CONNECTING=7, DISCONNECTING=8, NO_SHIELD=9, WAITING_FOR_IP=10)
+    # wsc | R | TYPE | Status | WiFi STA error count
+    # wsm | R | TYPE | Status | WiFi STA error message
+    # wsl | R | TYPE | Status | WiFi STA error messages log
+    # wsms | R | TYPE | Status | WiFi state machine state (None=0, Scanning=1, Connecting=2, Connected=3)
+    # ccw | R | TYPE | Status | Currently connected WiFi
+    # wfb | R | TYPE | Status | WiFi failed mac addresses (bssids)
+    # wcb | R | TYPE | Status | WiFi current mac address (bssid connecting to)
+    # wpb | R | TYPE | Status | WiFi planned mac addresses (future bssids)
+    # nif | R | TYPE | Status | Default route
+    # cce | R | TYPE | Status | Currently connected Ethernet
+    # dns | R | TYPE | Status | dns servers
+    # rssi | R | TYPE | Status | RSSI signal strength
+    # tsss | R | TYPE | Status | time server sync status (RESET=0, COMPLETED=1, IN_PROGRESS=2)
+    # loc | R | TYPE | Status | local time
+    # rbc | R | TYPE | Status | reboot_counter
+    # rbt | R | TYPE | Status | time since boot in milliseconds
+    # fwv | R | TYPE | Status | FW_VERSION
+    # awcp | R | TYPE | Status | awattar current price
+    # awpl | W | TYPE | Status | awattar price list, timestamps are measured in unix-time, seconds since 1970
+    # clea | R | TYPE | Status | Cloud last error (age)
+    # cle | R | TYPE | Status | Cloud last error
+    # data | R | TYPE | Status | grafana token from cloud for app
+    # dll | R | TYPE | Status | download link for app csv export
+    # mcs | R | TYPE | Status | MQTT started
+    # mcc | R | TYPE | Status | MQTT connected
+    # mcca | R | TYPE | Status | MQTT connected (age)
+    # mlr | R | TYPE | Status | MQTT last error
+    # mlra | R | TYPE | Status | MQTT last error (age)
+    # ccp | R | TYPE | Status | controller category powers
+    # cec | R | TYPE | Status | controller energy counters
+    # cpc | R | TYPE | Status | controller category phase currents
+    # bri | R | TYPE | Status | brightness sensor
+    # mecd | R | TYPE | Status | Mecmeter current data
+
+    # delw | W | TYPE | Unknown | set this to 0-9 to delete sta config (erases ssid, key, ...)
+
+    # host | R | TYPE | Status | configured hostname
+    # -> exist as KEY but does not EXIST in GOe API responses :-/

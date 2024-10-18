@@ -15,7 +15,7 @@ from homeassistant.const import (
 
 # Base component constants
 MANUFACTURER: Final = "go-e GmbH [Austria]"
-NAME: Final = "go-eCharger APIv2 Connect"
+NAME: Final = "go-e APIv2 Connect"
 DOMAIN: Final = "goecharger_api2"
 ISSUE_URL: Final = "https://github.com/marq24/ha-goecharger-api2/issues"
 
@@ -31,6 +31,8 @@ If you have any issues with this you need to open an issue here:
 SERVICE_SET_PV_DATA: Final = "set_pv_data"
 SERVICE_STOP_CHARGING: Final = "stop_charging"
 CONF_11KWLIMIT: Final = "limit_to_11kw"
+CONF_INTEGRATION_TYPE = "integration_type"
+
 WAN: Final = "wan"
 LAN: Final = "lan"
 
@@ -61,6 +63,7 @@ class ExtSelectEntityDescription(SelectEntityDescription):
 @dataclass
 class ExtSensorEntityDescription(SensorEntityDescription):
     idx: int | str | None = None
+    tuple_idx: list | None = None
     factor: int | None = None
     lookup: bool | None = None
     differential_base_key: str | None = None
@@ -1577,7 +1580,7 @@ SENSOR_SENSORS = [
         key=Tag.PNP.key,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         icon="mdi:counter",
         entity_registry_enabled_default=False
@@ -1638,7 +1641,7 @@ SENSOR_SENSORS = [
         key=Tag.RFB.key,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1852,7 +1855,7 @@ OTHER = [
         name="Scheduler saturday",
         entity_category=None,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1861,7 +1864,7 @@ OTHER = [
         name="Scheduler sunday",
         entity_category=None,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1870,7 +1873,7 @@ OTHER = [
         name="Scheduler weekday",
         entity_category=None,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1879,7 +1882,7 @@ OTHER = [
         name="Timezone daylight saving mode",
         entity_category=None,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1888,7 +1891,7 @@ OTHER = [
         name="Timezone offset in minutes",
         entity_category=None,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1897,7 +1900,7 @@ OTHER = [
         name="Time server sync status",
         entity_category=None,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1906,7 +1909,7 @@ OTHER = [
         name="WiFi configurations",
         entity_category=None,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1915,7 +1918,7 @@ OTHER = [
         name="Delete card",
         entity_category=None,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1924,7 +1927,7 @@ OTHER = [
         name="Delete STA config",
         entity_category=None,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1933,7 +1936,7 @@ OTHER = [
         name="Learn card",
         entity_category=None,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1942,7 +1945,7 @@ OTHER = [
         name="Firmware update trigger",
         entity_category=None,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1951,7 +1954,7 @@ OTHER = [
         name="Hostname on STA interface",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1960,7 +1963,7 @@ OTHER = [
         name="Local time",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1970,7 +1973,7 @@ OTHER = [
         # state=json_array_to_csv,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         icon="mdi:numeric",
         entity_registry_enabled_default=False
@@ -1980,7 +1983,7 @@ OTHER = [
         name="WiFi scan age",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1989,7 +1992,7 @@ OTHER = [
         name="WiFi scan result",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1998,7 +2001,7 @@ OTHER = [
         name="Transaction",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         icon="mdi:message-text-lock-outline",
         entity_registry_enabled_default=False
@@ -2008,8 +2011,271 @@ OTHER = [
         name="UTC time",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     )
+]
+
+CONTROLLER_BINARY_SENSORS = [
+]
+CONTROLLER_BUTTONS = [
+    ExtButtonEntityDescription(
+        key=Tag.RST.key,
+        payload="true",
+        entity_category=EntityCategory.CONFIG,
+        device_class=None,
+        icon="mdi:restart",
+        entity_registry_enabled_default=True
+    ),
+]
+CONTROLLER_NUMBER_SENSORS = [
+]
+CONTROLLER_SELECT_SENSORS = [
+]
+CONTROLLER_SENSOR_SENSORS = [
+    ExtSensorEntityDescription(
+        key=Tag.USV.key,
+        tuple_idx=[0, "u1"], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.USV.key+"_0_u1", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.USV.key,
+        tuple_idx=[0, "u2"], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.USV.key+"_0_u2", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.USV.key,
+        tuple_idx=[0, "u3"], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.USV.key+"_0_u3", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_registry_enabled_default=True
+    ),    
+    ExtSensorEntityDescription(
+        key=Tag.USV.key,
+        tuple_idx=[0, "uN"], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.USV.key+"_0_un", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.ISV.key,
+        tuple_idx=[0, "i"], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.ISV.key+"_0_i", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.ISV.key,
+        tuple_idx=[0, "p"], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.ISV.key+"_0_p", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.ISV.key,
+        tuple_idx=[0, "f"], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.ISV.key+"_0_f", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER_FACTOR,    
+        entity_registry_enabled_default=True
+    ),    
+    ExtSensorEntityDescription(
+        key=Tag.ISV.key,
+        tuple_idx=[1, "i"], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.ISV.key+"_1_i", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.ISV.key,
+        tuple_idx=[1, "p"], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.ISV.key+"_1_p", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.ISV.key,
+        tuple_idx=[1, "f"], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.ISV.key+"_1_f", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER_FACTOR,    
+        entity_registry_enabled_default=True
+    ),        
+    ExtSensorEntityDescription(
+        key=Tag.ISV.key,
+        tuple_idx=[2, "i"], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.ISV.key+"_2_i", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.ISV.key,
+        tuple_idx=[2, "p"], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.ISV.key+"_2_p", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.ISV.key,
+        tuple_idx=[2, "f"], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.ISV.key+"_2_f", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER_FACTOR,    
+        entity_registry_enabled_default=True
+    ),        
+    ExtSensorEntityDescription(
+        key=Tag.ISV.key,
+        tuple_idx=[3, "i"], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.ISV.key+"_3_i", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.ISV.key,
+        tuple_idx=[3, "p"], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.ISV.key+"_3_p", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.ISV.key,
+        tuple_idx=[3, "f"], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.ISV.key+"_3_f", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER_FACTOR,    
+        entity_registry_enabled_default=True
+    ),        
+    ExtSensorEntityDescription(
+        key=Tag.ISV.key,
+        tuple_idx=[4, "i"], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.ISV.key+"_4_i", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.ISV.key,
+        tuple_idx=[4, "p"], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.ISV.key+"_4_p", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.ISV.key,
+        tuple_idx=[4, "f"], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.ISV.key+"_4_f", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER_FACTOR,    
+        entity_registry_enabled_default=True
+    ),        
+    ExtSensorEntityDescription(
+        key=Tag.ISV.key,
+        tuple_idx=[5, "i"], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.ISV.key+"_5_i", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.ISV.key,
+        tuple_idx=[5, "p"], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.ISV.key+"_5_p", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.ISV.key,
+        tuple_idx=[5, "f"], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.ISV.key+"_5_f", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER_FACTOR,    
+        entity_registry_enabled_default=True
+    ),          
+]
+CONTROLLER_SWITCH_SENSORS = [
 ]

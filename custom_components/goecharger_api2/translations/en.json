@@ -5,26 +5,34 @@
         "lan": "LAN: Local API v2 access via local network [http]",
         "wan": "WAN: Cloud API v2 access via internet [https]"
       }
+    },
+    "integration_type": {
+      "options": {
+        "charger": "go-eCharger (default)",
+        "controller": "go-eController"
+      }
     }
   },
   "config": {
     "step": {
       "user": {
-        "description": "Please select the communication channel [only select WAN(Cloud) if your wallbox is not in your home network]",
+        "description": "Please select the communication channel [only select WAN(Cloud) if your wallbox/controller is not in your home network]",
         "data": {
           "stype": "Select LAN(Local Network) or WAN(Cloud/Internet)"
         }
       },
       "user_lan": {
-        "description": "If you need help setting it up, you can find it here: https://github.com/marq24/ha-goecharger-api2.\n\nImportant note: Local APIv2 access must first be activated in the Go-eCharger app settings",
+        "description": "If you need help setting it up, you can find it here: https://github.com/marq24/ha-goecharger-api2.\n\nImportant note: Local APIv2 access must first be activated in the go-e app settings",
         "data": {
+          "integration_type": "Integration type: Charger or Controller?",
           "host": "Host or IP of your go-eCharger Wallbox",
           "scan_interval": "Polling Interval in seconds [min: 5sec]"
         }
       },
       "user_wan": {
-        "description": "If you need help setting it up, you can find it here: https://github.com/marq24/ha-goecharger-api2.\n\nImportant note: Cloud APIv2 access must first be activated in the Go-eCharger app settings",
+        "description": "If you need help setting it up, you can find it here: https://github.com/marq24/ha-goecharger-api2.\n\nImportant note: Cloud APIv2 access must first be activated in the go-e app settings",
         "data": {
+          "integration_type": "Integration type: Charger or Controller?",
           "serial": "Your go-eCharger Wallbox Serial number",
           "token": "Your go-eCharger Cloud API-Key",
           "scan_interval": "Polling Interval in seconds [min: 30sec]"
@@ -89,7 +97,7 @@
       "tls": {"name": "Test charging started"}
     },
     "button": {
-      "rst": {"name":  "Restart Charger device"},
+      "rst": {"name":  "Restart go-e device"},
       "zfocore": {"name":  "Read Configuration"}
     },
     "number": {
@@ -313,7 +321,31 @@
       "wsc": {"name": "WiFi STA error count"},
       "wsm": {"name": "WiFi STA error message"},
 
-      "cll": {"name": "Current Limits"}
+      "cll": {"name": "Current Limits"},
+
+      "usv_0_u1": {"name": "Voltage L1"},
+      "usv_0_u2": {"name": "Voltage L2"},
+      "usv_0_u3": {"name": "Voltage L3"},
+      "usv_0_un": {"name": "Voltage N"},
+
+      "isv_0_i": {"name": "Internal 1 ampere"},
+      "isv_0_p": {"name": "Internal 1 power"},
+      "isv_0_f": {"name": "Internal 1 power factor"},
+      "isv_1_i": {"name": "Internal 2 ampere"},
+      "isv_1_p": {"name": "Internal 2 power"},
+      "isv_1_f": {"name": "Internal 2 power factor"},      
+      "isv_2_i": {"name": "Internal 3 ampere"},
+      "isv_2_p": {"name": "Internal 3 power"},
+      "isv_2_f": {"name": "Internal 3 power factor"},      
+      "isv_3_i": {"name": "Internal 4 ampere"},
+      "isv_3_p": {"name": "Internal 4 power"},
+      "isv_3_f": {"name": "Internal 4 power factor"},      
+      "isv_4_i": {"name": "Internal 5 ampere"},
+      "isv_4_p": {"name": "Internal 5 power"},
+      "isv_4_f": {"name": "Internal 5 power factor"},      
+      "isv_5_i": {"name": "Internal 6 ampere"},
+      "isv_5_p": {"name": "Internal 6 power"},
+      "isv_5_f": {"name": "Internal 6 power factor"}     
     },
     "switch": {
       "acp": {"name": "Allow Charge Pause (car compatibility)"},

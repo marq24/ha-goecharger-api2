@@ -3,6 +3,7 @@ import re
 from datetime import datetime, time
 from typing import Final
 
+from custom_components.goecharger_api2.pygoecharger_ha import INTG_TYPE
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
@@ -10,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity
-from .const import DOMAIN, SENSOR_SENSORS, ExtSensorEntityDescription
+from .const import DOMAIN, SENSOR_SENSORS, CONTROLLER_SENSOR_SENSORS, ExtSensorEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,9 +20,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
     _LOGGER.debug("SENSOR async_setup_entry")
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
-    for description in SENSOR_SENSORS:
-        entity = GoeChargerSensor(coordinator, description)
-        entities.append(entity)
+
+    if coordinator.intg_type == INTG_TYPE.CHARGER.value:
+        for description in SENSOR_SENSORS:
+            entity = GoeChargerSensor(coordinator, description)
+            entities.append(entity)
+    else:
+        for description in CONTROLLER_SENSOR_SENSORS:
+            entity = GoeChargerSensor(coordinator, description)
+            entities.append(entity)
+
     add_entity_cb(entities)
 
 CC_P1: Final = re.compile(r"(.)([A-Z][a-z]+)")
@@ -51,7 +59,11 @@ class GoeChargerSensor(GoeChargerBaseEntity, SensorEntity, RestoreEntity):
     @property
     def native_value(self):
         try:
-            if self.entity_description.idx is not None:
+            if self.entity_description.tuple_idx is not None and len(self.entity_description.tuple_idx) > 1:
+                subKey1 = self.entity_description.tuple_idx[0]
+                subKey2 = self.entity_description.tuple_idx[1]
+                value = self.coordinator.data[self.data_key][subKey1][subKey2]
+            elif self.entity_description.idx is not None:
                 value = self.coordinator.data[self.data_key][self.entity_description.idx]
             elif self.data_key == Tag.CLL.key:
                 # very special handling for the cll attribute - which is actually a json object that might should

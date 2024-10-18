@@ -1,14 +1,15 @@
 import logging
 
+from custom_components.goecharger_api2.pygoecharger_ha import INTG_TYPE
+from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.core import HomeAssistant
-
-from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity
-from .const import DOMAIN, BINARY_SENSORS, ExtBinarySensorEntityDescription
+from .const import DOMAIN, BINARY_SENSORS, CONTROLLER_BINARY_SENSORS, \
+    ExtBinarySensorEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,9 +18,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
     _LOGGER.debug("BINARY_SENSOR async_setup_entry")
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
-    for description in BINARY_SENSORS:
-        entity = GoeChargerApiV2BinarySensor(coordinator, description)
-        entities.append(entity)
+
+    if coordinator.intg_type == INTG_TYPE.CHARGER.value:
+        for description in BINARY_SENSORS:
+            entity = GoeChargerApiV2BinarySensor(coordinator, description)
+            entities.append(entity)
+    else:
+        for description in CONTROLLER_BINARY_SENSORS:
+            entity = GoeChargerApiV2BinarySensor(coordinator, description)
+            entities.append(entity)
+
     add_entity_cb(entities)
 
 
@@ -51,7 +59,8 @@ class GoeChargerApiV2BinarySensor(GoeChargerBaseEntity, BinarySensorEntity):
 
         except IndexError:
             if self.entity_description.idx is not None:
-                _LOGGER.debug(f"lc-key: {self.data_key.lower()} value: {value} idx: {self.entity_description.idx} -> {self.coordinator.data[self.data_key]}")
+                _LOGGER.debug(
+                    f"lc-key: {self.data_key.lower()} value: {value} idx: {self.entity_description.idx} -> {self.coordinator.data[self.data_key]}")
             else:
                 _LOGGER.debug(f"lc-key: {self.data_key.lower()} caused IndexError")
             value = None
