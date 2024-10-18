@@ -74,7 +74,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         #     return self.async_abort(reason="single_instance_allowed")
 
         if user_input is not None:
-            valid = await self._test_host(type=user_input[CONF_INTEGRATION_TYPE], host=user_input[CONF_HOST], serial=None, token=None)
+            valid = await self._test_host(intg_type=user_input[CONF_INTEGRATION_TYPE], host=user_input[CONF_HOST], serial=None, token=None)
             if valid:
                 user_input[CONF_MODE] = LAN
                 user_input[CONF_MODEL] = self._model.split(' ')[0]
@@ -121,7 +121,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         #     return self.async_abort(reason="single_instance_allowed")
 
         if user_input is not None:
-            valid = await self._test_host(type=user_input[CONF_INTEGRATION_TYPE], host=None, serial=user_input[CONF_ID], token=user_input[CONF_TOKEN])
+            valid = await self._test_host(intg_type=user_input[CONF_INTEGRATION_TYPE], host=None, serial=user_input[CONF_ID], token=user_input[CONF_TOKEN])
             if valid:
                 user_input[CONF_MODE] = WAN
                 user_input[CONF_MODEL] = self._model.split(' ')[0]
@@ -161,7 +161,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=self._errors
         )
 
-    async def _test_host(self, intg_type, host, serial, token):
+    async def _test_host(self, intg_type:str, host:str, serial:str, token:str):
         try:
             session = async_create_clientsession(self.hass)
             client = GoeChargerApiV2Bridge(intg_type=intg_type, host=host, serial=serial, token=token, web_session=session,
