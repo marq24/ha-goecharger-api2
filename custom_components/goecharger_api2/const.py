@@ -31,6 +31,8 @@ If you have any issues with this you need to open an issue here:
 SERVICE_SET_PV_DATA: Final = "set_pv_data"
 SERVICE_STOP_CHARGING: Final = "stop_charging"
 CONF_11KWLIMIT: Final = "limit_to_11kw"
+CONF_INTEGRATION_TYPE = "integration_type"
+
 WAN: Final = "wan"
 LAN: Final = "lan"
 
@@ -2012,4 +2014,17 @@ OTHER = [
         device_class=None,
         entity_registry_enabled_default=False
     )
+]
+
+CONTROLLER_BINARY_SENSORS = [
+]
+CONTROLLER_BUTTONS = [
+]
+CONTROLLER_NUMBER_SENSORS = [
+]
+CONTROLLER_SELECT_SENSORS = [
+]
+CONTROLLER_SENSOR_SENSORS = [
+]
+CONTROLLER_SWITCH_SENSORS = [
 ]

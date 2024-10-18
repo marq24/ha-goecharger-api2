@@ -1,6 +1,9 @@
 from enum import Enum
 from typing import Final
 
+##############
+#   CHARGER  #
+##############
 FILTER_SYSTEMS: Final = "oem,sse,typ,var"
 FILTER_VERSIONS: Final = "ccrv,fwc,fwv,cards,var"
 FILTER_MIN_STATES: Final = "car,modelStatus,err,nrg,tma,trx"
@@ -21,6 +24,24 @@ FILTER_UNKNOWN_FW59_X_BETA: Final = "bar,dsrc,evt,gmtr,gsa,lto,mhe,mht,ocppdp,oc
 FILTER_UNKNOWN_FW56_2_BETA: Final = "bar,gmtr,gsa,mhe,mht,pco,rmaf,rmav,rmif,rmiv,rsa,rsre,rsrr"
 FILTER_UNKNOWN_FW56_1: Final = "avgfhz,simo"
 
+##############
+# CONTROLLER #
+##############
+FILTER_CONTROLER_SYSTEMS: Final = "oem,sse,typ"
+FILTER_CONTROLER_VERSIONS: Final = "fwv"
+FILTER_CONTROLER_MIN_STATES: Final = ""
+
+# rbt: is the reboot time - and "looks like", that all other timestamps use the rbt "as" start point
+FILTER_CONTROLER_TIMES_ADDON: Final = ",rbt,lcs,clea"
+
+FILTER_CONTROLER_ALL_STATES: Final = ""
+FILTER_CONTROLER_ALL_CONFIG: Final = ""
+
+
+
+class INTG_TYPE(Enum):
+    CHARGER = "charger"
+    CONTROLLER = "controller"
 
 class CAR_VALUES(Enum):
     UNKNOWN = 0

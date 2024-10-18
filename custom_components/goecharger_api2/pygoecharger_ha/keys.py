@@ -623,3 +623,7 @@ class Tag(ApiKey, Enum):
     # wbw | R | TYPE | Config | WiFi Bandwidth (for both AP and STA) WIFI_BW_HT20=1, WIFI_BW_HT40=2
     # wda | R/W | TYPE | Config | disable AccessPoint when cloud is connected
     # wsl | R | TYPE | Status | WiFi STA error messages log
+
+    ###################################
+    # CONTROLLER
+    ###################################

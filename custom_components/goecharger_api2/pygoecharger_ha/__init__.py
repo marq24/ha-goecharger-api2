@@ -7,6 +7,7 @@ from aiohttp import ClientResponseError
 
 from custom_components.goecharger_api2.pygoecharger_ha.const import (
     TRANSLATIONS,
+    INTG_TYPE,
     CAR_VALUES,
     FILTER_SYSTEMS,
     FILTER_VERSIONS,
@@ -15,6 +16,13 @@ from custom_components.goecharger_api2.pygoecharger_ha.const import (
     FILTER_TIMES_ADDON,
     FILTER_ALL_STATES,
     FILTER_ALL_CONFIG,
+
+    FILTER_CONTROLER_SYSTEMS,
+    FILTER_CONTROLER_VERSIONS,
+    FILTER_CONTROLER_MIN_STATES,
+    FILTER_CONTROLER_TIMES_ADDON,
+    FILTER_CONTROLER_ALL_STATES,
+    FILTER_CONTROLER_ALL_CONFIG,
 )
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag, IS_TRIGGER
 
@@ -22,7 +30,8 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
 class GoeChargerApiV2Bridge:
-    def __init__(self, host: str, serial:str, token:str, web_session, lang: str = "en") -> None:
+
+    def __init__(self, intg_type:str, host: str, serial:str, token:str, web_session, lang: str = "en") -> None:
         if host is not None:
             self.host_url = f"http://{host}"
             self.token = None
@@ -30,6 +39,23 @@ class GoeChargerApiV2Bridge:
             # the Cloud-API 2 endpoint!
             self.host_url = f"https://{serial}.api.v3.go-e.io"
             self.token = f"Bearer {token}"
+
+        if intg_type is not None and intg_type == INTG_TYPE.CONTROLLER.value:
+            self._FILTER_SYSTEMS = FILTER_CONTROLER_SYSTEMS
+            self._FILTER_VERSIONS = FILTER_CONTROLER_VERSIONS
+            self._FILTER_MIN_STATES = FILTER_CONTROLER_MIN_STATES
+            self._FILTER_IDS_ADDON = ""
+            self._FILTER_TIMES_ADDON = FILTER_CONTROLER_TIMES_ADDON
+            self._FILTER_ALL_STATES = FILTER_CONTROLER_ALL_STATES
+            self._FILTER_ALL_CONFIG = FILTER_CONTROLER_ALL_CONFIG
+        else:
+            self._FILTER_SYSTEMS = FILTER_SYSTEMS
+            self._FILTER_VERSIONS = FILTER_VERSIONS
+            self._FILTER_MIN_STATES = FILTER_MIN_STATES
+            self._FILTER_IDS_ADDON = FILTER_IDS_ADDON
+            self._FILTER_TIMES_ADDON = FILTER_TIMES_ADDON
+            self._FILTER_ALL_STATES = FILTER_ALL_STATES
+            self._FILTER_ALL_CONFIG = FILTER_ALL_CONFIG
 
         self.web_session = web_session
         self.lang_map = None
@@ -57,10 +83,10 @@ class GoeChargerApiV2Bridge:
         self._config = {}
 
     async def read_system(self) -> dict:
-        return await self._read_filtered_data(filters=FILTER_SYSTEMS, log_info="read_system")
+        return await self._read_filtered_data(filters=self._FILTER_SYSTEMS, log_info="read_system")
 
     async def read_versions(self):
-        self._versions = await self._read_filtered_data(filters=FILTER_VERSIONS, log_info="read_versions")
+        self._versions = await self._read_filtered_data(filters=self._FILTER_VERSIONS, log_info="read_versions")
 
     async def read_all(self) -> dict:
         await self.read_all_states();
@@ -74,12 +100,12 @@ class GoeChargerApiV2Bridge:
     async def read_all_states(self):
         # ok we are in idle state - so we do not need all states... [but 5 minutes (=300sec) do a full update]
         if "car" in self._states and CAR_VALUES.IDLE.value == self._states["car"] and self._LAST_FULL_STATE_UPDATE_TS + 300 > time():
-            filter = FILTER_MIN_STATES
+            filter = self._FILTER_MIN_STATES
             if self._REQUEST_IDS_DATA:
-                filter = filter + FILTER_IDS_ADDON
+                filter = filter + self._FILTER_IDS_ADDON
 
             # check what additional times do frequent upddate?!
-            filter = filter+FILTER_TIMES_ADDON
+            filter = filter+self._FILTER_TIMES_ADDON
 
             idle_states = await self._read_filtered_data(filters=filter, log_info="read_idle_states")
             if len(idle_states) > 0:
@@ -97,7 +123,7 @@ class GoeChargerApiV2Bridge:
                     await self.read_all_states()
 
         else:
-            self._states = await self._read_filtered_data(filters=FILTER_ALL_STATES, log_info="read_all_states")
+            self._states = await self._read_filtered_data(filters=self._FILTER_ALL_STATES, log_info="read_all_states")
             if len(self._states) > 0:
                 self._LAST_FULL_STATE_UPDATE_TS = time()
 
@@ -106,7 +132,7 @@ class GoeChargerApiV2Bridge:
         await self.read_all_config()
 
     async def read_all_config(self):
-        self._config = await self._read_filtered_data(filters=FILTER_ALL_CONFIG, log_info="read_all_config")
+        self._config = await self._read_filtered_data(filters=self._FILTER_ALL_CONFIG, log_info="read_all_config")
         if len(self._config) > 0:
             self._LAST_CONFIG_UPDATE_TS = time()
 

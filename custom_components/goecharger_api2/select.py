@@ -1,13 +1,13 @@
 import logging
 
+from custom_components.goecharger_api2.pygoecharger_ha import INTG_TYPE
+from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.core import HomeAssistant
-
-from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity
-from .const import DOMAIN, SELECT_SENSORS, ExtSelectEntityDescription
+from .const import DOMAIN, CONF_INTEGRATION_TYPE, SELECT_SENSORS, CONTROLLER_SELECT_SENSORS, ExtSelectEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,9 +16,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
     _LOGGER.debug("SELECT async_setup_entry")
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
-    for description in SELECT_SENSORS:
-        entity = GoeChargerSelect(coordinator, description)
-        entities.append(entity)
+
+    if CONF_INTEGRATION_TYPE in config_entry.data and config_entry.data.get(CONF_INTEGRATION_TYPE) == INTG_TYPE.CONTROLLER.value:
+        for description in SELECT_SENSORS:
+            entity = GoeChargerSelect(coordinator, description)
+            entities.append(entity)
+    else:
+        for description in CONTROLLER_SELECT_SENSORS:
+            entity = GoeChargerSelect(coordinator, description)
+            entities.append(entity)
+
     add_entity_cb(entities)
 
 

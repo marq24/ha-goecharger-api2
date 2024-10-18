@@ -5,12 +5,18 @@
         "lan": "LAN: Lokale API v2 Zugriff übe das lokale Netzwerk [http]",
         "wan": "WAN: Cloud API v2 Zugriff über das Internet [https]"
       }
+    },
+    "integration_type": {
+      "options": {
+        "charger": "go-eCharger (default)",
+        "controller": "go-eController"
+      }
     }
   },
   "config": {
     "step": {
       "user": {
-        "description": "Bitte wähle den Kommunikationskanal [wähle WAN(Cloud) nur dann, wenn sich Deine Wallbox nicht im Heimnetzwerk befindet!]",
+        "description": "Bitte wähle den Kommunikationskanal [wähle WAN(Cloud) nur dann, wenn sich Deine Wallbox/Dein Controller nicht im Heimnetzwerk befindet!]",
         "data": {
           "stype": "Wähle LAN(Lokales Netzwerk) oder WAN(Cloud/Internet)"
         }
@@ -18,22 +24,24 @@
       "user_lan": {
         "description": "Wenn Du Hilfe bei der Einrichtung benötigst, findest du sie hier: https://github.com/marq24/ha-goecharger-api2.\n\nWichtiger Hinweis: Der lokale APIv2 Zugriff muss zuvor in den Go-eCharger App Einstellungen aktiviert werden",
         "data": {
-          "host": "IP oder Hostname deiner go-eCharger Wallbox",
+          "integration_type": "Integrationstyp: Charger oder Controller?",
+          "host": "IP oder Hostname deiner go-eCharger Wallbox/deines go-eControllers",
           "scan_interval": "Aktualisierungsintervall in Sekunden [min: 5sek]"
         }
       },
       "user_wan": {
         "description": "Wenn Du Hilfe bei der Einrichtung benötigst, findest du sie hier: https://github.com/marq24/ha-goecharger-api2.\n\nWichtiger Hinweis: Der Cloud APIv2 Zugriff muss zuvor in den Go-eCharger App Einstellungen aktiviert werden",
         "data": {
-          "serial": "Deine go-eCharger Wallbox Seriennummer",
+          "integration_type": "Integrationstyp: Charger oder Controller?",
+          "serial": "Deine Seriennummer der go-eCharger Wallbox / des go-eControllers",
           "token": "Dein Cloud API v2 Key",
           "scan_interval": "Aktualisierungsintervall in Sekunden [min: 30sek]"
         }
       }
     },
     "error": {
-      "auth_lan": "Unter dieser IP/Host konnte keine Wallbox erreicht werden",
-      "auth_wan": "Mit dieser Seriennummer und dem API-Key konnte keine Wallbox erreicht werden"
+      "auth_lan": "Unter dieser IP/Host konnte keine Wallbox/Controller erreicht werden",
+      "auth_wan": "Mit dieser Seriennummer und dem API-Key konnte keine Wallbox/Controller erreicht werden"
     }
   },
   "options": {
