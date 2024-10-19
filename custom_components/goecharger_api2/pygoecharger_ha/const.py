@@ -27,7 +27,7 @@ FILTER_UNKNOWN_FW56_1: Final = "avgfhz,simo"
 ##############
 # CONTROLLER #
 ##############
-FILTER_CONTROLER_SYSTEMS: Final = "oem,sse,typ"
+FILTER_CONTROLER_SYSTEMS: Final = "oem,sse,typ,host"
 FILTER_CONTROLER_VERSIONS: Final = "fwv"
 FILTER_CONTROLER_MIN_STATES: Final = ""
 

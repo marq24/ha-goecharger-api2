@@ -172,7 +172,11 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await client.read_versions()
                 # self._oem = ret[Tag.OEM.key]
                 self._type = str(ret[Tag.TYP.key]).replace('_', ' ')
-                self._model = f"{ret[Tag.VAR.key]} kW"
+                if intg_type == INTG_TYPE.CHARGER.value:
+                    self._model = f"{ret[Tag.VAR.key]} kW"
+                else:
+                    # not so happy with using the host here - but well...
+                    self._model = f"{ret[Tag.HOST.key]}"
                 self._serial = ret[Tag.SSE.key]
                 _LOGGER.info(f"successfully validated host -> result: {ret}")
                 return True

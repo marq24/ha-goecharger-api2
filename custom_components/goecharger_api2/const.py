@@ -1579,7 +1579,7 @@ SENSOR_SENSORS = [
         key=Tag.PNP.key,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         icon="mdi:counter",
         entity_registry_enabled_default=False
@@ -1640,7 +1640,7 @@ SENSOR_SENSORS = [
         key=Tag.RFB.key,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1854,7 +1854,7 @@ OTHER = [
         name="Scheduler saturday",
         entity_category=None,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1863,7 +1863,7 @@ OTHER = [
         name="Scheduler sunday",
         entity_category=None,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1872,7 +1872,7 @@ OTHER = [
         name="Scheduler weekday",
         entity_category=None,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1881,7 +1881,7 @@ OTHER = [
         name="Timezone daylight saving mode",
         entity_category=None,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1890,7 +1890,7 @@ OTHER = [
         name="Timezone offset in minutes",
         entity_category=None,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1899,7 +1899,7 @@ OTHER = [
         name="Time server sync status",
         entity_category=None,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1908,7 +1908,7 @@ OTHER = [
         name="WiFi configurations",
         entity_category=None,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1917,7 +1917,7 @@ OTHER = [
         name="Delete card",
         entity_category=None,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1926,7 +1926,7 @@ OTHER = [
         name="Delete STA config",
         entity_category=None,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1935,7 +1935,7 @@ OTHER = [
         name="Learn card",
         entity_category=None,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1944,7 +1944,7 @@ OTHER = [
         name="Firmware update trigger",
         entity_category=None,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1953,7 +1953,7 @@ OTHER = [
         name="Hostname on STA interface",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1962,7 +1962,7 @@ OTHER = [
         name="Local time",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1972,7 +1972,7 @@ OTHER = [
         # state=json_array_to_csv,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         icon="mdi:numeric",
         entity_registry_enabled_default=False
@@ -1982,7 +1982,7 @@ OTHER = [
         name="WiFi scan age",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -1991,7 +1991,7 @@ OTHER = [
         name="WiFi scan result",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     ),
@@ -2000,7 +2000,7 @@ OTHER = [
         name="Transaction",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         icon="mdi:message-text-lock-outline",
         entity_registry_enabled_default=False
@@ -2010,7 +2010,7 @@ OTHER = [
         name="UTC time",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         device_class=None,
         entity_registry_enabled_default=False
     )
@@ -2019,12 +2019,30 @@ OTHER = [
 CONTROLLER_BINARY_SENSORS = [
 ]
 CONTROLLER_BUTTONS = [
+    ExtButtonEntityDescription(
+        key=Tag.RST.key,
+        payload="true",
+        entity_category=EntityCategory.CONFIG,
+        device_class=None,
+        icon="mdi:restart",
+        entity_registry_enabled_default=True
+    ),
 ]
 CONTROLLER_NUMBER_SENSORS = [
 ]
 CONTROLLER_SELECT_SENSORS = [
 ]
 CONTROLLER_SENSOR_SENSORS = [
+    ExtSensorEntityDescription(
+        key=Tag.HOST.key,
+        name="Hostname on STA interface",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=None,
+        state_class=None,
+        device_class=None,
+        entity_registry_enabled_default=False
+    ),
+
 ]
 CONTROLLER_SWITCH_SENSORS = [
 ]
