@@ -15,7 +15,7 @@ from homeassistant.const import (
 
 # Base component constants
 MANUFACTURER: Final = "go-e GmbH [Austria]"
-NAME: Final = "go-eCharger/go-eController APIv2 Connect"
+NAME: Final = "go-e APIv2 Connect"
 DOMAIN: Final = "goecharger_api2"
 ISSUE_URL: Final = "https://github.com/marq24/ha-goecharger-api2/issues"
 
@@ -63,6 +63,7 @@ class ExtSelectEntityDescription(SelectEntityDescription):
 @dataclass
 class ExtSensorEntityDescription(SensorEntityDescription):
     idx: int | str | None = None
+    tuple_idx: list | None = None
     factor: int | None = None
     lookup: bool | None = None
     differential_base_key: str | None = None
@@ -2033,6 +2034,28 @@ CONTROLLER_NUMBER_SENSORS = [
 CONTROLLER_SELECT_SENSORS = [
 ]
 CONTROLLER_SENSOR_SENSORS = [
+    ExtSensorEntityDescription(
+        key=Tag.USV.key,
+        tuple_idx=[0, "u1"], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.USV.key+"_0_u1", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.USV.key,
+        tuple_idx=[0, "uN"], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.USV.key+"_0_un", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_registry_enabled_default=True
+    ),
 ]
 CONTROLLER_SWITCH_SENSORS = [
 ]

@@ -321,7 +321,13 @@
       "wsc": {"name": "WiFi STA error count"},
       "wsm": {"name": "WiFi STA error message"},
 
-      "cll": {"name": "Current Limits"}
+      "cll": {"name": "Current Limits"},
+
+      "usv_0_u1": {"name": "Voltage 1"},
+      "usv_0_u2": {"name": "Voltage 2"},
+      "usv_0_u3": {"name": "Voltage 3"},
+      "usv_0_un": {"name": "???"}
+
     },
     "switch": {
       "acp": {"name": "Allow Charge Pause (car compatibility)"},

@@ -321,7 +321,12 @@
       "wsc": {"name": "WiFi STA Fehler Anzahl"},
       "wsm": {"name": "WiFi STA Fehler Meldung"},
 
-      "cll": {"name": "Ladestrom Limitliste"}
+      "cll": {"name": "Ladestrom Limitliste"},
+
+      "usv_0_u1": {"name": "Spannung 1"},
+      "usv_0_u2": {"name": "Spannung 2"},
+      "usv_0_u3": {"name": "Spannung 3"},
+      "usv_0_un": {"name": "???"}
     },
     "switch": {
       "acp": {"name": "Ladepausen zulassen (Fahrzeug Kompatibilität)"},

@@ -188,6 +188,7 @@ async def check_device_registry(hass: HomeAssistant):
                 for a_device_entry_id in key_list:
                     a_device_reg.async_remove_device(device_id=a_device_entry_id)
 
+
 class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, config_entry):
         lang = hass.config.language.lower()
@@ -376,7 +377,20 @@ class GoeChargerBaseEntity(Entity):
         # make sure that we keep the CASE of the key!
         self.data_key = description.key
 
-        if hasattr(description, "idx") and description.idx is not None:
+        # tuple_idx must have description.translation_key !
+        if hasattr(description, "tuple_idx") and description.tuple_idx is not None:
+            if description.translation_key is not None:
+                self._attr_translation_key = description.translation_key.lower()
+            else:
+                if len(description.tuple_idx) > 1:
+                    subKey1 = description.tuple_idx[0]
+                    subKey2 = description.tuple_idx[1]
+                    self._attr_translation_key = f"{self.data_key}_{subKey1}_{subKey2}".lower()
+                elif len(description.tuple_idx) > 0:
+                    subKey1 = description.tuple_idx[0]
+                    self._attr_translation_key = f"{self.data_key}_{subKey1}".lower()
+
+        elif hasattr(description, "idx") and description.idx is not None:
             self._attr_translation_key = f"{self.data_key.lower()}_{description.idx}"
         elif hasattr(description, "lookup") and description.lookup is not None:
             self._attr_translation_key = f"{self.data_key.lower()}_value"

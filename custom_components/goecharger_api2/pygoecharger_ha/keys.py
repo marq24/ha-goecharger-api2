@@ -699,7 +699,7 @@ class Tag(ApiKey, Enum):
     # msr | R/W | TYPE | Config | modbus slave swap registers
     # MSR = ApiKey(key="msr", cat=CAT.CONFIG, writeable=True)
     # mce | R/W | TYPE | Config | MQTT enabled
-    vMCE = ApiKey(key="mce", cat=CAT.CONFIG, writeable=True)
+    # MCE = ApiKey(key="mce", cat=CAT.CONFIG, writeable=True)
     # mcu | R/W | TYPE | Config | MQTT broker url
     # MCU = ApiKey(key="mcu", cat=CAT.CONFIG, writeable=True)
     # mcr | R/W | TYPE | Config | MQTT readonly (don't allow api writes from mqtt broker)
@@ -800,9 +800,7 @@ class Tag(ApiKey, Enum):
 
     # host | R | TYPE | Status | configured hostname
     # HOST = ApiKey(key="host", cat=CAT.STATUS)
-    # -> esist [but not present in data from controller]
-
-
+    # -> exist as KEY but does not EXIST in GOe API responses :-/
 
 
 

@@ -59,7 +59,11 @@ class GoeChargerSensor(GoeChargerBaseEntity, SensorEntity, RestoreEntity):
     @property
     def native_value(self):
         try:
-            if self.entity_description.idx is not None:
+            if self.entity_description.tuple_idx is not None and len(self.entity_description.tuple_idx) > 1:
+                subKey1 = self.entity_description.tuple_idx[0]
+                subKey2 = self.entity_description.tuple_idx[1]
+                value = self.coordinator.data[self.data_key][subKey1][subKey2]
+            elif self.entity_description.idx is not None:
                 value = self.coordinator.data[self.data_key][self.entity_description.idx]
             elif self.data_key == Tag.CLL.key:
                 # very special handling for the cll attribute - which is actually a json object that might should
