@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity
-from .const import DOMAIN, CONF_INTEGRATION_TYPE, BUTTONS, CONTROLLER_BUTTONS, ExtButtonEntityDescription
+from .const import DOMAIN, BUTTONS, CONTROLLER_BUTTONS, ExtButtonEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
 
-    if CONF_INTEGRATION_TYPE in config_entry.data and config_entry.data.get(CONF_INTEGRATION_TYPE) == INTG_TYPE.CONTROLLER.value:
+    if coordinator.intg_type == INTG_TYPE.CHARGER.value:
         for description in BUTTONS:
             entity = GoeChargerApiV2Button(coordinator, description)
             entities.append(entity)

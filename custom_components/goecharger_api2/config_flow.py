@@ -77,13 +77,14 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             valid = await self._test_host(intg_type=user_input[CONF_INTEGRATION_TYPE], host=user_input[CONF_HOST], serial=None, token=None)
             if valid:
                 user_input[CONF_MODE] = LAN
-                user_input[CONF_MODEL] = self._model.split(' ')[0]
-                user_input[CONF_TYPE] = f"{self._type} [{self._model}] Local"
                 user_input[CONF_ID] = self._serial
-                user_input[CONF_SCAN_INTERVAL] = max(5, user_input[CONF_SCAN_INTERVAL])
+                user_input[CONF_SCAN_INTERVAL] = max(30, user_input[CONF_SCAN_INTERVAL])
+                user_input[CONF_MODEL] = self._model.split(' ')[0]
                 if(user_input[CONF_INTEGRATION_TYPE] == INTG_TYPE.CHARGER.value):
+                    user_input[CONF_TYPE] = f"{self._type} [{self._model}] Local"
                     title = f"go-eCharger API v2 [{self._serial}] Local"
                 else:
+                    user_input[CONF_TYPE] = f"{self._type} Local"
                     title = f"go-eController API v2 [{self._serial}] Local"
                 return self.async_create_entry(title=title, data=user_input)
             else:
@@ -124,13 +125,14 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             valid = await self._test_host(intg_type=user_input[CONF_INTEGRATION_TYPE], host=None, serial=user_input[CONF_ID], token=user_input[CONF_TOKEN])
             if valid:
                 user_input[CONF_MODE] = WAN
-                user_input[CONF_MODEL] = self._model.split(' ')[0]
-                user_input[CONF_TYPE] = f"{self._type} [{self._model}] Cloud"
                 user_input[CONF_ID] = self._serial
                 user_input[CONF_SCAN_INTERVAL] = max(30, user_input[CONF_SCAN_INTERVAL])
+                user_input[CONF_MODEL] = self._model.split(' ')[0]
                 if(user_input[CONF_INTEGRATION_TYPE] == INTG_TYPE.CHARGER.value):
+                    user_input[CONF_TYPE] = f"{self._type} [{self._model}] Cloud"
                     title = f"go-eCharger API v2 [{self._serial}] Cloud"
                 else:
+                    user_input[CONF_TYPE] = f"{self._type} Cloud"
                     title = f"go-eController API v2 [{self._serial}] Cloud"
                 return self.async_create_entry(title=title, data=user_input)
             else:
@@ -175,10 +177,12 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 if intg_type == INTG_TYPE.CHARGER.value:
                     self._model = f"{ret[Tag.VAR.key]} kW"
                 else:
-                    # not so happy with using the host here - but well...
-                    self._model = f"{ret[Tag.HOST.key]}"
+                    # there is no model info for a controller... so we hardcode it,
+                    # since it will be used anyhow only for 11/22kW Version detection...
+                    self._model = "eControl" #f"{ret[Tag.FNA.key]}"
+
                 self._serial = ret[Tag.SSE.key]
-                _LOGGER.info(f"successfully validated host -> result: {ret}")
+                _LOGGER.info(f"successfully validated host for '{intg_type}' -> result: {ret}")
                 return True
 
         except Exception as exc:

@@ -41,6 +41,7 @@ class GoeChargerApiV2Bridge:
             self.token = f"Bearer {token}"
 
         if intg_type is not None and intg_type == INTG_TYPE.CONTROLLER.value:
+            self._logkey = "go-eController"
             self._FILTER_SYSTEMS = FILTER_CONTROLER_SYSTEMS
             self._FILTER_VERSIONS = FILTER_CONTROLER_VERSIONS
             self._FILTER_MIN_STATES = FILTER_CONTROLER_MIN_STATES
@@ -49,6 +50,7 @@ class GoeChargerApiV2Bridge:
             self._FILTER_ALL_STATES = FILTER_CONTROLER_ALL_STATES
             self._FILTER_ALL_CONFIG = FILTER_CONTROLER_ALL_CONFIG
         else:
+            self._logkey = "go-eCharger"
             self._FILTER_SYSTEMS = FILTER_SYSTEMS
             self._FILTER_VERSIONS = FILTER_VERSIONS
             self._FILTER_MIN_STATES = FILTER_MIN_STATES
@@ -139,7 +141,7 @@ class GoeChargerApiV2Bridge:
     async def _read_filtered_data(self, filters: str, log_info: str) -> dict:
         args = {"filter": filters}
         req_field_count = len(args['filter'].split(','))
-        _LOGGER.debug(f"going to request {req_field_count} keys from go-eCharger@{self.host_url}")
+        _LOGGER.debug(f"going to request {req_field_count} keys from {self._logkey}@{self.host_url}")
         if self.token:
             headers = {"Authorization": self.token}
         else:
@@ -153,7 +155,7 @@ class GoeChargerApiV2Bridge:
                         if r_json is not None and len(r_json) > 0:
                             resp_field_count = len(r_json)
                             if resp_field_count >= req_field_count:
-                                _LOGGER.debug(f"read {resp_field_count} values from go-eCharger@{self.host_url}")
+                                _LOGGER.debug(f"read {resp_field_count} values from {self._logkey}@{self.host_url}")
                             else:
                                 missing_fields_in_reponse = []
                                 requested_fields = args['filter'].split(',')
@@ -162,7 +164,7 @@ class GoeChargerApiV2Bridge:
                                         missing_fields_in_reponse.append(a_req_key)
 
                                 _LOGGER.info(
-                                    f"[missing fields: {len(missing_fields_in_reponse)} -> {missing_fields_in_reponse}] - not all requested fields where present in the response from from go-eCharger@{self.host_url}")
+                                    f"[missing fields: {len(missing_fields_in_reponse)} -> {missing_fields_in_reponse}] - not all requested fields where present in the response from from {self._logkey}@{self.host_url}")
                             return r_json
 
                     except JSONDecodeError as json_exc:
@@ -180,7 +182,7 @@ class GoeChargerApiV2Bridge:
         return {}
 
     async def _read_all_data(self) -> dict:
-        _LOGGER.info(f"going to request ALL keys from go-eCharger@{self.host_url}")
+        _LOGGER.info(f"going to request ALL keys from {self._logkey}@{self.host_url}")
         if self.token:
             headers = {"Authorization": self.token}
         else:
@@ -225,7 +227,7 @@ class GoeChargerApiV2Bridge:
         else:
             args = {key: '"'+str(value)+'"'}
 
-        _LOGGER.info(f"going to write {args} to go-eCharger@{self.host_url}")
+        _LOGGER.info(f"going to write {args} to {self._logkey}@{self.host_url}")
         if self.token:
             headers = {"Authorization": self.token}
         else:

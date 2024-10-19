@@ -8,7 +8,7 @@ from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity
-from .const import DOMAIN, CONF_INTEGRATION_TYPE, BINARY_SENSORS, CONTROLLER_BINARY_SENSORS, \
+from .const import DOMAIN, BINARY_SENSORS, CONTROLLER_BINARY_SENSORS, \
     ExtBinarySensorEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
 
-    if CONF_INTEGRATION_TYPE in config_entry.data and config_entry.data.get(CONF_INTEGRATION_TYPE) == INTG_TYPE.CONTROLLER.value:
+    if coordinator.intg_type == INTG_TYPE.CHARGER.value:
         for description in BINARY_SENSORS:
             entity = GoeChargerApiV2BinarySensor(coordinator, description)
             entities.append(entity)
@@ -59,7 +59,8 @@ class GoeChargerApiV2BinarySensor(GoeChargerBaseEntity, BinarySensorEntity):
 
         except IndexError:
             if self.entity_description.idx is not None:
-                _LOGGER.debug(f"lc-key: {self.data_key.lower()} value: {value} idx: {self.entity_description.idx} -> {self.coordinator.data[self.data_key]}")
+                _LOGGER.debug(
+                    f"lc-key: {self.data_key.lower()} value: {value} idx: {self.entity_description.idx} -> {self.coordinator.data[self.data_key]}")
             else:
                 _LOGGER.debug(f"lc-key: {self.data_key.lower()} caused IndexError")
             value = None

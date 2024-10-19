@@ -22,7 +22,7 @@
         }
       },
       "user_lan": {
-        "description": "If you need help setting it up, you can find it here: https://github.com/marq24/ha-goecharger-api2.\n\nImportant note: Local APIv2 access must first be activated in the Go-eCharger app settings",
+        "description": "If you need help setting it up, you can find it here: https://github.com/marq24/ha-goecharger-api2.\n\nImportant note: Local APIv2 access must first be activated in the go-e app settings",
         "data": {
           "integration_type": "Integration type: Charger or Controller?",
           "host": "Host or IP of your go-eCharger Wallbox",
@@ -30,7 +30,7 @@
         }
       },
       "user_wan": {
-        "description": "If you need help setting it up, you can find it here: https://github.com/marq24/ha-goecharger-api2.\n\nImportant note: Cloud APIv2 access must first be activated in the Go-eCharger app settings",
+        "description": "If you need help setting it up, you can find it here: https://github.com/marq24/ha-goecharger-api2.\n\nImportant note: Cloud APIv2 access must first be activated in the go-e app settings",
         "data": {
           "integration_type": "Integration type: Charger or Controller?",
           "serial": "Your go-eCharger Wallbox Serial number",
@@ -97,7 +97,7 @@
       "tls": {"name": "Test charging started"}
     },
     "button": {
-      "rst": {"name":  "Restart Charger device"},
+      "rst": {"name":  "Restart go-e device"},
       "zfocore": {"name":  "Read Configuration"}
     },
     "number": {

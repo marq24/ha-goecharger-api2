@@ -15,7 +15,7 @@ from homeassistant.const import (
 
 # Base component constants
 MANUFACTURER: Final = "go-e GmbH [Austria]"
-NAME: Final = "go-eCharger APIv2 Connect"
+NAME: Final = "go-eCharger/go-eController APIv2 Connect"
 DOMAIN: Final = "goecharger_api2"
 ISSUE_URL: Final = "https://github.com/marq24/ha-goecharger-api2/issues"
 
@@ -2033,16 +2033,6 @@ CONTROLLER_NUMBER_SENSORS = [
 CONTROLLER_SELECT_SENSORS = [
 ]
 CONTROLLER_SENSOR_SENSORS = [
-    ExtSensorEntityDescription(
-        key=Tag.HOST.key,
-        name="Hostname on STA interface",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=None,
-        state_class=None,
-        device_class=None,
-        entity_registry_enabled_default=False
-    ),
-
 ]
 CONTROLLER_SWITCH_SENSORS = [
 ]

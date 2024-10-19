@@ -22,7 +22,7 @@
         }
       },
       "user_lan": {
-        "description": "Wenn Du Hilfe bei der Einrichtung benötigst, findest du sie hier: https://github.com/marq24/ha-goecharger-api2.\n\nWichtiger Hinweis: Der lokale APIv2 Zugriff muss zuvor in den Go-eCharger App Einstellungen aktiviert werden",
+        "description": "Wenn Du Hilfe bei der Einrichtung benötigst, findest du sie hier: https://github.com/marq24/ha-goecharger-api2.\n\nWichtiger Hinweis: Der lokale APIv2 Zugriff muss zuvor in den go-e App Einstellungen aktiviert werden",
         "data": {
           "integration_type": "Integrationstyp: Charger oder Controller?",
           "host": "IP oder Hostname deiner go-eCharger Wallbox/deines go-eControllers",
@@ -30,7 +30,7 @@
         }
       },
       "user_wan": {
-        "description": "Wenn Du Hilfe bei der Einrichtung benötigst, findest du sie hier: https://github.com/marq24/ha-goecharger-api2.\n\nWichtiger Hinweis: Der Cloud APIv2 Zugriff muss zuvor in den Go-eCharger App Einstellungen aktiviert werden",
+        "description": "Wenn Du Hilfe bei der Einrichtung benötigst, findest du sie hier: https://github.com/marq24/ha-goecharger-api2.\n\nWichtiger Hinweis: Der Cloud APIv2 Zugriff muss zuvor in den go-e App Einstellungen aktiviert werden",
         "data": {
           "integration_type": "Integrationstyp: Charger oder Controller?",
           "serial": "Deine Seriennummer der go-eCharger Wallbox / des go-eControllers",
@@ -47,14 +47,14 @@
   "options": {
     "step": {
       "user_lan": {
-        "description": "Lokal: Wenn Du Hilfe bei der Einrichtung benötigst, findest du sie hier: https://github.com/marq24/ha-goecharger-api2.\n\nWichtiger Hinweis: Der APIv2 Zugriff muss zuvor in den Go-eCharger App Einstellungen aktiviert werden",
+        "description": "Lokal: Wenn Du Hilfe bei der Einrichtung benötigst, findest du sie hier: https://github.com/marq24/ha-goecharger-api2.\n\nWichtiger Hinweis: Der APIv2 Zugriff muss zuvor in den go-e App Einstellungen aktiviert werden",
         "data": {
           "limit_to_11kw": "11-kW-Limit setzen (nur für 22-kW-Varianten) – alle relevanten Einstellungen werden auf maximal 16A beschränkt (statt der möglichen 32A)",
           "scan_interval": "Aktualisierungsintervall in Sekunden [min: 5sek]"
         }
       },
       "user_wan": {
-        "description": "Cloud: Wenn Du Hilfe bei der Einrichtung benötigst, findest du sie hier: https://github.com/marq24/ha-goecharger-api2.\n\nWichtiger Hinweis: Der APIv2 Zugriff muss zuvor in den Go-eCharger App Einstellungen aktiviert werden",
+        "description": "Cloud: Wenn Du Hilfe bei der Einrichtung benötigst, findest du sie hier: https://github.com/marq24/ha-goecharger-api2.\n\nWichtiger Hinweis: Der APIv2 Zugriff muss zuvor in den go-e App Einstellungen aktiviert werden",
         "data": {
           "limit_to_11kw": "11-kW-Limit setzen (nur für 22-kW-Varianten) – alle relevanten Einstellungen werden auf maximal 16A beschränkt (statt der möglichen 32A)",
           "scan_interval": "Aktualisierungsintervall in Sekunden [min: 30sek]"
@@ -97,7 +97,7 @@
       "tls": {"name": "Test-Ladung gestartet"}
     },
     "button": {
-      "rst": {"name":  "go-eCharger Neustarten"},
+      "rst": {"name":  "go-e Neustarten"},
       "zfocore": {"name":  "Konfiguration erneut einlesen"}
     },
     "number": {

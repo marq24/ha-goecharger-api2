@@ -631,8 +631,6 @@ class Tag(ApiKey, Enum):
 
     # rst | W | TYPE | Unknown | Reset the controller
     # -> exist
-    # host | R | TYPE | Status | configured hostname
-    # -> exist
     # sse | R | TYPE | Constant | serial number
     # -> exist [no Sensor]
     # typ | R | TYPE | Constant | Devicetype
@@ -724,3 +722,6 @@ class Tag(ApiKey, Enum):
     # mecd | R | TYPE | Status | Mecmeter current data
 
     # delw | W | TYPE | Unknown | set this to 0-9 to delete sta config (erases ssid, key, ...)
+
+    # host | R | TYPE | Status | configured hostname
+    # -> exist as KEY but does not EXIST in GOe API responses :-/

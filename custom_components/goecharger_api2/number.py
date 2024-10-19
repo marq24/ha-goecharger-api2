@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity
-from .const import DOMAIN, CONF_INTEGRATION_TYPE, NUMBER_SENSORS, CONTROLLER_NUMBER_SENSORS, ExtNumberEntityDescription
+from .const import DOMAIN, NUMBER_SENSORS, CONTROLLER_NUMBER_SENSORS, ExtNumberEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,12 +15,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
 
-    if CONF_INTEGRATION_TYPE in config_entry.data and config_entry.data.get(CONF_INTEGRATION_TYPE) == INTG_TYPE.CONTROLLER.value:
-        for description in CONTROLLER_NUMBER_SENSORS:
+    if coordinator.intg_type == INTG_TYPE.CHARGER.value:
+        for description in NUMBER_SENSORS:
             entity = GoeChargerNumber(coordinator, description)
             entities.append(entity)
     else:
-        for description in NUMBER_SENSORS:
+        for description in CONTROLLER_NUMBER_SENSORS:
             entity = GoeChargerNumber(coordinator, description)
             entities.append(entity)
 
