@@ -2275,7 +2275,27 @@ CONTROLLER_SENSOR_SENSORS = [
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER_FACTOR,    
         entity_registry_enabled_default=True
-    ),          
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.WST.key,
+        lookup=True,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=None,
+        state_class=None,
+        device_class=None,
+        icon="mdi:wifi",
+        entity_registry_enabled_default=True
+    ),    
+    ExtSensorEntityDescription(
+        key=Tag.CCW.key,
+        idx="ssid",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=None,
+        state_class=None,
+        device_class=None,
+        icon="mdi:wifi",
+        entity_registry_enabled_default=True
+    )   
 ]
 CONTROLLER_SWITCH_SENSORS = [
 ]
