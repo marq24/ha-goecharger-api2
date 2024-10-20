@@ -41,6 +41,8 @@ class GoeChargerApiV2Bridge:
             self.token = f"Bearer {token}"
 
         if intg_type is not None and intg_type == INTG_TYPE.CONTROLLER.value:
+            self.isController = True
+            self.isCharger = False
             self._logkey = "go-eController"
             self._FILTER_SYSTEMS = FILTER_CONTROLER_SYSTEMS
             self._FILTER_VERSIONS = FILTER_CONTROLER_VERSIONS
@@ -50,6 +52,8 @@ class GoeChargerApiV2Bridge:
             self._FILTER_ALL_STATES = FILTER_CONTROLER_ALL_STATES
             self._FILTER_ALL_CONFIG = FILTER_CONTROLER_ALL_CONFIG
         else:
+            self.isCharger = True
+            self.isController = False
             self._logkey = "go-eCharger"
             self._FILTER_SYSTEMS = FILTER_SYSTEMS
             self._FILTER_VERSIONS = FILTER_VERSIONS
@@ -100,13 +104,22 @@ class GoeChargerApiV2Bridge:
         return self._versions | self._states | self._config
 
     async def read_all_states(self):
-        # ok we are in idle state - so we do not need all states... [but 5 minutes (=300sec) do a full update]
-        if "car" in self._states and CAR_VALUES.IDLE.value == self._states["car"] and self._LAST_FULL_STATE_UPDATE_TS + 300 > time():
+        do_minimal_status_update: bool = False
+        if self.isCharger:
+            # ok we are in idle state - so we do not need all states... [but 5 minutes (=300sec) do a full update]
+            if Tag.CAR.key in self._states and self._states[Tag.CAR.key] == CAR_VALUES.IDLE.value:
+                if self._LAST_FULL_STATE_UPDATE_TS + 300 > time():
+                    do_minimal_status_update = True
+        elif self.isController:
+            if self._LAST_FULL_STATE_UPDATE_TS + 300 > time():
+                do_minimal_status_update = True
+
+        if do_minimal_status_update:
             filter = self._FILTER_MIN_STATES
-            if self._REQUEST_IDS_DATA:
+            if self.isCharger and self._REQUEST_IDS_DATA:
                 filter = filter + self._FILTER_IDS_ADDON
 
-            # check what additional times do frequent upddate?!
+            # check what additional times do frequent update?!
             filter = filter+self._FILTER_TIMES_ADDON
 
             idle_states = await self._read_filtered_data(filters=filter, log_info="read_idle_states")
@@ -116,12 +129,13 @@ class GoeChargerApiV2Bridge:
 
                 # reset the '_REQUEST_IDS_DATA' flag (will be enabled again, if we post new PV data to the
                 # wallbox)
-                if self._REQUEST_IDS_DATA:
+                if self.isCharger and self._REQUEST_IDS_DATA:
                     self._REQUEST_IDS_DATA = False
 
-                # chck, if the car idle state have changed to something else
-                if Tag.CAR.key in self._states and self._states[Tag.CAR.key] != CAR_VALUES.IDLE.value:
+                # check, if the car idle state have changed to something else
+                if self.isCharger and Tag.CAR.key in self._states and self._states[Tag.CAR.key] != CAR_VALUES.IDLE.value:
                     # the car state is not 'idle' - so we should fetch all states...
+                    _LAST_FULL_STATE_UPDATE_TS = 0
                     await self.read_all_states()
 
         else:
@@ -134,9 +148,13 @@ class GoeChargerApiV2Bridge:
         await self.read_all_config()
 
     async def read_all_config(self):
-        self._config = await self._read_filtered_data(filters=self._FILTER_ALL_CONFIG, log_info="read_all_config")
-        if len(self._config) > 0:
-            self._LAST_CONFIG_UPDATE_TS = time()
+        if len(self._FILTER_ALL_CONFIG) > 0:
+            self._config = await self._read_filtered_data(filters=self._FILTER_ALL_CONFIG, log_info="read_all_config")
+            if len(self._config) > 0:
+                self._LAST_CONFIG_UPDATE_TS = time()
+        else:
+            # no configuration filter yet...
+            pass
 
     async def _read_filtered_data(self, filters: str, log_info: str) -> dict:
         args = {"filter": filters}
@@ -244,7 +262,8 @@ class GoeChargerApiV2Bridge:
                                     self._LAST_CONFIG_UPDATE_TS = 0
                                     self._LAST_FULL_STATE_UPDATE_TS = 0
                                 else:
-                                    self._REQUEST_IDS_DATA = True
+                                    if self.isCharger:
+                                        self._REQUEST_IDS_DATA = True
                                 return {key: value}
                             else:
                                 return {"err": r_json}

@@ -2,7 +2,8 @@
   "domain": "goecharger_api2",
   "name": "go-e APIv2 Connect",
   "codeowners": [
-    "@marq24"
+    "@marq24",
+    "@s3ppo"
   ],
   "config_flow": true,
   "dependencies": [],
