@@ -221,7 +221,7 @@ class GoeChargerApiV2OptionsFlowHandler(config_entries.OptionsFlow):
             return await self._update_options()
 
         # is this the 11kW or the 22kW Version?
-        if int(self.options.get(CONF_MODEL)) == 11:
+        if self.options.get(CONF_INTEGRATION_TYPE, INTG_TYPE.CHARGER.value) == INTG_TYPE.CONTROLLER.value or int(self.options.get(CONF_MODEL)) == 11:
             return self.async_show_form(
                 step_id=step_type,
                 data_schema=vol.Schema({
@@ -247,7 +247,7 @@ class GoeChargerApiV2OptionsFlowHandler(config_entries.OptionsFlow):
             return await self._update_options()
 
         # is this the 11kW or the 22kW Version?
-        if int(self.options.get(CONF_MODEL)) == 11:
+        if self.options.get(CONF_INTEGRATION_TYPE, INTG_TYPE.CHARGER.value) == INTG_TYPE.CONTROLLER.value or int(self.options.get(CONF_MODEL)) == 11:
             return self.async_show_form(
                 step_id=step_type,
                 data_schema=vol.Schema({
