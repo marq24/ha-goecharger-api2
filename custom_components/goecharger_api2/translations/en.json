@@ -345,7 +345,10 @@
       "isv_4_f": {"name": "Power factor Internal 5"},     
       "isv_5_i": {"name": "Ampere Internal 6"},
       "isv_5_p": {"name": "Power Internal 6"},
-      "isv_5_f": {"name": "Power factor Internal 6"} 
+      "isv_5_f": {"name": "Power factor Internal 6"},
+
+      "cpc_0_0": {"name": "Category 1 Consumed"},
+      "cpc_0_1": {"name": "Category 1 Returned"}      
     },
     "switch": {
       "acp": {"name": "Allow Charge Pause (car compatibility)"},
