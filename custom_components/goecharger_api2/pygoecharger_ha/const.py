@@ -29,7 +29,7 @@ FILTER_UNKNOWN_FW56_1: Final = "avgfhz,simo"
 ##############
 FILTER_CONTROLER_SYSTEMS: Final = "oem,sse,typ,fna"
 FILTER_CONTROLER_VERSIONS: Final = "fwv"
-FILTER_CONTROLER_MIN_STATES: Final = "usv,isv,cec,cpc"
+FILTER_CONTROLER_MIN_STATES: Final = "usv,isv,cec,ccp"
 
 # rbt: is the reboot time - and "looks like", that all other timestamps use the rbt "as" start point
 FILTER_CONTROLER_TIMES_ADDON: Final = ",rbt,lcs,clea"
