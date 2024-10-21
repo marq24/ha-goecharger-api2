@@ -345,7 +345,10 @@
       "isv_4_f": {"name": "Leistungsfaktor Internal 5"},        
       "isv_5_i": {"name": "Strom Internal 6"},
       "isv_5_p": {"name": "Leistung Internal 6"},
-      "isv_5_f": {"name": "Leistungsfaktor Internal 6"}              
+      "isv_5_f": {"name": "Leistungsfaktor Internal 6"},
+      
+      "cpc_0_0": {"name": "Kategorie 1 Zähler Verbrauch"},
+      "cpc_0_1": {"name": "Kategorie 1 Zähler Überschuss"}
     },
     "switch": {
       "acp": {"name": "Ladepausen zulassen (Fahrzeug Kompatibilität)"},

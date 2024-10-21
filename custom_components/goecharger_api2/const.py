@@ -2277,6 +2277,38 @@ CONTROLLER_SENSOR_SENSORS = [
         entity_registry_enabled_default=True
     ),
     ExtSensorEntityDescription(
+        key=Tag.CPC.key,
+        tuple_idx=[0, 0], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.ISV.key+"_0_0", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        write_zero_as_null=True,
+        native_max_value=1000000,
+        native_min_value=0,
+        native_step=10,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CPC.key,
+        tuple_idx=[0, 1], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.ISV.key+"_0_1", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        write_zero_as_null=True,
+        native_max_value=1000000,
+        native_min_value=0,
+        native_step=10,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
         key=Tag.WST.key,
         lookup=True,
         entity_category=EntityCategory.DIAGNOSTIC,
