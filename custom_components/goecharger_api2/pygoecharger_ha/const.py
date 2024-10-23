@@ -34,7 +34,7 @@ FILTER_CONTROLER_MIN_STATES: Final = "usv,isv,cec,ccp"
 # rbt: is the reboot time - and "looks like", that all other timestamps use the rbt "as" start point
 FILTER_CONTROLER_TIMES_ADDON: Final = ",rbt,lcs,clea"
 FILTER_CONTROLER_ALL_STATES: Final = "usv,isv,ccp,ecp,cec,cpc,ccf,ccw,wst"
-FILTER_CONTROLER_ALL_CONFIG: Final = ""
+FILTER_CONTROLER_ALL_CONFIG: Final = "mece,mecu,hai,wda,mme,mmh,iim,ips"
 
 
 

@@ -2032,6 +2032,60 @@ CONTROLLER_BUTTONS = [
 CONTROLLER_NUMBER_SENSORS = [
 ]
 CONTROLLER_SELECT_SENSORS = [
+    #ExtSelectEntityDescription(
+    #    key=Tag.IPS.key,
+    #    idx=0,
+    #    options=["0", "1", "2", "3"],
+    #    entity_category=EntityCategory.CONFIG,
+    #    device_class=None,
+    #    icon="mdi:sort",
+    #    entity_registry_enabled_default=True
+    #),
+    #ExtSelectEntityDescription(
+    #    key=Tag.IPS.key,
+    #    idx=1,
+    #    options=["0", "1", "2", "3"],
+    #    entity_category=EntityCategory.CONFIG,
+    #    device_class=None,
+    #    icon="mdi:sort",
+    #    entity_registry_enabled_default=True
+    #),
+    #ExtSelectEntityDescription(
+    #    key=Tag.IPS.key,
+    #    idx=2,
+    #    options=["0", "1", "2", "3"],
+    #    entity_category=EntityCategory.CONFIG,
+    #    device_class=None,
+    #    icon="mdi:sort",
+    #    entity_registry_enabled_default=True
+    #),
+    #ExtSelectEntityDescription(
+    #    key=Tag.IPS.key,
+    #    idx=3,
+    #    options=["0", "1", "2", "3"],
+    #    entity_category=EntityCategory.CONFIG,
+    #    device_class=None,
+    #    icon="mdi:sort",
+    #    entity_registry_enabled_default=True
+    #),
+    #ExtSelectEntityDescription(
+    #    key=Tag.IPS.key,
+    #    idx=4,
+    #    options=["0", "1", "2", "3"],
+    #    entity_category=EntityCategory.CONFIG,
+    #    device_class=None,
+    #    icon="mdi:sort",
+    #    entity_registry_enabled_default=True
+    #),
+    #ExtSelectEntityDescription(
+    #    key=Tag.IPS.key,
+    #    idx=5,
+    #    options=["0", "1", "2", "3"],
+    #    entity_category=EntityCategory.CONFIG,
+    #    device_class=None,
+    #    icon="mdi:sort",
+    #    entity_registry_enabled_default=True
+    #),
 ]
 CONTROLLER_SENSOR_SENSORS = [
     ExtSensorEntityDescription(
@@ -2870,7 +2924,91 @@ CONTROLLER_SENSOR_SENSORS = [
         device_class=None,
         icon="mdi:wifi",
         entity_registry_enabled_default=True
-    )   
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.MECU.key,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=None,
+        state_class=None,
+        device_class=None,
+        icon="mdi:link",
+        entity_registry_enabled_default=False
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.MMH.key,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=None,
+        state_class=None,
+        device_class=None,
+        icon="mdi:link",
+        entity_registry_enabled_default=False
+    ),
 ]
 CONTROLLER_SWITCH_SENSORS = [
+    ExtSwitchEntityDescription(
+        key=Tag.MECE.key,
+        entity_category=EntityCategory.CONFIG,
+        device_class=None,
+        entity_registry_enabled_default=False
+    ),
+    ExtSwitchEntityDescription(
+        key=Tag.HAI.key,
+        entity_category=EntityCategory.CONFIG,
+        device_class=None,
+        entity_registry_enabled_default=False
+    ),
+    ExtSwitchEntityDescription(
+        key=Tag.WDA.key,
+        entity_category=EntityCategory.CONFIG,
+        device_class=None,
+        entity_registry_enabled_default=True
+    ),
+    ExtSwitchEntityDescription(
+        key=Tag.MME.key,
+        entity_category=EntityCategory.CONFIG,
+        device_class=None,
+        entity_registry_enabled_default=False
+    )
+    #ExtSwitchEntityDescription(
+    #    key=Tag.IIM.key,
+    #    idx=0,
+    #    entity_category=EntityCategory.CONFIG,
+    #    device_class=None,
+    #    entity_registry_enabled_default=True
+    #),
+    #ExtSwitchEntityDescription(
+    #    key=Tag.IIM.key,
+    #    idx=1,
+    #    entity_category=EntityCategory.CONFIG,
+    #    device_class=None,
+    #    entity_registry_enabled_default=True
+    #),
+    #ExtSwitchEntityDescription(
+    #    key=Tag.IIM.key,
+    #    idx=2,
+    #    entity_category=EntityCategory.CONFIG,
+    #    device_class=None,
+    #    entity_registry_enabled_default=True
+    #),
+    #ExtSwitchEntityDescription(
+    #    key=Tag.IIM.key,
+    #    idx=3,
+    #    entity_category=EntityCategory.CONFIG,
+    #    device_class=None,
+    #    entity_registry_enabled_default=True
+    #),
+    #ExtSwitchEntityDescription(
+    #    key=Tag.IIM.key,
+    #    idx=4,
+    #    entity_category=EntityCategory.CONFIG,
+    #    device_class=None,
+    #    entity_registry_enabled_default=True
+    #),
+    #ExtSwitchEntityDescription(
+    #    key=Tag.IIM.key,
+    #    idx=5,
+    #    entity_category=EntityCategory.CONFIG,
+    #    device_class=None,
+    #    entity_registry_enabled_default=True
+    #),
 ]
