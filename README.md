@@ -9,7 +9,7 @@ __Please note__, _that this integration is not official and not supported by the
 
 [![hacs_badge][hacsbadge]][hacs] [![github][ghsbadge]][ghs] [![BuyMeCoffee][buymecoffeebadge]][buymecoffee] [![PayPal][paypalbadge]][paypal] [![hainstall][hainstallbadge]][hainstall]
 
-## latest successfully testes go-eCharger Firmware Version: 56.2 / go-eController Firmware Version: ??? 
+## latest successfully tests go-eCharger Firmware Version: 56.2 / go-eController Firmware Version: 1.1.1
 
 The latest go-eCharger firmware 56.8 have not been fully tested with this integration (yet) - So if you have issues with this integration after you updated your go-eCharger firmware higher than 56.2 - as [reported here: #11](https://github.com/marq24/ha-goecharger-api2/issues/11) - then please be so kind and downgrade the firmware again. TIA
 
@@ -28,7 +28,11 @@ The latest go-eCharger firmware 56.8 have not been fully tested with this integr
 - Owners of a 22kW variant can __force 16A only__ for all relevant settings. (This can be enabled via the integration settings and require a restart of the integration - then with every restart the settings will be inspected and adjusted to a max of 16A if required)
 
 ### go-eController
- - lorem
+ - __Most documented fields__ [in the official go-eCharger GitHub repository](https://github.com/goecharger/go-eCharger-API-v2/blob/main/apikeys-en.md) are supported by this integration.
+ - More sensors will follow up
+ - Multilanguage support: a German translation included (any feedback highly appreciated!) & looking forward to other language contributions
+
+   Please note that the configuration data will be read only every 24hours from the hardware (to save data) - but you can update the sensors any time with an 'update' button.
 
 ## Disclaimer
 
@@ -41,7 +45,7 @@ Please be aware, that we are developing this integration to best of our knowledg
 - enabled APIv2 [[see instructions](#enable-http-api-v2-in-go-echarger-app)]
 
 ### go-eController
-- ???
+- enabled APIv2 Controller running Firmware version __1.1.1__ (or higher) - tested successfully with 1.1.2 BETA
 - enabled APIv2 [[see instructions](#enable-http-api-v2-in-go-echarger-app)]
 
 ## Installation
