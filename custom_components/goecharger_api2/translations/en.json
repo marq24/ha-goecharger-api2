@@ -94,7 +94,7 @@
       "esk": {"name": "energy set kwh (only stored for app)"},
       "fsp": {"name": "Force single phase"},
       "tlf": {"name": "Test charging finished"},
-      "tls": {"name": "Test charging started"}
+      "tls": {"name": "Test charging started"}    
     },
     "button": {
       "rst": {"name":  "Restart go-e device"},
@@ -220,6 +220,60 @@
           "1": "Auto unlock",
           "2": "Always locked",
           "3": "Force unlock"
+        }
+      },
+      "ips_0": {
+        "name": "Assign phase Internal 1",
+        "state": {
+          "0": "L1",
+          "1": "L2",
+          "2": "L3",
+          "3": "N"
+        }
+      },
+      "ips_1": {
+        "name": "Assign phase Internal 2",
+        "state": {
+          "0": "L1",
+          "1": "L2",
+          "2": "L3",
+          "3": "N"
+        }
+      },
+      "ips_2": {
+        "name": "Assign phase Internal 3",
+        "state": {
+          "0": "L1",
+          "1": "L2",
+          "2": "L3",
+          "3": "N"
+        }
+      },
+      "ips_3": {
+        "name": "Assign phase Internal 4",
+        "state": {
+          "0": "L1",
+          "1": "L2",
+          "2": "L3",
+          "3": "N"
+        }
+      },
+      "ips_4": {
+        "name": "Assign phase Internal 5",
+        "state": {
+          "0": "L1",
+          "1": "L2",
+          "2": "L3",
+          "3": "N"
+        }
+      },
+      "ips_5": {
+        "name": "Assign phase Internal 6",
+        "state": {
+          "0": "L1",
+          "1": "L2",
+          "2": "L3",
+          "3": "N"
         }
       }
     },
@@ -395,7 +449,10 @@
       "ccp_12": {"name": "Category 13 Power"},
       "ccp_13": {"name": "Category 14 Power"},
       "ccp_14": {"name": "Category 15 Power"},
-      "ccp_15": {"name": "Category 16 Power"}
+      "ccp_15": {"name": "Category 16 Power"},
+
+      "mecu": {"name": "MEC meter url"},
+      "mmh": {"name": "Modbus master host"}
     },
     "switch": {
       "acp": {"name": "Allow Charge Pause (car compatibility)"},
@@ -413,7 +470,17 @@
       "nmo": {"name": "Ground-Check disabled / Norway Mode"},
       "su":  {"name": "Simulate unplugging (short)"},
       "sua": {"name": "Simulate unplugging permanently"},
-      "upo": {"name": "Unlock on power outage"}
+      "upo": {"name": "Unlock on power outage"},
+      "mece": {"name": "MEC meter"},
+      "hai": {"name": "Local HTTP-API v2"},
+      "wda": {"name": "Disable access point when cloud connected"},
+      "mme": {"name": "Modubus master"},
+      "iim_0": {"name": "Invert Internal 1"},
+      "iim_1": {"name": "Invert Internal 2"},
+      "iim_2": {"name": "Invert Internal 3"},
+      "iim_3": {"name": "Invert Internal 4"},
+      "iim_4": {"name": "Invert Internal 5"},
+      "iim_5": {"name": "Invert Internal 6"}
     }
   }
 }
