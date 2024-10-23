@@ -9,7 +9,7 @@ __Please note__, _that this integration is not official and not supported by the
 
 [![hacs_badge][hacsbadge]][hacs] [![github][ghsbadge]][ghs] [![BuyMeCoffee][buymecoffeebadge]][buymecoffee] [![PayPal][paypalbadge]][paypal] [![hainstall][hainstallbadge]][hainstall]
 
-## latest successfully testes go-eCharger Firmware Version: 56.2 / go-eController Firmware Version: 1.1.1
+## latest successfully tests go-eCharger Firmware Version: 56.2 / go-eController Firmware Version: 1.1.1
 
 The latest go-eCharger firmware 56.8 have not been fully tested with this integration (yet) - So if you have issues with this integration after you updated your go-eCharger firmware higher than 56.2 - as [reported here: #11](https://github.com/marq24/ha-goecharger-api2/issues/11) - then please be so kind and downgrade the firmware again. TIA
 
@@ -45,7 +45,7 @@ Please be aware, that we are developing this integration to best of our knowledg
 - enabled APIv2 [[see instructions](#enable-http-api-v2-in-go-echarger-app)]
 
 ### go-eController
-- ???
+- enabled APIv2 Controller running Firmware version __1.1.1__ (or higher) - tested successfully with 1.1.2 BETA
 - enabled APIv2 [[see instructions](#enable-http-api-v2-in-go-echarger-app)]
 
 ## Installation
