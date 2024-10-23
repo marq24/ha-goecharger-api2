@@ -39,7 +39,15 @@ class GoeChargerSelect(GoeChargerBaseEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         try:
-            value = self.coordinator.data[self.data_key]
+            if self.entity_description.idx is not None:
+                if self.data_key in self.coordinator.data:
+                    value = self.coordinator.data[self.data_key][self.entity_description.idx]
+                else:
+                    _LOGGER.warning(f"current_option: for {self.data_key} with index not found in data: {len(self.coordinator.data)}")
+                    return "unavailable"
+            else:
+                value = self.coordinator.data[self.data_key]
+
             if value is None or value == "":
                 # special handling for tra 'transaction' API key...
                 # where None means, that Auth is required
@@ -57,9 +65,24 @@ class GoeChargerSelect(GoeChargerBaseEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         try:
-            if str(option) == "null":
-                await self.coordinator.async_write_key(self.data_key, None, self)
+
+            if self.entity_description.idx is not None:
+                if self.data_key in self.coordinator.data:
+                    # we have to write all values of the object... [not only the set one]
+                    obj = self.coordinator.data[self.data_key]
+                    if str(option) == "null":
+                        obj[self.entity_description.idx] = None
+                    else:
+                        obj[self.entity_description.idx] = option
+
+                    await self.coordinator.async_write_key(self.data_key, obj, self)
+                else:
+                    _LOGGER.warning(f"async_select_option: for {self.data_key} with index not found in data: {len(self.coordinator.data)}")
+                    return "unavailable"
             else:
-                await self.coordinator.async_write_key(self.data_key, int(option), self)
+                if str(option) == "null":
+                    await self.coordinator.async_write_key(self.data_key, None, self)
+                else:
+                    await self.coordinator.async_write_key(self.data_key, int(option), self)
         except ValueError:
             return "unavailable"

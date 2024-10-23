@@ -57,7 +57,7 @@ class ExtNumberEntityDescription(NumberEntityDescription):
 
 @dataclass
 class ExtSelectEntityDescription(SelectEntityDescription):
-    pass
+    idx: int | str | None = None
 
 
 @dataclass
@@ -73,6 +73,7 @@ class ExtSensorEntityDescription(SensorEntityDescription):
 class ExtSwitchEntityDescription(SwitchEntityDescription):
     is_zero_or_one: bool | None = None
     icon_off: str | None = None
+    idx: int | str | None = None
 
 
 PLATFORMS: Final = ["binary_sensor", "button", "number", "select", "sensor", "switch"]
@@ -2120,7 +2121,7 @@ CONTROLLER_SENSOR_SENSORS = [
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
         entity_registry_enabled_default=True
-    ),    
+    ),
     ExtSensorEntityDescription(
         key=Tag.USV.key,
         tuple_idx=[0, "uN"], # when using the 'tuple_idx', a 'translation_key' must be also present!
@@ -2162,9 +2163,9 @@ CONTROLLER_SENSOR_SENSORS = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.POWER_FACTOR,    
+        device_class=SensorDeviceClass.POWER_FACTOR,
         entity_registry_enabled_default=True
-    ),    
+    ),
     ExtSensorEntityDescription(
         key=Tag.ISV.key,
         tuple_idx=[1, "i"], # when using the 'tuple_idx', a 'translation_key' must be also present!
@@ -2195,9 +2196,9 @@ CONTROLLER_SENSOR_SENSORS = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.POWER_FACTOR,    
+        device_class=SensorDeviceClass.POWER_FACTOR,
         entity_registry_enabled_default=True
-    ),        
+    ),
     ExtSensorEntityDescription(
         key=Tag.ISV.key,
         tuple_idx=[2, "i"], # when using the 'tuple_idx', a 'translation_key' must be also present!
@@ -2228,9 +2229,9 @@ CONTROLLER_SENSOR_SENSORS = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.POWER_FACTOR,    
+        device_class=SensorDeviceClass.POWER_FACTOR,
         entity_registry_enabled_default=True
-    ),        
+    ),
     ExtSensorEntityDescription(
         key=Tag.ISV.key,
         tuple_idx=[3, "i"], # when using the 'tuple_idx', a 'translation_key' must be also present!
@@ -2261,9 +2262,9 @@ CONTROLLER_SENSOR_SENSORS = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.POWER_FACTOR,    
+        device_class=SensorDeviceClass.POWER_FACTOR,
         entity_registry_enabled_default=True
-    ),        
+    ),
     ExtSensorEntityDescription(
         key=Tag.ISV.key,
         tuple_idx=[4, "i"], # when using the 'tuple_idx', a 'translation_key' must be also present!
@@ -2294,9 +2295,9 @@ CONTROLLER_SENSOR_SENSORS = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.POWER_FACTOR,    
+        device_class=SensorDeviceClass.POWER_FACTOR,
         entity_registry_enabled_default=True
-    ),        
+    ),
     ExtSensorEntityDescription(
         key=Tag.ISV.key,
         tuple_idx=[5, "i"], # when using the 'tuple_idx', a 'translation_key' must be also present!
@@ -2327,7 +2328,7 @@ CONTROLLER_SENSOR_SENSORS = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.POWER_FACTOR,    
+        device_class=SensorDeviceClass.POWER_FACTOR,
         entity_registry_enabled_default=True
     ),
     ExtSensorEntityDescription(
@@ -2339,7 +2340,7 @@ CONTROLLER_SENSOR_SENSORS = [
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=NumberDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,        
+        state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:lightning-bolt",
         entity_registry_enabled_default=True
     ),
@@ -2484,7 +2485,7 @@ CONTROLLER_SENSOR_SENSORS = [
         device_class=NumberDeviceClass.ENERGY,
         icon="mdi:lightning-bolt",
         entity_registry_enabled_default=True
-    ),    
+    ),
     ExtSensorEntityDescription(
         key=Tag.CEC.key,
         tuple_idx=[6, 0], # when using the 'tuple_idx', a 'translation_key' must be also present!
@@ -2510,7 +2511,7 @@ CONTROLLER_SENSOR_SENSORS = [
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:lightning-bolt",
         entity_registry_enabled_default=True
-    ),    
+    ),
     ExtSensorEntityDescription(
         key=Tag.CEC.key,
         tuple_idx=[7, 0], # when using the 'tuple_idx', a 'translation_key' must be also present!
@@ -2536,7 +2537,7 @@ CONTROLLER_SENSOR_SENSORS = [
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:lightning-bolt",
         entity_registry_enabled_default=True
-    ),    
+    ),
     ExtSensorEntityDescription(
         key=Tag.CEC.key,
         tuple_idx=[8, 0], # when using the 'tuple_idx', a 'translation_key' must be also present!
@@ -2692,7 +2693,7 @@ CONTROLLER_SENSOR_SENSORS = [
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:lightning-bolt",
         entity_registry_enabled_default=True
-    ),    
+    ),
     ExtSensorEntityDescription(
         key=Tag.CEC.key,
         tuple_idx=[14, 0], # when using the 'tuple_idx', a 'translation_key' must be also present!
@@ -2718,7 +2719,7 @@ CONTROLLER_SENSOR_SENSORS = [
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:lightning-bolt",
         entity_registry_enabled_default=True
-    ),    
+    ),
     ExtSensorEntityDescription(
         key=Tag.CEC.key,
         tuple_idx=[15, 0], # when using the 'tuple_idx', a 'translation_key' must be also present!
@@ -2784,7 +2785,7 @@ CONTROLLER_SENSOR_SENSORS = [
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=True
-    ),                
+    ),
     ExtSensorEntityDescription(
         key=Tag.CCP.key,
         idx=4,
@@ -2834,7 +2835,7 @@ CONTROLLER_SENSOR_SENSORS = [
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=True
-    ),                
+    ),
     ExtSensorEntityDescription(
         key=Tag.CCP.key,
         idx=9,
@@ -2884,7 +2885,7 @@ CONTROLLER_SENSOR_SENSORS = [
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=True
-    ),                
+    ),
     ExtSensorEntityDescription(
         key=Tag.CCP.key,
         idx=14,
@@ -2904,7 +2905,7 @@ CONTROLLER_SENSOR_SENSORS = [
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=True
-    ),    
+    ),
     ExtSensorEntityDescription(
         key=Tag.WST.key,
         lookup=True,
@@ -2914,7 +2915,7 @@ CONTROLLER_SENSOR_SENSORS = [
         device_class=None,
         icon="mdi:wifi",
         entity_registry_enabled_default=True
-    ),    
+    ),
     ExtSensorEntityDescription(
         key=Tag.CCW.key,
         idx="ssid",
