@@ -36,26 +36,55 @@ class GoeChargerSwitch(GoeChargerBaseEntity, SwitchEntity):
         self._attr_icon_off = self.entity_description.icon_off
 
     async def async_turn_on(self, **kwargs):
-       """Turn on the switch."""
-       try:
-           if self.entity_description.is_zero_or_one:
-               await self.coordinator.async_write_key(self.data_key, 1, self)
-           else:
-               await self.coordinator.async_write_key(self.data_key, True, self)
-           return self.coordinator.data[self.data_key]
-       except ValueError:
-           return "unavailable"
+        """Turn on the switch."""
+        try:
+            if self.entity_description.idx is not None:
+                if self.data_key in self.coordinator.data:
+                    # we have to write all values of the object... [not only the set one]
+                    obj = self.coordinator.data[self.data_key]
+                    if self.entity_description.is_zero_or_one:
+                        obj[self.entity_description.idx] = 1
+                    else:
+                        obj[self.entity_description.idx] = True
+                else:
+                    _LOGGER.warning(f"async_turn_on: for {self.data_key} with index not found in data: {len(self.coordinator.data)}")
+                    return "unavailable"
+            else:
+                if self.entity_description.is_zero_or_one:
+                    obj = 1
+                else:
+                    obj = True
+
+            await self.coordinator.async_write_key(self.data_key, obj, self)
+            return self.coordinator.data[self.data_key]
+
+        except ValueError:
+            return "unavailable"
 
     async def async_turn_off(self, **kwargs):
-       """Turn off the switch."""
-       try:
-           if self.entity_description.is_zero_or_one:
-               await self.coordinator.async_write_key(self.data_key, 0, self)
-           else:
-               await self.coordinator.async_write_key(self.data_key, False, self)
-           return self.coordinator.data[self.data_key]
-       except ValueError:
-           return "unavailable"
+        """Turn off the switch."""
+        try:
+            if self.entity_description.idx is not None:
+                if self.data_key in self.coordinator.data:
+                    # we have to write all values of the object... [not only the set one]
+                    obj = self.coordinator.data[self.data_key]
+                    if self.entity_description.is_zero_or_one:
+                        obj[self.entity_description.idx] = 0
+                    else:
+                        obj[self.entity_description.idx] = False
+                else:
+                    _LOGGER.warning(f"async_turn_off: for {self.data_key} with index not found in data: {len(self.coordinator.data)}")
+                    return "unavailable"
+            else:
+                if self.entity_description.is_zero_or_one:
+                    obj = 0
+                else:
+                    obj = False
+
+            await self.coordinator.async_write_key(self.data_key, obj, self)
+            return self.coordinator.data[self.data_key]
+        except ValueError:
+            return "unavailable"
 
     @property
     def is_on(self) -> bool | None:
@@ -63,7 +92,10 @@ class GoeChargerSwitch(GoeChargerBaseEntity, SwitchEntity):
             value = None
             if self.coordinator.data is not None:
                 if self.data_key in self.coordinator.data:
-                    value = self.coordinator.data[self.data_key]
+                    if self.entity_description.idx is not None:
+                        value = self.coordinator.data[self.data_key][self.entity_description.idx]
+                    else:
+                        value = self.coordinator.data[self.data_key]
                 else:
                     if len(self.coordinator.data) > 0:
                         _LOGGER.info(f"is_on: for {self.data_key} not found in data: {len(self.coordinator.data)}")

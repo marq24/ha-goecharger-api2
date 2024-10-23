@@ -1,5 +1,5 @@
 {
-  "name": "go-eCharger APIv2 Connect",
+  "name": "go-e APIv2 Connect",
   "homeassistant": "2023.8.0",
   "hacs": "1.18.0",
   "render_readme": true
