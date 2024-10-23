@@ -94,7 +94,7 @@
       "esk": {"name": "Gesetzte Lademenge kWh (Anzeige)"},
       "fsp": {"name": "1-phasiges Laden erzwingen"},
       "tlf": {"name": "Test-Ladung abgeschlossen"},
-      "tls": {"name": "Test-Ladung gestartet"}
+      "tls": {"name": "Test-Ladung gestartet"}        
     },
     "button": {
       "rst": {"name":  "go-e Neustarten"},
@@ -220,6 +220,60 @@
           "1": "Automatisch entriegeln",
           "2": "Immer verriegelt",
           "3": "Entriegelung erzwingen"
+        }
+      },
+      "ips_0": {
+        "name": "Phasenzuordnung Internal 1",
+        "state": {
+          "0": "L1",
+          "1": "L2",
+          "2": "L3",
+          "3": "N"
+        }
+      },
+      "ips_1": {
+        "name": "Phasenzuordnung Internal 2",
+        "state": {
+          "0": "L1",
+          "1": "L2",
+          "2": "L3",
+          "3": "N"
+        }
+      },
+      "ips_2": {
+        "name": "Phasenzuordnung Internal 3",
+        "state": {
+          "0": "L1",
+          "1": "L2",
+          "2": "L3",
+          "3": "N"
+        }
+      },
+      "ips_3": {
+        "name": "Phasenzuordnung Internal 4",
+        "state": {
+          "0": "L1",
+          "1": "L2",
+          "2": "L3",
+          "3": "N"
+        }
+      },
+      "ips_4": {
+        "name": "Phasenzuordnung Internal 5",
+        "state": {
+          "0": "L1",
+          "1": "L2",
+          "2": "L3",
+          "3": "N"
+        }
+      },
+      "ips_5": {
+        "name": "Phasenzuordnung Internal 6",
+        "state": {
+          "0": "L1",
+          "1": "L2",
+          "2": "L3",
+          "3": "N"
         }
       }
     },
@@ -348,7 +402,57 @@
       "isv_5_f": {"name": "Leistungsfaktor Internal 6"},
       
       "cec_0_0": {"name": "Kategorie 1 Zähler Verbrauch"},
-      "cec_0_1": {"name": "Kategorie 1 Zähler Überschuss"}
+      "cec_0_1": {"name": "Kategorie 1 Zähler Überschuss"},
+      "cec_1_0": {"name": "Kategorie 2 Zähler Verbrauch"},
+      "cec_1_1": {"name": "Kategorie 2 Zähler Überschuss"},
+      "cec_2_0": {"name": "Kategorie 3 Zähler Verbrauch"},
+      "cec_2_1": {"name": "Kategorie 3 Zähler Überschuss"},
+      "cec_3_0": {"name": "Kategorie 4 Zähler Verbrauch"},
+      "cec_3_1": {"name": "Kategorie 4 Zähler Überschuss"},
+      "cec_4_0": {"name": "Kategorie 5 Zähler Verbrauch"},
+      "cec_4_1": {"name": "Kategorie 5 Zähler Überschuss"},
+      "cec_5_0": {"name": "Kategorie 6 Zähler Verbrauch"},
+      "cec_5_1": {"name": "Kategorie 6 Zähler Überschuss"},
+      "cec_6_0": {"name": "Kategorie 7 Zähler Verbrauch"},
+      "cec_6_1": {"name": "Kategorie 7 Zähler Überschuss"},
+      "cec_7_0": {"name": "Kategorie 8 Zähler Verbrauch"},
+      "cec_7_1": {"name": "Kategorie 8 Zähler Überschuss"},
+      "cec_8_0": {"name": "Kategorie 9 Zähler Verbrauch"},
+      "cec_8_1": {"name": "Kategorie 9 Zähler Überschuss"},
+      "cec_9_0": {"name": "Kategorie 10 Zähler Verbrauch"},
+      "cec_9_1": {"name": "Kategorie 10 Zähler Überschuss"},
+      "cec_10_0": {"name": "Kategorie 11 Zähler Verbrauch"},
+      "cec_10_1": {"name": "Kategorie 11 Zähler Überschuss"},
+      "cec_11_0": {"name": "Kategorie 12 Zähler Verbrauch"},
+      "cec_11_1": {"name": "Kategorie 12 Zähler Überschuss"},
+      "cec_12_0": {"name": "Kategorie 13 Zähler Verbrauch"},
+      "cec_12_1": {"name": "Kategorie 13 Zähler Überschuss"},
+      "cec_13_0": {"name": "Kategorie 14 Zähler Verbrauch"},
+      "cec_13_1": {"name": "Kategorie 14 Zähler Überschuss"},
+      "cec_14_0": {"name": "Kategorie 15 Zähler Verbrauch"},
+      "cec_14_1": {"name": "Kategorie 15 Zähler Überschuss"},
+      "cec_15_0": {"name": "Kategorie 16 Zähler Verbrauch"},
+      "cec_15_1": {"name": "Kategorie 16 Zähler Überschuss"},
+
+      "ccp_0": {"name": "Kategorie 1 Leistung"},
+      "ccp_1": {"name": "Kategorie 2 Leistung"},
+      "ccp_2": {"name": "Kategorie 3 Leistung"},
+      "ccp_3": {"name": "Kategorie 4 Leistung"},
+      "ccp_4": {"name": "Kategorie 5 Leistung"},
+      "ccp_5": {"name": "Kategorie 6 Leistung"},
+      "ccp_6": {"name": "Kategorie 7 Leistung"},
+      "ccp_7": {"name": "Kategorie 8 Leistung"},
+      "ccp_8": {"name": "Kategorie 9 Leistung"},
+      "ccp_9": {"name": "Kategorie 10 Leistung"},
+      "ccp_10": {"name": "Kategorie 11 Leistung"},
+      "ccp_11": {"name": "Kategorie 12 Leistung"},
+      "ccp_12": {"name": "Kategorie 13 Leistung"},
+      "ccp_13": {"name": "Kategorie 14 Leistung"},
+      "ccp_14": {"name": "Kategorie 15 Leistung"},
+      "ccp_15": {"name": "Kategorie 16 Leistung"},
+
+      "mecu": {"name": "MEC Meter Url"},
+      "mmh": {"name": "Modbus Master Host"}
     },
     "switch": {
       "acp": {"name": "Ladepausen zulassen (Fahrzeug Kompatibilität)"},
@@ -366,7 +470,17 @@
       "nmo": {"name": "Erdungsprüfung deaktiviert / Norwegen Modus"},
       "su":  {"name": "Simuliertes-Ausstecken (kurz)"},
       "sua": {"name": "Simuliertes-Ausstecken permanent"},
-      "upo": {"name": "Entriegelung bei Stromausfall"}
+      "upo": {"name": "Entriegelung bei Stromausfall"},
+      "hai": {"name": "Lokale HTTP-API v2"},
+      "wda": {"name": "Access Point ausschalten wenn Cloud verbunden"},
+      "mece": {"name": "MEC Meter"},
+      "mme": {"name": "Modubus Master"},
+      "iim_0": {"name": "Invertieren Internal 1"},
+      "iim_1": {"name": "Invertieren Internal 2"},
+      "iim_2": {"name": "Invertieren Internal 3"},
+      "iim_3": {"name": "Invertieren Internal 4"},
+      "iim_4": {"name": "Invertieren Internal 5"},
+      "iim_5": {"name": "Invertieren Internal 6"}
     }
   }
 }

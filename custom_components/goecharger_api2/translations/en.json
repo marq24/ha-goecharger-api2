@@ -94,7 +94,7 @@
       "esk": {"name": "energy set kwh (only stored for app)"},
       "fsp": {"name": "Force single phase"},
       "tlf": {"name": "Test charging finished"},
-      "tls": {"name": "Test charging started"}
+      "tls": {"name": "Test charging started"}    
     },
     "button": {
       "rst": {"name":  "Restart go-e device"},
@@ -220,6 +220,60 @@
           "1": "Auto unlock",
           "2": "Always locked",
           "3": "Force unlock"
+        }
+      },
+      "ips_0": {
+        "name": "Assign phase Internal 1",
+        "state": {
+          "0": "L1",
+          "1": "L2",
+          "2": "L3",
+          "3": "N"
+        }
+      },
+      "ips_1": {
+        "name": "Assign phase Internal 2",
+        "state": {
+          "0": "L1",
+          "1": "L2",
+          "2": "L3",
+          "3": "N"
+        }
+      },
+      "ips_2": {
+        "name": "Assign phase Internal 3",
+        "state": {
+          "0": "L1",
+          "1": "L2",
+          "2": "L3",
+          "3": "N"
+        }
+      },
+      "ips_3": {
+        "name": "Assign phase Internal 4",
+        "state": {
+          "0": "L1",
+          "1": "L2",
+          "2": "L3",
+          "3": "N"
+        }
+      },
+      "ips_4": {
+        "name": "Assign phase Internal 5",
+        "state": {
+          "0": "L1",
+          "1": "L2",
+          "2": "L3",
+          "3": "N"
+        }
+      },
+      "ips_5": {
+        "name": "Assign phase Internal 6",
+        "state": {
+          "0": "L1",
+          "1": "L2",
+          "2": "L3",
+          "3": "N"
         }
       }
     },
@@ -348,7 +402,57 @@
       "isv_5_f": {"name": "Power factor Internal 6"},
 
       "cec_0_0": {"name": "Category 1 Consumed"},
-      "cec_0_1": {"name": "Category 1 Returned"}      
+      "cec_0_1": {"name": "Category 1 Returned"},
+      "cec_1_0": {"name": "Category 2 Consumed"},
+      "cec_1_1": {"name": "Category 2 Returned"},
+      "cec_2_0": {"name": "Category 3 Consumed"},
+      "cec_2_1": {"name": "Category 3 Returned"},
+      "cec_3_0": {"name": "Category 4 Consumed"},
+      "cec_3_1": {"name": "Category 4 Returned"},
+      "cec_4_0": {"name": "Category 5 Consumed"},
+      "cec_4_1": {"name": "Category 5 Returned"},
+      "cec_5_0": {"name": "Category 6 Consumed"},
+      "cec_5_1": {"name": "Category 6 Returned"},
+      "cec_6_0": {"name": "Category 7 Consumed"},
+      "cec_6_1": {"name": "Category 7 Returned"},
+      "cec_7_0": {"name": "Category 8 Consumed"},
+      "cec_7_1": {"name": "Category 8 Returned"},
+      "cec_8_0": {"name": "Category 9 Consumed"},
+      "cec_8_1": {"name": "Category 9 Returned"},
+      "cec_9_0": {"name": "Category 10 Consumed"},
+      "cec_9_1": {"name": "Category 10 Returned"},
+      "cec_10_0": {"name": "Category 11 Consumed"},
+      "cec_10_1": {"name": "Category 11 Returned"},
+      "cec_11_0": {"name": "Category 12 Consumed"},
+      "cec_11_1": {"name": "Category 12 Returned"},
+      "cec_12_0": {"name": "Category 13 Consumed"},
+      "cec_12_1": {"name": "Category 13 Returned"},
+      "cec_13_0": {"name": "Category 14 Consumed"},
+      "cec_13_1": {"name": "Category 14 Returned"},
+      "cec_14_0": {"name": "Category 15 Consumed"},
+      "cec_14_1": {"name": "Category 15 Returned"},
+      "cec_15_0": {"name": "Category 16 Consumed"},
+      "cec_15_1": {"name": "Category 16 Returned"},
+
+      "ccp_0": {"name": "Category 1 Power"},
+      "ccp_1": {"name": "Category 2 Power"},
+      "ccp_2": {"name": "Category 3 Power"},
+      "ccp_3": {"name": "Category 4 Power"},
+      "ccp_4": {"name": "Category 5 Power"},
+      "ccp_5": {"name": "Category 6 Power"},
+      "ccp_6": {"name": "Category 7 Power"},
+      "ccp_7": {"name": "Category 8 Power"},
+      "ccp_8": {"name": "Category 9 Power"},
+      "ccp_9": {"name": "Category 10 Power"},
+      "ccp_10": {"name": "Category 11 Power"},
+      "ccp_11": {"name": "Category 12 Power"},
+      "ccp_12": {"name": "Category 13 Power"},
+      "ccp_13": {"name": "Category 14 Power"},
+      "ccp_14": {"name": "Category 15 Power"},
+      "ccp_15": {"name": "Category 16 Power"},
+
+      "mecu": {"name": "MEC meter url"},
+      "mmh": {"name": "Modbus master host"}
     },
     "switch": {
       "acp": {"name": "Allow Charge Pause (car compatibility)"},
@@ -366,7 +470,17 @@
       "nmo": {"name": "Ground-Check disabled / Norway Mode"},
       "su":  {"name": "Simulate unplugging (short)"},
       "sua": {"name": "Simulate unplugging permanently"},
-      "upo": {"name": "Unlock on power outage"}
+      "upo": {"name": "Unlock on power outage"},
+      "mece": {"name": "MEC meter"},
+      "hai": {"name": "Local HTTP-API v2"},
+      "wda": {"name": "Disable access point when cloud connected"},
+      "mme": {"name": "Modubus master"},
+      "iim_0": {"name": "Invert Internal 1"},
+      "iim_1": {"name": "Invert Internal 2"},
+      "iim_2": {"name": "Invert Internal 3"},
+      "iim_3": {"name": "Invert Internal 4"},
+      "iim_4": {"name": "Invert Internal 5"},
+      "iim_5": {"name": "Invert Internal 6"}
     }
   }
 }

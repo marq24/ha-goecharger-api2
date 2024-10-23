@@ -2032,6 +2032,60 @@ CONTROLLER_BUTTONS = [
 CONTROLLER_NUMBER_SENSORS = [
 ]
 CONTROLLER_SELECT_SENSORS = [
+    #ExtSelectEntityDescription(
+    #    key=Tag.IPS.key,
+    #    idx=0,
+    #    options=["0", "1", "2", "3"],
+    #    entity_category=EntityCategory.CONFIG,
+    #    device_class=None,
+    #    icon="mdi:sort",
+    #    entity_registry_enabled_default=True
+    #),
+    #ExtSelectEntityDescription(
+    #    key=Tag.IPS.key,
+    #    idx=1,
+    #    options=["0", "1", "2", "3"],
+    #    entity_category=EntityCategory.CONFIG,
+    #    device_class=None,
+    #    icon="mdi:sort",
+    #    entity_registry_enabled_default=True
+    #),
+    #ExtSelectEntityDescription(
+    #    key=Tag.IPS.key,
+    #    idx=2,
+    #    options=["0", "1", "2", "3"],
+    #    entity_category=EntityCategory.CONFIG,
+    #    device_class=None,
+    #    icon="mdi:sort",
+    #    entity_registry_enabled_default=True
+    #),
+    #ExtSelectEntityDescription(
+    #    key=Tag.IPS.key,
+    #    idx=3,
+    #    options=["0", "1", "2", "3"],
+    #    entity_category=EntityCategory.CONFIG,
+    #    device_class=None,
+    #    icon="mdi:sort",
+    #    entity_registry_enabled_default=True
+    #),
+    #ExtSelectEntityDescription(
+    #    key=Tag.IPS.key,
+    #    idx=4,
+    #    options=["0", "1", "2", "3"],
+    #    entity_category=EntityCategory.CONFIG,
+    #    device_class=None,
+    #    icon="mdi:sort",
+    #    entity_registry_enabled_default=True
+    #),
+    #ExtSelectEntityDescription(
+    #    key=Tag.IPS.key,
+    #    idx=5,
+    #    options=["0", "1", "2", "3"],
+    #    entity_category=EntityCategory.CONFIG,
+    #    device_class=None,
+    #    icon="mdi:sort",
+    #    entity_registry_enabled_default=True
+    #),
 ]
 CONTROLLER_SENSOR_SENSORS = [
     ExtSensorEntityDescription(
@@ -2281,14 +2335,11 @@ CONTROLLER_SENSOR_SENSORS = [
         tuple_idx=[0, 0], # when using the 'tuple_idx', a 'translation_key' must be also present!
         translation_key=Tag.CEC.key+"_0_0", # important! 'translation_key' must be allways lower case!!!
         suggested_display_precision=3,
-        write_zero_as_null=True,
-        native_max_value=1000000,
-        native_min_value=0,
-        native_step=10,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,        
         icon="mdi:lightning-bolt",
         entity_registry_enabled_default=True
     ),
@@ -2297,15 +2348,561 @@ CONTROLLER_SENSOR_SENSORS = [
         tuple_idx=[0, 1], # when using the 'tuple_idx', a 'translation_key' must be also present!
         translation_key=Tag.CEC.key+"_0_1", # important! 'translation_key' must be allways lower case!!!
         suggested_display_precision=3,
-        write_zero_as_null=True,
-        native_max_value=1000000,
-        native_min_value=0,
-        native_step=10,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[1, 0], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_1_0", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[1, 1], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_1_1", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[2, 0], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_2_0", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[2, 1], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_2_1", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[3, 0], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_3_0", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[3, 1], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_3_1", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[4, 0], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_4_0", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[4, 1], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_4_1", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[5, 0], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_5_0", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[5, 1], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_5_1", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=NumberDeviceClass.ENERGY,
         icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),    
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[6, 0], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_6_0", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[6, 1], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_6_1", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),    
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[7, 0], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_7_0", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[7, 1], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_7_1", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),    
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[8, 0], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_8_0", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[8, 1], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_8_1", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[9, 0], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_9_0", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[9, 1], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_9_1", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[10, 0], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_10_0", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[10, 1], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_10_1", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[11, 0], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_11_0", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[11, 1], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_11_1", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[12, 0], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_12_0", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[12, 1], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_12_1", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[13, 0], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_13_0", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[13, 1], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_13_1", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),    
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[14, 0], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_14_0", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[14, 1], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_14_1", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),    
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[15, 0], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_15_0", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CEC.key,
+        tuple_idx=[15, 1], # when using the 'tuple_idx', a 'translation_key' must be also present!
+        translation_key=Tag.CEC.key+"_15_1", # important! 'translation_key' must be allways lower case!!!
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=NumberDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CCP.key,
+        idx=0,
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CCP.key,
+        idx=1,
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CCP.key,
+        idx=2,
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CCP.key,
+        idx=3,
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=True
+    ),                
+    ExtSensorEntityDescription(
+        key=Tag.CCP.key,
+        idx=4,
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CCP.key,
+        idx=5,
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CCP.key,
+        idx=6,
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CCP.key,
+        idx=7,
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CCP.key,
+        idx=8,
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=True
+    ),                
+    ExtSensorEntityDescription(
+        key=Tag.CCP.key,
+        idx=9,
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CCP.key,
+        idx=10,
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CCP.key,
+        idx=11,
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CCP.key,
+        idx=12,
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CCP.key,
+        idx=13,
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=True
+    ),                
+    ExtSensorEntityDescription(
+        key=Tag.CCP.key,
+        idx=14,
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CCP.key,
+        idx=15,
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=True
     ),    
     ExtSensorEntityDescription(
@@ -2327,7 +2924,91 @@ CONTROLLER_SENSOR_SENSORS = [
         device_class=None,
         icon="mdi:wifi",
         entity_registry_enabled_default=True
-    )   
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.MECU.key,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=None,
+        state_class=None,
+        device_class=None,
+        icon="mdi:link",
+        entity_registry_enabled_default=False
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.MMH.key,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=None,
+        state_class=None,
+        device_class=None,
+        icon="mdi:link",
+        entity_registry_enabled_default=False
+    ),
 ]
 CONTROLLER_SWITCH_SENSORS = [
+    ExtSwitchEntityDescription(
+        key=Tag.MECE.key,
+        entity_category=EntityCategory.CONFIG,
+        device_class=None,
+        entity_registry_enabled_default=False
+    ),
+    ExtSwitchEntityDescription(
+        key=Tag.HAI.key,
+        entity_category=EntityCategory.CONFIG,
+        device_class=None,
+        entity_registry_enabled_default=False
+    ),
+    ExtSwitchEntityDescription(
+        key=Tag.WDA.key,
+        entity_category=EntityCategory.CONFIG,
+        device_class=None,
+        entity_registry_enabled_default=True
+    ),
+    ExtSwitchEntityDescription(
+        key=Tag.MME.key,
+        entity_category=EntityCategory.CONFIG,
+        device_class=None,
+        entity_registry_enabled_default=False
+    )
+    #ExtSwitchEntityDescription(
+    #    key=Tag.IIM.key,
+    #    idx=0,
+    #    entity_category=EntityCategory.CONFIG,
+    #    device_class=None,
+    #    entity_registry_enabled_default=True
+    #),
+    #ExtSwitchEntityDescription(
+    #    key=Tag.IIM.key,
+    #    idx=1,
+    #    entity_category=EntityCategory.CONFIG,
+    #    device_class=None,
+    #    entity_registry_enabled_default=True
+    #),
+    #ExtSwitchEntityDescription(
+    #    key=Tag.IIM.key,
+    #    idx=2,
+    #    entity_category=EntityCategory.CONFIG,
+    #    device_class=None,
+    #    entity_registry_enabled_default=True
+    #),
+    #ExtSwitchEntityDescription(
+    #    key=Tag.IIM.key,
+    #    idx=3,
+    #    entity_category=EntityCategory.CONFIG,
+    #    device_class=None,
+    #    entity_registry_enabled_default=True
+    #),
+    #ExtSwitchEntityDescription(
+    #    key=Tag.IIM.key,
+    #    idx=4,
+    #    entity_category=EntityCategory.CONFIG,
+    #    device_class=None,
+    #    entity_registry_enabled_default=True
+    #),
+    #ExtSwitchEntityDescription(
+    #    key=Tag.IIM.key,
+    #    idx=5,
+    #    entity_category=EntityCategory.CONFIG,
+    #    device_class=None,
+    #    entity_registry_enabled_default=True
+    #),
 ]
