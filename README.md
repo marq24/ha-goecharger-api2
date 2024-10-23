@@ -1,20 +1,22 @@
-# Home Assistant Integration 'go-eCharger APIv2 Connect'
+# Home Assistant Integration 'go-eCharger & go-eController [via APIv2]'
 
 ![logo](https://github.com/marq24/ha-goecharger-api2/raw/main/logo.png)
 
-Support for all go-eCharger Wallboxes supporting the APIv2 - __of course__ the APIv2 have to be enabled via the go-eCharger mobile app, __before__ you can use this integration [[see instructions](#enable-http-api-v2-in-go-echarger-app)].
+Support for all go-eCharger Wallboxes & go-eController's supporting the APIv2 - __of course__ the APIv2 have to be enabled via the go-e mobile app, __before__ you can use this integration [[see instructions](#enable-http-api-v2-in-go-echarger-app)].
 
 __Please note__, _that this integration is not official and not supported by the go-e development team. I am not affiliated with go-e.com in any way. This integration is based on the go-e API and the go-e API documentation._
 
 
 [![hacs_badge][hacsbadge]][hacs] [![github][ghsbadge]][ghs] [![BuyMeCoffee][buymecoffeebadge]][buymecoffee] [![PayPal][paypalbadge]][paypal] [![hainstall][hainstallbadge]][hainstall]
 
-## latest successfully testes go-eCharger Firmware Version: 56.2
+## latest successfully testes go-eCharger Firmware Version: 56.2 / go-eController Firmware Version: ??? 
 
 The latest go-eCharger firmware 56.8 have not been fully tested with this integration (yet) - So if you have issues with this integration after you updated your go-eCharger firmware higher than 56.2 - as [reported here: #11](https://github.com/marq24/ha-goecharger-api2/issues/11) - then please be so kind and downgrade the firmware again. TIA
 
 ## Main features
  
+### go-eCharger
+
  - __All documented fields__ [in the official go-eCharger GitHub repository](https://github.com/goecharger/go-eCharger-API-v2/blob/main/apikeys-en.md) are supported by this integration (with very few exceptions) [[see list of currently not handled API keys](#list-of-currently-not-handled-api-keys-27172)]
  - Support for 'PV surplus charging' (PV-Überschuss Laden) __without additional hardware__ - no need to pay for evcc. In order to use this feature a small additional manual setup process is required [[details can be found below](#enable-pv-surplus-charging-via-ha-automation)]
  - For all go-eCharger (status) fields that support a numeric status code, this code is available as separate sensor
@@ -25,13 +27,21 @@ The latest go-eCharger firmware 56.8 have not been fully tested with this integr
 
 - Owners of a 22kW variant can __force 16A only__ for all relevant settings. (This can be enabled via the integration settings and require a restart of the integration - then with every restart the settings will be inspected and adjusted to a max of 16A if required)
 
+### go-eController
+ - lorem
+
 ## Disclaimer
 
 Please be aware, that we are developing this integration to best of our knowledge and belief, but cant give a guarantee. Therefore, use this integration **at your own risk**.
 
 ## Requirements
 
+### go-eCharger
 - go-eCharger Wallbox running Firmware version __56.1__ (or higher) - tested successfully with 56.2 BETA
+- enabled APIv2 [[see instructions](#enable-http-api-v2-in-go-echarger-app)]
+
+### go-eController
+- ???
 - enabled APIv2 [[see instructions](#enable-http-api-v2-in-go-echarger-app)]
 
 ## Installation
@@ -41,7 +51,7 @@ Please be aware, that we are developing this integration to best of our knowledg
 #### Option 1: via HACS
 
 1. Add a custom integration repository to HACS: [https://github.com/marq24/ha-goecharger-api2](https://github.com/marq24/ha-goecharger-api2)
-2. Once the repository is added, use the search bar and type `go-eCharger APIv2 Connect`
+2. Once the repository is added, use the search bar and type `go-e APIv2 Connect`
 3. Use the 3-dots at the right of the list entry (not at the top bar!) to download/install the custom integration - the latest release version is automatically selected. Only select a different version if you have specific reasons.
 4. After you presses download and the process has completed, you must __Restart Home Assistant__ to install all dependencies 
 5. Setup the go-eCharger custom integration as described below (see _Step II: Adding or enabling the integration_)
@@ -56,7 +66,7 @@ Please be aware, that we are developing this integration to best of our knowledg
 4. Download _all_ the files from the `custom_components/goecharger_api2/` directory (folder) in this repository.
 5. Place the files you downloaded in the new directory (folder) you created.
 6. Restart Home Assistant
-7. Setup the go-eCharger custom integration as described below (see _Step II: Adding or enabling the integration_)
+7. Setup the go-e custom integration as described below (see _Step II: Adding or enabling the integration_)
 
 ### Step II: Adding or enabling the integration
 
@@ -72,19 +82,21 @@ Just click the following Button to start the configuration automatically (for th
 
 Use the following steps for a manual configuration by adding the custom integration using the web interface and follow instruction on screen:
 
-- Go to `Configuration -> Integrations` and add "go-eCharger APIv2 Connect" integration
-- Provide the IP address (or hostname) of your go-eCharger web server
-- Provide area where the wallbox is located
+- Go to `Configuration -> Integrations` and add "go-e APIv2 Connect" integration
+- Select what go-e device you would like to install: `go-eCharger` or `go-eController`
+- Provide the IP address (or hostname) of your go-eCharger or go-eController web server
+- Provide area where the wallbox/controller is located
 
 After the integration was added you can use the 'config' button to adjust your settings, you can additionally modify the update interval
 <a id="pvsurplus"></a>
 
 Please note, that some of the available sensors are __not__ enabled by default.
 
+## go-eCharger 
 
-## Enable PV Surplus Charging via HA automation
+### Enable PV Surplus Charging via HA automation
 
-When you use this integration you do not need any additional hardware (go-eController) in order to allow PV surplus charging. The only thing that is required to add a __Home Assistant automation__ fetching the data from your grid & solar power entities and provide this data to a service of this integration.
+When you use this integration you do not need the additional hardware (go-eController) in order to allow PV surplus charging. The only thing that is required to add a __Home Assistant automation__ fetching the data from your grid & solar power entities and provide this data to a service of this integration.
 
 __If you are not familiar with 'creating an automation in Home Assistant', then [you might like to start with a tutorial explaining the basics of automations in HA](https://www.home-assistant.io/getting-started/automation/).__ 
 
@@ -156,7 +168,6 @@ action:
 
 _Please note, that this is __only__ required, if you have multiple go-eChargers configured via this integration your HA installation._
 
-
 ### Finally: Verify if the wallbox receive your data from the automation
 
 After you have your automation up and running you might want to verify that everything is correctly connected together.
@@ -174,7 +185,6 @@ Please note, that the wallbox drop the stored data after 5 seconds - so if the a
 So you might like to check also the average values (to verify if the wallbox received in the recent past some data):
 
 `http://[wallbox-ip]/api/status?filter=pvopt_averagePAkku,pvopt_averagePGrid,pvopt_averagePPv`
-
 
 ### _Optional_ - Force stop charging when PV power is too low
 
@@ -206,7 +216,7 @@ mode: single
 
 <a id="hibernation"></a>
 
-## Hibernation-Mode - Good to know 
+### Hibernation-Mode - Good to know 
 
 This integration will __not always fetch all sensor data from your wallbox__. For example the configuration values - they probably do not change every 5 sec. - so in order to reduce the overall system load the integration will refresh the configuration entities just every 24h - OR when you make adjustments to any of the go-eCharger settings via HA. If you want to manually sync the configuration sensors, then you can use the `button.goe_[serial]_zfocore` [^1] ['Read Configuration' button].
 
@@ -230,39 +240,7 @@ Once the __car__ status will switch from `idle` (=1) to something different the 
 
 <a id="enableapiv2"></a>
 
-## Enable HTTP API v2 in go-eCharger App [v4.x]
-[screenshots are from the Android version]
-
-1. Start the go-eCharger App
-2. Select '_Setting_' (lower main button bar)
-3. Select '_Connection_' section as shown here:
-
-   '![step1](https://github.com/marq24/ha-goecharger-api2/raw/main/res/app003.png)
-
-4. Select '_API Settings_' section as shown here:
-
-   '![step2](https://github.com/marq24/ha-goecharger-api2/raw/main/res/app004.png)
-5. Toggle the '_Allow local HTTP API v2_' as shown here:
-
-   ![step3](https://github.com/marq24/ha-goecharger-api2/raw/main/res/app005.png)
-
-
-## Enable HTTP API v2 in go-eCharger App [v3.x]
-[screenshots are from the Android version]
-
-1. Start the go-eCharger App 
-2. Select '_Internet_'
-3. Enable '_Advanced Settings_' as shown here:
-
-   '![step1](https://github.com/marq24/ha-goecharger-api2/raw/main/res/app001.png)
-4. Toggle the '_Access to /api/status and /api/set API_' (_Allow local HTTP API v2_) as shown here:
-
-   ![step1](https://github.com/marq24/ha-goecharger-api2/raw/main/res/app002.png)
-5. __DO not forget__ to press the save Icon!
-
-<a id="notimplementedkeys"></a>
-
-## List of (currently) not handled API keys (24/172)
+### List of (currently) not handled API keys (24/172)
 
 Just as reference here is the list of API keys that the current implementation of the integration will __not__ handle:
 
@@ -291,8 +269,43 @@ Just as reference here is the list of API keys that the current implementation o
 - wsc: WiFi STA error count
 - wsm: WiFi STA error message
 
+## go-eController
+Implementation of eController features have been provided by [@s3ppo (Harald Wiesinger)](https://github.com/s3ppo) - thank you very much! 
 
-## Want to report an issue?
+## go-eCharger & go-eController [COMON]
+
+### Enable HTTP API v2 in go-e App [v4.x]
+[screenshots are from the Android version]
+
+1. Start the go-er App
+2. Select '_Setting_' (lower main button bar)
+3. Select '_Connection_' section as shown here:
+
+   '![step1](https://github.com/marq24/ha-goecharger-api2/raw/main/res/app003.png)
+
+4. Select '_API Settings_' section as shown here:
+
+   '![step2](https://github.com/marq24/ha-goecharger-api2/raw/main/res/app004.png)
+5. Toggle the '_Allow local HTTP API v2_' as shown here:
+
+   ![step3](https://github.com/marq24/ha-goecharger-api2/raw/main/res/app005.png)
+
+### Enable HTTP API v2 in go-e App [v3.x]
+[screenshots are from the Android version]
+
+1. Start the go-e App
+2. Select '_Internet_'
+3. Enable '_Advanced Settings_' as shown here:
+
+   '![step1](https://github.com/marq24/ha-goecharger-api2/raw/main/res/app001.png)
+4. Toggle the '_Access to /api/status and /api/set API_' (_Allow local HTTP API v2_) as shown here:
+
+   ![step1](https://github.com/marq24/ha-goecharger-api2/raw/main/res/app002.png)
+5. __DO not forget__ to press the save Icon!
+
+<a id="notimplementedkeys"></a>
+
+### Want to report an issue?
 
 Please use the [GitHub Issues](https://github.com/marq24/ha-goecharger-api2/issues) for reporting any issues you encounter with this integration. Please be so kind before creating a new issues, check the closed ones, if your problem have been already reported (& solved).
 
@@ -310,22 +323,23 @@ logger:
 
 #### 2. In case of implausible data
 
-It will happen, that the data that is displayed by this integration does not make much sense (to you) - aka 'the data is not plausible'. __Of course__ it could be the case, that something in this integration has been messed up - but so far - in all reported issues the root cause of implausible data was/is, that the go-eCharger device itself already provided this data [you can check this by directly requesting the attribute from the wallbox]
+It will happen, that the data that is displayed by this integration does not make much sense (to you) - aka 'the data is not plausible'. __Of course__ it could be the case, that something in this integration has been messed up - but so far - in all reported issues the root cause of implausible data was/is, that the go-e device itself already provided this data [you can check this by directly requesting the attribute from the wallbox]
 
 Each sensor of this integration have an API-Key identifier in its entity ID. You can manually request values from your wallbox by using this __API key__ via a regular web browser.
 
-E.g. assuming the value of the sensor in question is `sensor.goe_123456_tpa` and your wallbox is reachable via the IP `192.168.22.10`, then you can request/read the 'original' value via the following link (where `tpa` is the API key):
+E.g. assuming the value of the sensor in question is `sensor.goe_123456_tpa` and your wallbox/controller is reachable via the IP `192.168.22.10`, then you can request/read the 'original' value via the following link (where `tpa` is the API key):
 
 `http://192.168.22.10/api/status?filter=tpa`
 
 so the pattern is:
 
-`http://[wallbox-ip]/api/status?filter=[API-KEY]`
+`http://[device-ip]/api/status?filter=[API-KEY]`
 
-If the plain data that will be returned in such a request is matching the data displayed by the integration, then I would kindly ask t get in contact with go-eCharger, since in such a case the integration is just the 'messenger'.
+If the plain data that will be returned in such a request is matching the data displayed by the integration, then I would kindly ask to get in contact with go-e, since in such a case the integration is just the 'messenger'.
+
+## 
 
 ---
-
 ###### Advertisement / Werbung - alternative way to support me
 
 ### Switch to Tibber!
@@ -339,6 +353,7 @@ Please consider [using my personal Tibber invitation link to join Tibber today](
 ### References
 
 - https://github.com/goecharger/go-eCharger-API-v2/blob/main/apikeys-en.md
+- https://github.com/goecharger/go-eController-API/blob/main/apikeys-en.md
 
 [^1]: `focore` stands for: FOrce COnfiguration REquest
 
