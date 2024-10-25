@@ -42,11 +42,11 @@ Please be aware, that we are developing this integration to best of our knowledg
 
 ### go-eCharger
 - go-eCharger Wallbox running Firmware version __56.1__ (or higher) - tested successfully with 56.2 BETA
-- enabled APIv2 [[see instructions](#enable-http-api-v2-in-go-echarger-app)]
+- enabled APIv2 [[see instructions](#enable-http-api-v2-in-go-e-app)]
 
 ### go-eController
 - enabled APIv2 Controller running Firmware version __1.1.1__ (or higher) - tested successfully with 1.1.2 BETA
-- enabled APIv2 [[see instructions](#enable-http-api-v2-in-go-echarger-app)]
+- enabled APIv2 [[see instructions](#enable-http-api-v2-in-go-e-app)]
 
 ## Installation
 
