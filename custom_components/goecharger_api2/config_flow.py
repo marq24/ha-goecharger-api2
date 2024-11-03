@@ -122,18 +122,21 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         #     return self.async_abort(reason="single_instance_allowed")
 
         if user_input is not None:
-            valid = await self._test_host(intg_type=user_input[CONF_INTEGRATION_TYPE], host=None, serial=user_input[CONF_ID], token=user_input[CONF_TOKEN])
+            #valid = await self._test_host(intg_type=user_input[CONF_INTEGRATION_TYPE], host=None, serial=user_input[CONF_ID], token=user_input[CONF_TOKEN])
+            valid = await self._test_host(intg_type=INTG_TYPE.CHARGER.value, host=None, serial=user_input[CONF_ID], token=user_input[CONF_TOKEN])
             if valid:
                 user_input[CONF_MODE] = WAN
                 user_input[CONF_ID] = self._serial
                 user_input[CONF_SCAN_INTERVAL] = max(30, user_input[CONF_SCAN_INTERVAL])
                 user_input[CONF_MODEL] = self._model.split(' ')[0]
-                if(user_input[CONF_INTEGRATION_TYPE] == INTG_TYPE.CHARGER.value):
-                    user_input[CONF_TYPE] = f"{self._type} [{self._model}] Cloud"
-                    title = f"go-eCharger API v2 [{self._serial}] Cloud"
-                else:
-                    user_input[CONF_TYPE] = f"{self._type} Cloud"
-                    title = f"go-eController API v2 [{self._serial}] Cloud"
+
+                #if(user_input[CONF_INTEGRATION_TYPE] == INTG_TYPE.CHARGER.value):
+                user_input[CONF_INTEGRATION_TYPE] = INTG_TYPE.CHARGER.value
+                user_input[CONF_TYPE] = f"{self._type} [{self._model}] Cloud"
+                title = f"go-eCharger API v2 [{self._serial}] Cloud"
+                #else:
+                #    user_input[CONF_TYPE] = f"{self._type} Cloud"
+                #    title = f"go-eController API v2 [{self._serial}] Cloud"
                 return self.async_create_entry(title=title, data=user_input)
             else:
                 self._errors["base"] = "auth_wan"
