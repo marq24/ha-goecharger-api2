@@ -36,32 +36,27 @@ CONF_INTEGRATION_TYPE = "integration_type"
 WAN: Final = "wan"
 LAN: Final = "lan"
 
-@dataclass
-class ExtBinarySensorEntityDescription(BinarySensorEntityDescription):
+class ExtBinarySensorEntityDescription(BinarySensorEntityDescription, frozen_or_thawed=True):
     idx: int | None = None
     icon_off: str | None = None
 
 
-@dataclass
-class ExtButtonEntityDescription(ButtonEntityDescription):
+class ExtButtonEntityDescription(ButtonEntityDescription, frozen_or_thawed=True):
     payload: str | None = None
 
 
-@dataclass
-class ExtNumberEntityDescription(NumberEntityDescription):
+class ExtNumberEntityDescription(NumberEntityDescription, frozen_or_thawed=True):
     write_zero_as_null: bool | None = None
     handle_as_float: bool | None = None
     factor: int | None = None
     idx: int | str | None = None
     check_16a_limit: bool | None = None
 
-@dataclass
-class ExtSelectEntityDescription(SelectEntityDescription):
+class ExtSelectEntityDescription(SelectEntityDescription, frozen_or_thawed=True):
     idx: int | str | None = None
 
 
-@dataclass
-class ExtSensorEntityDescription(SensorEntityDescription):
+class ExtSensorEntityDescription(SensorEntityDescription, frozen_or_thawed=True):
     idx: int | str | None = None
     tuple_idx: list | None = None
     factor: int | None = None
@@ -69,8 +64,7 @@ class ExtSensorEntityDescription(SensorEntityDescription):
     differential_base_key: str | None = None
 
 
-@dataclass
-class ExtSwitchEntityDescription(SwitchEntityDescription):
+class ExtSwitchEntityDescription(SwitchEntityDescription, frozen_or_thawed=True):
     is_zero_or_one: bool | None = None
     icon_off: str | None = None
     idx: int | str | None = None
@@ -1681,7 +1675,140 @@ SENSOR_SENSORS = [
     # wsc -> later (if at all)
     # wsm -> later (if at all)
 
+    ExtSensorEntityDescription(
+        key=Tag.CARDS.key,
+        tuple_idx=[0, "energy"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        device_class=SensorDeviceClass.ENERGY,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CARDS.key,
+        tuple_idx=[1, "energy"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        device_class=SensorDeviceClass.ENERGY,
+        entity_registry_enabled_default=False
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CARDS.key,
+        tuple_idx=[2, "energy"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        device_class=SensorDeviceClass.ENERGY,
+        entity_registry_enabled_default=False
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CARDS.key,
+        tuple_idx=[3, "energy"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        device_class=SensorDeviceClass.ENERGY,
+        entity_registry_enabled_default=False
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CARDS.key,
+        tuple_idx=[4, "energy"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        device_class=SensorDeviceClass.ENERGY,
+        entity_registry_enabled_default=False
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CARDS.key,
+        tuple_idx=[5, "energy"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        device_class=SensorDeviceClass.ENERGY,
+        entity_registry_enabled_default=False
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CARDS.key,
+        tuple_idx=[6, "energy"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        device_class=SensorDeviceClass.ENERGY,
+        entity_registry_enabled_default=False
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CARDS.key,
+        tuple_idx=[7, "energy"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        device_class=SensorDeviceClass.ENERGY,
+        entity_registry_enabled_default=False
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CARDS.key,
+        tuple_idx=[8, "energy"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        device_class=SensorDeviceClass.ENERGY,
+        entity_registry_enabled_default=False
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CARDS.key,
+        tuple_idx=[9, "energy"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        device_class=SensorDeviceClass.ENERGY,
+        entity_registry_enabled_default=False
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.CARDS.key,
+        tuple_idx=[10, "energy"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:lightning-bolt",
+        device_class=SensorDeviceClass.ENERGY,
+        entity_registry_enabled_default=False
+    ),
 ]
+
 SWITCH_SENSORS = [
     ExtSwitchEntityDescription(
         key=Tag.ACP.key,

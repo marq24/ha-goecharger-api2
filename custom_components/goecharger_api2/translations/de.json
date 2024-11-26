@@ -94,7 +94,7 @@
       "esk": {"name": "Gesetzte Lademenge kWh (Anzeige)"},
       "fsp": {"name": "1-phasiges Laden erzwingen"},
       "tlf": {"name": "Test-Ladung abgeschlossen"},
-      "tls": {"name": "Test-Ladung gestartet"}        
+      "tls": {"name": "Test-Ladung gestartet"}
     },
     "button": {
       "rst": {"name":  "go-e Neustarten"},
@@ -384,23 +384,23 @@
 
       "isv_0_i": {"name": "Strom Internal 1"},
       "isv_0_p": {"name": "Leistung Internal 1"},
-      "isv_0_f": {"name": "Leistungsfaktor Internal 1"},      
+      "isv_0_f": {"name": "Leistungsfaktor Internal 1"},
       "isv_1_i": {"name": "Strom Internal 2"},
       "isv_1_p": {"name": "Leistung Internal 2"},
-      "isv_1_f": {"name": "Leistungsfaktor Internal 2"},        
+      "isv_1_f": {"name": "Leistungsfaktor Internal 2"},
       "isv_2_i": {"name": "Strom Internal 3"},
       "isv_2_p": {"name": "Leistung Internal 3"},
-      "isv_2_f": {"name": "Leistungsfaktor Internal 3"},        
+      "isv_2_f": {"name": "Leistungsfaktor Internal 3"},
       "isv_3_i": {"name": "Strom Internal 4"},
       "isv_3_p": {"name": "Leistung Internal 4"},
-      "isv_3_f": {"name": "Leistungsfaktor Internal 4"},        
+      "isv_3_f": {"name": "Leistungsfaktor Internal 4"},
       "isv_4_i": {"name": "Strom Internal 5"},
       "isv_4_p": {"name": "Leistung Internal 5"},
-      "isv_4_f": {"name": "Leistungsfaktor Internal 5"},        
+      "isv_4_f": {"name": "Leistungsfaktor Internal 5"},
       "isv_5_i": {"name": "Strom Internal 6"},
       "isv_5_p": {"name": "Leistung Internal 6"},
       "isv_5_f": {"name": "Leistungsfaktor Internal 6"},
-      
+
       "cec_0_0": {"name": "Kategorie 1 Zähler Verbrauch"},
       "cec_0_1": {"name": "Kategorie 1 Zähler Überschuss"},
       "cec_1_0": {"name": "Kategorie 2 Zähler Verbrauch"},
@@ -452,7 +452,19 @@
       "ccp_15": {"name": "Kategorie 16 Leistung"},
 
       "mecu": {"name": "MEC Meter Url"},
-      "mmh": {"name": "Modbus Master Host"}
+      "mmh": {"name": "Modbus Master Host"},
+
+      "cards_0_energy": {"name": "Lademenge Karte"},
+      "cards_1_energy": {"name": "Lademenge Karte 1"},
+      "cards_2_energy": {"name": "Lademenge Karte 2"},
+      "cards_3_energy": {"name": "Lademenge Karte 3"},
+      "cards_4_energy": {"name": "Lademenge Karte 4"},
+      "cards_5_energy": {"name": "Lademenge Karte 5"},
+      "cards_6_energy": {"name": "Lademenge Karte 6"},
+      "cards_7_energy": {"name": "Lademenge Karte 7"},
+      "cards_8_energy": {"name": "Lademenge Karte 8"},
+      "cards_9_energy": {"name": "Lademenge Karte 9"},
+      "cards_10_energy": {"name": "Lademenge Karte 10"}
     },
     "switch": {
       "acp": {"name": "Ladepausen zulassen (Fahrzeug Kompatibilität)"},

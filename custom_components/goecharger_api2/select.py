@@ -32,8 +32,25 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
 class GoeChargerSelect(GoeChargerBaseEntity, SelectEntity):
     def __init__(self, coordinator: GoeChargerDataUpdateCoordinator, description: ExtSelectEntityDescription):
         if description.key == Tag.TRX.key:
-            options = ["null", "0"]
-            description.options = options + coordinator.available_cards_idx
+            new_options = ["null", "0"] + coordinator.available_cards_idx
+            # ok we need to create a new entity description with the new options...
+            # [since ExtSelectEntityDescription is frozen]
+            description = ExtSelectEntityDescription (
+                key = description.key,
+                device_class = description.device_class,
+                entity_category = description.entity_category,
+                entity_registry_enabled_default = description.entity_registry_enabled_default,
+                entity_registry_visible_default = description.entity_registry_visible_default,
+                force_update = description.force_update,
+                icon = description.icon,
+                has_entity_name = description.has_entity_name,
+                name = description.name,
+                translation_key = description.translation_key,
+                translation_placeholders = description.translation_placeholders,
+                unit_of_measurement = description.unit_of_measurement,
+                options = new_options,
+                idx = description.idx,
+            )
         super().__init__(coordinator=coordinator, description=description)
 
     @property

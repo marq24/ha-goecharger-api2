@@ -145,6 +145,7 @@ class GoeChargerApiV2Bridge:
 
     async def force_config_update(self):
         self._LAST_CONFIG_UPDATE_TS = 0
+        self._LAST_FULL_STATE_UPDATE_TS = 0
         await self.read_all_config()
 
     async def read_all_config(self):

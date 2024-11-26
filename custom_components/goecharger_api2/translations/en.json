@@ -94,7 +94,7 @@
       "esk": {"name": "energy set kwh (only stored for app)"},
       "fsp": {"name": "Force single phase"},
       "tlf": {"name": "Test charging finished"},
-      "tls": {"name": "Test charging started"}    
+      "tls": {"name": "Test charging started"}
     },
     "button": {
       "rst": {"name":  "Restart go-e device"},
@@ -387,16 +387,16 @@
       "isv_0_f": {"name": "Power factor Internal 1"},
       "isv_1_i": {"name": "Ampere Internal 2"},
       "isv_1_p": {"name": "Power Internal 2"},
-      "isv_1_f": {"name": "Power factor Internal 2"},   
+      "isv_1_f": {"name": "Power factor Internal 2"},
       "isv_2_i": {"name": "Ampere Internal 3"},
       "isv_2_p": {"name": "Power Internal 3"},
-      "isv_2_f": {"name": "Power factor Internal 3"},    
+      "isv_2_f": {"name": "Power factor Internal 3"},
       "isv_3_i": {"name": "Ampere Internal 4"},
       "isv_3_p": {"name": "Power Internal 4"},
-      "isv_3_f": {"name": "Power factor Internal 4"},    
+      "isv_3_f": {"name": "Power factor Internal 4"},
       "isv_4_i": {"name": "Ampere Internal 5"},
       "isv_4_p": {"name": "Power Internal 5"},
-      "isv_4_f": {"name": "Power factor Internal 5"},     
+      "isv_4_f": {"name": "Power factor Internal 5"},
       "isv_5_i": {"name": "Ampere Internal 6"},
       "isv_5_p": {"name": "Power Internal 6"},
       "isv_5_f": {"name": "Power factor Internal 6"},
@@ -452,7 +452,19 @@
       "ccp_15": {"name": "Category 16 Power"},
 
       "mecu": {"name": "MEC meter url"},
-      "mmh": {"name": "Modbus master host"}
+      "mmh": {"name": "Modbus master host"},
+
+      "cards_0_energy": {"name": "Energy Card"},
+      "cards_1_energy": {"name": "Energy Card 1"},
+      "cards_2_energy": {"name": "Energy Card 2"},
+      "cards_3_energy": {"name": "Energy Card 3"},
+      "cards_4_energy": {"name": "Energy Card 4"},
+      "cards_5_energy": {"name": "Energy Card 5"},
+      "cards_6_energy": {"name": "Energy Card 6"},
+      "cards_7_energy": {"name": "Energy Card 7"},
+      "cards_8_energy": {"name": "Energy Card 8"},
+      "cards_9_energy": {"name": "Energy Card 9"},
+      "cards_10_energy": {"name": "Energy Card 10"}
     },
     "switch": {
       "acp": {"name": "Allow Charge Pause (car compatibility)"},
