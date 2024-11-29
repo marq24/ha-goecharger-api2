@@ -80,39 +80,37 @@ class GoeChargerSensor(GoeChargerBaseEntity, SensorEntity, RestoreEntity):
             else:
                 value = self.coordinator.data[self.data_key]
 
-                if value is None or len(str(value)) == 0:
-                    value = None
-                else:
-                    if self.entity_description.lookup is not None:
-                        if self.data_key.lower() in self.coordinator.lang_map:
-                            value = self.coordinator.lang_map[self.data_key.lower()][value]
-                        else:
-                            _LOGGER.warning(f"{self.data_key} not found in translations")
+            if value is None or len(str(value)) == 0:
+                value = None
+            else:
+                if self.entity_description.lookup is not None:
+                    if self.data_key.lower() in self.coordinator.lang_map:
+                        value = self.coordinator.lang_map[self.data_key.lower()][value]
                     else:
-                        # self.entity_description.lookup values are always 'strings' - so there we should not
-                        # have an additional features like 'factor' or  'differential_base_key'
-                        is_int_value = isinstance(value, int)
-
+                        _LOGGER.warning(f"{self.data_key} not found in translations")
+                else:
+                    # self.entity_description.lookup values are always 'strings' - so there we should not
+                    # have an additional features like 'factor' or  'differential_base_key'
+                    if isinstance(value, int):
                         # the timestamp values of the go-eCharger are based on the reboot time stamp...
                         # so we have to subtract these values!
-                        if is_int_value:
-                            if self.entity_description.differential_base_key is not None:
-                                differential_base = self.coordinator.data[self.entity_description.differential_base_key]
-                                if differential_base is not None and int(differential_base) > 0:
-                                    value = differential_base - int(value)
+                        if self.entity_description.differential_base_key is not None:
+                            differential_base = self.coordinator.data[self.entity_description.differential_base_key]
+                            if differential_base is not None and int(differential_base) > 0:
+                                value = differential_base - int(value)
 
-                            if self.entity_description.factor is not None and self.entity_description.factor > 0:
-                                value = int(int(value) / self.entity_description.factor)
+                        if self.entity_description.factor is not None and self.entity_description.factor > 0:
+                            value = int(int(value) / self.entity_description.factor)
 
-                        if isinstance(value, datetime):
-                            return value.isoformat(sep=' ', timespec="minutes")
-                        elif isinstance(value, time):
-                            return value.isoformat(timespec="minutes")
-                        elif isinstance(value, bool):
-                            if value is True:
-                                value = "on"
-                            elif value is False:
-                                value = "off"
+                    if isinstance(value, datetime):
+                        return value.isoformat(sep=' ', timespec="minutes")
+                    elif isinstance(value, time):
+                        return value.isoformat(timespec="minutes")
+                    elif isinstance(value, bool):
+                        if value is True:
+                            value = "on"
+                        elif value is False:
+                            value = "off"
 
         except IndexError:
             if self.entity_description.lookup is not None:

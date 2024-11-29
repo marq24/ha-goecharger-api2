@@ -30,7 +30,38 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
 class GoeChargerNumber(GoeChargerBaseEntity, NumberEntity):
     def __init__(self, coordinator: GoeChargerDataUpdateCoordinator, description: ExtNumberEntityDescription):
         if description.check_16a_limit and coordinator.limit_to16a:
-            description.native_max_value = 16
+            # ok we need to create a new entity description with the new options...
+            # [since ExtNumberEntityDescription is frozen]
+            description = ExtNumberEntityDescription (
+                key = description.key,
+                device_class = description.device_class,
+                entity_category = description.entity_category,
+                entity_registry_enabled_default = description.entity_registry_enabled_default,
+                entity_registry_visible_default = description.entity_registry_visible_default,
+                force_update = description.force_update,
+                icon = description.icon,
+                has_entity_name = description.has_entity_name,
+                name = description.name,
+                translation_key = description.translation_key,
+                translation_placeholders = description.translation_placeholders,
+                unit_of_measurement = description.unit_of_measurement,
+
+                max_value = description.max_value,
+                min_value = description.min_value,
+                mode = description.mode,
+                # here is the value, that we overwrite...
+                native_max_value = 16,
+                native_min_value = description.native_min_value,
+                native_step = description.native_step,
+                native_unit_of_measurement = description.native_unit_of_measurement,
+                step = description.step,
+
+                write_zero_as_null = description.write_zero_as_null,
+                handle_as_float = description.handle_as_float,
+                factor = description.factor,
+                idx = description.idx,
+                check_16a_limit = description.check_16a_limit
+            )
         super().__init__(coordinator=coordinator, description=description)
 
     @property
