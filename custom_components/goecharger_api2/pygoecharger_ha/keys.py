@@ -19,7 +19,7 @@ class CAT(Enum):
 
 class ApiKey(NamedTuple):
     key: str
-    cat: str
+    cat: CAT
     writeable: bool = False
     writeonly: bool = False
 
@@ -68,7 +68,7 @@ class Tag(ApiKey, Enum):
     BAC = ApiKey(key="bac", cat=CAT.CONFIG, writeable=True)
     # carState, null if internal error (Unknown/Error=0, Idle=1, Charging=2, WaitCar=3, Complete=4, Error=5)
     CAR = ApiKey(key="car", cat=CAT.STATUS)
-    # 
+    #
     CARDS = ApiKey(key="cards", cat=CAT.CONFIG, writeable=True)
     # cable_current_limit in A
     CBL = ApiKey(key="cbl", cat=CAT.STATUS)

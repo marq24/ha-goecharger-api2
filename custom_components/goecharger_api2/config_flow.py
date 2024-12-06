@@ -201,7 +201,6 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class GoeChargerApiV2OptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry):
         """Initialize HACS options flow."""
-        self.config_entry = config_entry
         if len(dict(config_entry.options)) == 0:
             self.options = dict(config_entry.data)
         else:
