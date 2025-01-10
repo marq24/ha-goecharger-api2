@@ -100,6 +100,9 @@ class Tag(ApiKey, Enum):
     CUS = ApiKey(key="cus", cat=CAT.STATUS)
     # cloud websocket enabled"
     CWE = ApiKey(key="cwe", cat=CAT.CONFIG, writeable=True)
+    # information about a paired and connected go-eController
+    # [see https://github.com/marq24/ha-goecharger-api2/discussions/34]
+    CTRLS = ApiKey(key="ctrls", cat=CAT.STATUS)
     # set this to 0-9 to clear card (erases card name, energy and rfid id)
     DEL = ApiKey(key="del", cat=CAT.OTHER, writeable=True, writeonly=True)
     # deltaA

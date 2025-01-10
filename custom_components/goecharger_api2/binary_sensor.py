@@ -42,7 +42,11 @@ class GoeChargerApiV2BinarySensor(GoeChargerBaseEntity, BinarySensorEntity):
             value = None
             if self.coordinator.data is not None:
                 if self.data_key in self.coordinator.data:
-                    if self.entity_description.idx is not None:
+                    if self.entity_description.tuple_idx is not None and len(self.entity_description.tuple_idx) > 1:
+                        subKey1 = self.entity_description.tuple_idx[0]
+                        subKey2 = self.entity_description.tuple_idx[1]
+                        value = self.coordinator.data[self.data_key][subKey1][subKey2]
+                    elif self.entity_description.idx is not None:
                         # hacking the CAR_CONNECT state... -> "car" > 1
                         if self.data_key == Tag.CAR_CONNECTED.key:
                             value = int(self.coordinator.data[self.data_key]) > 1
@@ -58,9 +62,10 @@ class GoeChargerApiV2BinarySensor(GoeChargerBaseEntity, BinarySensorEntity):
                     value = None
 
         except IndexError:
-            if self.entity_description.idx is not None:
-                _LOGGER.debug(
-                    f"lc-key: {self.data_key.lower()} value: {value} idx: {self.entity_description.idx} -> {self.coordinator.data[self.data_key]}")
+            if self.entity_description.tuple_idx is not None:
+                _LOGGER.debug(f"lc-key: {self.data_key.lower()} value: {value} tuple_idx: {self.entity_description.tuple_idx} -> {self.coordinator.data[self.data_key]}")
+            elif self.entity_description.idx is not None:
+                _LOGGER.debug(f"lc-key: {self.data_key.lower()} value: {value} idx: {self.entity_description.idx} -> {self.coordinator.data[self.data_key]}")
             else:
                 _LOGGER.debug(f"lc-key: {self.data_key.lower()} caused IndexError")
             value = None

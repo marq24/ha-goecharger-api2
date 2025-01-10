@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Final
 
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag, IS_TRIGGER
@@ -38,6 +37,7 @@ LAN: Final = "lan"
 
 class ExtBinarySensorEntityDescription(BinarySensorEntityDescription, frozen_or_thawed=True):
     idx: int | None = None
+    tuple_idx: list | None = None
     icon_off: str | None = None
 
 
@@ -164,7 +164,25 @@ BINARY_SENSORS = [
         device_class=None,
         icon="mdi:ab-testing",
         entity_registry_enabled_default=False
-    )
+    ),
+    ExtBinarySensorEntityDescription(
+        key=Tag.CTRLS.key,
+        translation_key="ctrls_0_paired", # important! 'translation_key' must be allways lower case!!!
+        tuple_idx=[0, 2],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=None,
+        icon="mdi:gamepad-square-outline",
+        entity_registry_enabled_default=False
+    ),
+    ExtBinarySensorEntityDescription(
+        key=Tag.CTRLS.key,
+        translation_key="ctrls_0_connected",  # important! 'translation_key' must be allways lower case!!!
+        tuple_idx=[0, 3],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=None,
+        icon="mdi:gamepad-square",
+        entity_registry_enabled_default=False
+    ),
 ]
 BUTTONS = [
     ExtButtonEntityDescription(

@@ -94,7 +94,9 @@
       "esk": {"name": "Gesetzte Lademenge kWh (Anzeige)"},
       "fsp": {"name": "1-phasiges Laden erzwingen"},
       "tlf": {"name": "Test-Ladung abgeschlossen"},
-      "tls": {"name": "Test-Ladung gestartet"}
+      "tls": {"name": "Test-Ladung gestartet"},
+      "ctrls_0_paired": {"name": "go-eController gepaart"},
+      "ctrls_0_connected": {"name": "go-eController verbunden"}
     },
     "button": {
       "rst": {"name":  "go-e Neustarten"},

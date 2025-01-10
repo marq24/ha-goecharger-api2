@@ -94,7 +94,9 @@
       "esk": {"name": "energy set kwh (only stored for app)"},
       "fsp": {"name": "Force single phase"},
       "tlf": {"name": "Test charging finished"},
-      "tls": {"name": "Test charging started"}
+      "tls": {"name": "Test charging started"},
+      "ctrls_0_paired": {"name": "go-eController paired"},
+      "ctrls_0_connected": {"name": "go-eController connected"}
     },
     "button": {
       "rst": {"name":  "Restart go-e device"},

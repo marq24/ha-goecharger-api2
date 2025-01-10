@@ -10,7 +10,8 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_TYPE, CONF_ID, CONF_SCAN_INTERVAL, CONF_MODE, CONF_TOKEN
 from homeassistant.core import HomeAssistant, Event, SupportsResponse
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as config_val, entity_registry as entity_reg, device_registry as device_reg
+from homeassistant.helpers import config_validation as config_val, entity_registry as entity_reg, \
+    device_registry as device_reg
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
@@ -303,7 +304,6 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                     self._config_entry.data.get(CONF_HOST),
                     self._config_entry.title)},
                 "manufacturer": MANUFACTURER,
-                "suggested_area": "Garage",
                 "name": self._config_entry.title,
                 "model": self._config_entry.data.get(CONF_TYPE),
                 "sw_version": sw_version
@@ -319,7 +319,6 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                     self._config_entry.data.get(CONF_TOKEN),
                     self._config_entry.title)},
                 "manufacturer": MANUFACTURER,
-                "suggested_area": "Garage",
                 "name": self._config_entry.title,
                 "model": self._config_entry.data.get(CONF_TYPE),
                 "sw_version": self.bridge._versions[Tag.FWV.key]
