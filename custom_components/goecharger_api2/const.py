@@ -257,12 +257,12 @@ NUMBER_SENSORS = [
         icon="mdi:timer-outline",
         entity_registry_enabled_default=True
     ),
-    # awp -> this is in €-CENT! - so also an INT!
+    # awp -> this is in €-CENT! - but api allow to specify 0.01 cent steps
     ExtNumberEntityDescription(
         key=Tag.AWP.key,
         native_max_value=1000,
         native_min_value=-100,
-        native_step=1,
+        native_step=0.01,
         # mode=NumberMode.SLIDER,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=CURRENCY_CENT,
