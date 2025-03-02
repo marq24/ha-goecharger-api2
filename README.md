@@ -54,6 +54,8 @@ Please be aware, that we are developing this integration to best of our knowledg
 
 #### Option 1: via HACS
 
+[![Open your Home Assistant instance and adding repository to HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=marq24&repository=ha-goecharger-api2&category=integration)
+
 1. Add a custom integration repository to HACS: [https://github.com/marq24/ha-goecharger-api2](https://github.com/marq24/ha-goecharger-api2)
 2. Once the repository is added, use the search bar and type `go-e APIv2 Connect`
 3. Use the 3-dots at the right of the list entry (not at the top bar!) to download/install the custom integration - the latest release version is automatically selected. Only select a different version if you have specific reasons.
