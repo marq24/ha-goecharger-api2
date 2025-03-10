@@ -106,7 +106,8 @@ When you use this integration you do not need the additional hardware (go-eContr
 
 __If you are not familiar with 'creating an automation in Home Assistant', then [you might like to start with a tutorial explaining the basics of automations in HA](https://www.home-assistant.io/getting-started/automation/).__ 
 
-Please note, that __only__ the `pgrid` value is required - the other two fields/sensors are just _optional_.
+> [!NOTE]
+> __only__ the `pgrid` value is __required__ - the other two fields `ppv` & `pakku` are just _optional_.
 
 ### Do not forget this important settings
 
@@ -120,13 +121,29 @@ in the setting of your go-eCharger - this can be done via the integration!
 
 __Please note: in order to be able to enable 'Use PV surplus' in the go-eCharger Application you must also configure the "Flexibler Energietarif" [specify "Preisgrenze", "Country", "Anbieter", "Tarif" and so on] even though the "Flexibler Energietarif" switch is "OFF"__ Probably a bug in the go-echarger software?
 
+### Service fields explained
+
+#### pgrid [**required**]
+The power in WATT you're currently consuming from the grid (positive value) or you are exporting to the grid (negative value). So when `pgrid` value is negative, the go-eCharger have the information that there is power available that can be used to charge your car.
+
+So once the value is negative, the go-eCharger might use the available power to start  charging your car (instead of exporting power to the grid).
+
+#### ppv [_optional_]
+The power in WATT your PV system currently generating - this value must be positive.
+#### pakku [_optional_]
+The power in WATT your home-battery currently providing (positive - discharge - power from the battery to your home) or consuming (negative - charge - power form grid/PV to your battery).
+
+With other words, `pAkku` is expected to be negative when the home battery is charging (consume power) and positive when it's currently discharging (provide power).
+
 ### Example automation
 
 Please note that this example is for a for SENEC.Home System - if you are using 'my' SENEC.Home Integration you can use the code below 1:1 - in any other case: __You must adjust/replace the sensor identifiers!!!__. So if you are not a SENEC.Home user please replace the following:
 
 - `sensor.senec_grid_state_power` with the entity that provide the information in WATT you're currently consuming from the grid (positive value) or you are exporting to the grid (negative value). Once the value is negative the go-eCharger might use the available power to start with charging your car.
-- _optional_ `sensor.senec_solar_generated_power` with the entity that provided the total power generation by your PV (in WATT)
-- _optional_ `sensor.senec_battery_state_power` with the entity that provided the power in WATT currently will be used to charge an additional battery (positive value) or will be consumed from the battery (negative value).
+
+- `sensor.senec_solar_generated_power` with the entity that provided the total power generation by your PV (in WATT)
+
+- `sensor.senec_battery_state_power` with the entity that provided the power in WATT currently will be used to charge an additional battery (negative value) or will be consumed from the battery (positive value).
 
 ```
 alias: go-e PV surplus charging brigde
@@ -145,9 +162,9 @@ action:
 mode: single
 ```
 
-### In case when your (grid) sensor need to be inverted
+### In case when your `pgrid` (or `pakku`) value provided by the sensor need to be inverted
 
-In some cases (when using other solar system integrations) you might run into the situation, that the grid sensor value is positive when you are exporting power to the grid (and negative when you import power from the grid). In this case you need to ___invert___ the value of your grid sensor. In HA this can be done very easy via the so called 'pipe' functionality inside templates.
+In some cases (when using other solar system integrations) you might run into the situation, that the pgrid sensor value is positive when you are exporting power to the grid (and negative when you import power from the grid). In this case you need to ___invert___ the value of your grid sensor. In HA this can be done very easy via the so called 'pipe' functionality inside templates.
 
 Here is a simple example (just inserted a `| float * -1`) - which takes the sensor value and _convert_ it to a floating point number (from a string) and then multiply it with `-1`)
 ```
