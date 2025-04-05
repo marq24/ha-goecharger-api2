@@ -109,6 +109,9 @@ __If you are not familiar with 'creating an automation in Home Assistant', then 
 > [!NOTE]
 > __only__ the `pgrid` value is __required__ - the other two fields `ppv` & `pakku` are just _optional_.
 
+> [!NOTE]
+> The goeCharger will drop the __stored data after 5 seconds__ - so if the automation is not running/sending data every five seconds (or faster) to the wallbox the 'PV Surplus Charging' is __not going to work__!
+
 ### Do not forget this important settings
 
 Once you have enabled the automation, you also need to:
