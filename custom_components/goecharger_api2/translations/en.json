@@ -96,7 +96,8 @@
       "tlf": {"name": "Test charging finished"},
       "tls": {"name": "Test charging started"},
       "ctrls_0_paired": {"name": "go-eController paired"},
-      "ctrls_0_connected": {"name": "go-eController connected"}
+      "ctrls_0_connected": {"name": "go-eController connected"},
+      "di1": {"name": "DigitalInput 1"}
     },
     "button": {
       "rst": {"name":  "Restart go-e device"},

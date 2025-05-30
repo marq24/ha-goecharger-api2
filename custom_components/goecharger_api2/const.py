@@ -183,6 +183,13 @@ BINARY_SENSORS = [
         icon="mdi:gamepad-square",
         entity_registry_enabled_default=False
     ),
+    ExtBinarySensorEntityDescription(
+        key=Tag.DI1.key,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=BinarySensorDeviceClass.OPENING, # On means open, Off means closed
+        icon="mdi:electric-switch",
+        icon_off="mdi:electric-switch-closed"
+    ),
 ]
 BUTTONS = [
     ExtButtonEntityDescription(

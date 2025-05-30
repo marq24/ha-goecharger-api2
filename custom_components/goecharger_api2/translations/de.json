@@ -96,7 +96,8 @@
       "tlf": {"name": "Test-Ladung abgeschlossen"},
       "tls": {"name": "Test-Ladung gestartet"},
       "ctrls_0_paired": {"name": "go-eController gepaart"},
-      "ctrls_0_connected": {"name": "go-eController verbunden"}
+      "ctrls_0_connected": {"name": "go-eController verbunden"},
+      "di1": {"name": "Freigabeeingang"}
     },
     "button": {
       "rst": {"name":  "go-e Neustarten"},

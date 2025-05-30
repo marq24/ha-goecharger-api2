@@ -111,6 +111,8 @@ class Tag(ApiKey, Enum):
     DELTAP = ApiKey(key="deltap", cat=CAT.STATUS)
     # set this to 0-9 to delete sta config (erases ssid, key, ...)
     DELW = ApiKey(key="delw", cat=CAT.OTHER, writeable=True, writeonly=True)
+    # https://github.com/marq24/ha-goecharger-api2/discussions/46
+    DI1 = ApiKey(key="di1", cat=CAT.STATUS)
     # DNS server
     DNS = ApiKey(key="dns", cat=CAT.STATUS)
     # Lade Energy Limit, gemessen in Wh, null bedeutet deaktiviert, nicht mit der Next-Trip Energie zu verwechseln
