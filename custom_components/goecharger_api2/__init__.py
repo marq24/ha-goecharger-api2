@@ -28,7 +28,8 @@ from .const import (
     SERVICE_SET_PV_DATA,
     SERVICE_STOP_CHARGING,
     CONF_11KWLIMIT,
-    CONF_INTEGRATION_TYPE
+    CONF_INTEGRATION_TYPE,
+    CONFIG_VERSION, CONFIG_MINOR_VERSION
 )
 from .service import GoeChargerApiV2Service
 
@@ -36,6 +37,19 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
 CONFIG_SCHEMA = config_val.removed(DOMAIN, raise_if_present=False)
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+    if config_entry.version < CONFIG_VERSION:
+        if config_entry.data is not None and len(config_entry.data) > 0:
+            _LOGGER.debug(f"Migrating configuration from version {config_entry.version}.{config_entry.minor_version}")
+            if config_entry.options is not None and len(config_entry.options):
+                new_data = {**config_entry.data, **config_entry.options}
+            else:
+                new_data = config_entry.data
+            hass.config_entries.async_update_entry(config_entry, data=new_data, options={}, version=CONFIG_VERSION, minor_version=CONFIG_MINOR_VERSION)
+            _LOGGER.debug(f"Migration to configuration version {config_entry.version}.{config_entry.minor_version} successful")
+    return True
 
 
 async def async_setup(hass: HomeAssistant, config: dict):  # pylint: disable=unused-argument
@@ -60,9 +74,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    if config_entry.state != ConfigEntryState.LOADED:
-        config_entry.add_update_listener(async_reload_entry)
-
     # initialize our service...
     if coordinator.intg_type == INTG_TYPE.CHARGER.value:
         service = GoeChargerApiV2Service(hass, config_entry, coordinator)
@@ -76,6 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     asyncio.create_task(coordinator.cleanup_device_registry(hass))
 
+    config_entry.async_on_unload(config_entry.add_update_listener(entry_update_listener))
     # ok we are done...
     return True
 
@@ -98,7 +110,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
             coordinator.clear_data()
             hass.data[DOMAIN].pop(config_entry.entry_id)
 
-        # ONLY remove the SERVICES, if this is the LAST ACTIVE config_entry that will be unloaded!
+        # ONLY remove the SERVICES if this is the LAST ACTIVE config_entry that will be unloaded!
         if check_unload_services(hass):
             hass.services.async_remove(DOMAIN, SERVICE_SET_PV_DATA)
             hass.services.async_remove(DOMAIN, SERVICE_STOP_CHARGING)
@@ -106,11 +118,9 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
-async def async_reload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-    """Reload config entry."""
-    if await async_unload_entry(hass, config_entry):
-        await asyncio.sleep(2)
-        await async_setup_entry(hass, config_entry)
+async def entry_update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    _LOGGER.debug(f"entry_update_listener() called for entry: {config_entry.entry_id}")
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 @staticmethod
@@ -203,23 +213,22 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             self.bridge = GoeChargerApiV2Bridge(
                 intg_type=self.intg_type,
                 host=None,
-                serial=config_entry.options.get(CONF_ID, config_entry.data.get(CONF_ID)),
-                token=config_entry.options.get(CONF_TOKEN, config_entry.data.get(CONF_TOKEN)),
+                serial=config_entry.data.get(CONF_ID),
+                token=config_entry.data.get(CONF_TOKEN),
                 web_session=async_get_clientsession(hass),
                 lang=lang)
         else:
             self.mode = LAN
             self.bridge = GoeChargerApiV2Bridge(
                 intg_type=self.intg_type,
-                host=config_entry.options.get(CONF_HOST, config_entry.data.get(CONF_HOST)),
+                host=config_entry.data.get(CONF_HOST),
                 serial=None,
                 token=None,
                 web_session=async_get_clientsession(hass),
                 lang=lang)
 
         global SCAN_INTERVAL
-        SCAN_INTERVAL = timedelta(seconds=config_entry.options.get(CONF_SCAN_INTERVAL,
-                                                                   config_entry.data.get(CONF_SCAN_INTERVAL, 5)))
+        SCAN_INTERVAL = timedelta(seconds=config_entry.data.get(CONF_SCAN_INTERVAL, 5))
         self._serial = config_entry.data.get(CONF_ID)
 
         self.lang_map = None
@@ -338,7 +347,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.info(f"active cards {self.available_cards_idx}")
 
             # check for the 16A limiter...
-            self.check_for_max_of_16a = self._config_entry.options.get(CONF_11KWLIMIT, False)
+            self.check_for_max_of_16a = self._config_entry.data.get(CONF_11KWLIMIT, False)
 
             self.limit_to16a = (self.check_for_max_of_16a
                                 or self.bridge._versions[Tag.VAR.key] == 11

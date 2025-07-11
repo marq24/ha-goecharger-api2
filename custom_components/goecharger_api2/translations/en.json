@@ -14,6 +14,12 @@
     }
   },
   "config": {
+    "abort": {
+      "auth_lan": "Host/IP is wrong - could not reach system",
+      "auth_wan": "Serial/API-Key is wrong - could not reach system",
+      "already_configured": "Integration is already configured",
+      "reconfigure_successful": "Re-configuration was successful"
+    },
     "step": {
       "user": {
         "description": "Please select the communication channel [only select WAN(Cloud) if your wallbox/controller is not in your home network]",
@@ -26,7 +32,8 @@
         "data": {
           "integration_type": "Integration type: Charger or Controller?",
           "host": "Host or IP of your go-eCharger Wallbox",
-          "scan_interval": "Polling Interval in seconds [min: 5sec]"
+          "scan_interval": "Polling Interval in seconds [min: 5sec]",
+          "limit_to_11kw": "Apply 11kW limit (for 22kW variants only) - will restrict all relevant settings to a max of 16A (instead of 32A)"
         }
       },
       "user_wan": {
@@ -35,31 +42,14 @@
           "integration_type": "Integration type: Charger or Controller?",
           "serial": "Your go-eCharger Wallbox Serial number",
           "token": "Your go-eCharger Cloud API-Key",
-          "scan_interval": "Polling Interval in seconds [min: 30sec]"
+          "scan_interval": "Polling Interval in seconds [min: 30sec]",
+          "limit_to_11kw": "Apply 11kW limit (for 22kW variants only) - will restrict all relevant settings to a max of 16A (instead of 32A)"
         }
       }
     },
     "error": {
       "auth_lan": "Host/IP is wrong - could not reach system",
       "auth_wan": "Serial/API-Key is wrong - could not reach system"
-    }
-  },
-  "options": {
-    "step": {
-      "user_lan": {
-        "description": "Local: If you need help setting it up, you can find it here: https://github.com/marq24/ha-goecharger-api2.",
-        "data": {
-          "limit_to_11kw": "Apply 11kW limit (for 22kW variants only) - will restrict all relevant settings to a max of 16A (instead of 32A)",
-          "scan_interval": "Polling Interval in seconds [min 5sec]"
-        }
-      },
-      "user_wan": {
-        "description": "Cloud: If you need help setting it up, you can find it here: https://github.com/marq24/ha-goecharger-api2.",
-        "data": {
-          "limit_to_11kw": "Apply 11kW limit (for 22kW variants only) - will restrict all relevant settings to a max of 16A (instead of 32A)",
-          "scan_interval": "Polling Interval in seconds [min 30sec]"
-        }
-      }
     }
   },
   "services": {
