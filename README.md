@@ -120,8 +120,11 @@ Once you have enabled the automation, you also need to:
 - __Select the 'logic mode': 'Awattar [Eco]' [API-Key 'lmo']__<br/>[Logik/Modus: ECO-Modus]
 - __enable the 'Use PV surplus' [API-Key 'fup']__<br/>[Mit PV-Überschuss laden]
 - __enable the 'Allow Charge Pause (car compatibility)'  [API-Key 'acp']__<br/>[Ladepausen zulassen (Fahrzeug Kompatibilität)]
+- double check in the _PV surplus settings_, that you have selected:
+    - __Power preference: _Prefer power to grid___
+    - you have a __negative Grid Target value (e.g. -500W)__
 
-in the setting of your go-eCharger — this can be done via the integration!
+in the setting of your go-eCharger — (this can be done via the integration)
 
 __Please note: in order to be able to enable 'Use PV surplus' in the go-eCharger Application you must also configure the "Flexibler Energietarif" [specify "Preisgrenze", "Country", "Anbieter", "Tarif" and so on] even though the "Flexibler Energietarif" switch is "OFF"__ Probably a bug in the go-echarger software?
 
