@@ -2,14 +2,14 @@ import logging
 from typing import Final, Any
 
 import voluptuous as vol
-
-from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bridge, INTG_TYPE
-from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.config_entries import ConfigFlowResult, SOURCE_RECONFIGURE
 from homeassistant.const import CONF_ID, CONF_HOST, CONF_MODEL, CONF_TYPE, CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_MODE
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+
+from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bridge, INTG_TYPE
+from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from .const import DOMAIN, CONF_11KWLIMIT, CONF_INTEGRATION_TYPE, LAN, WAN, CONFIG_VERSION, CONFIG_MINOR_VERSION
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -46,18 +46,19 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         entry_data = self._get_reconfigure_entry().data
         self._selected_system = entry_data.get(CONF_MODE)
-        if self._selected_system == LAN:
+
+        if self._selected_system == WAN:
+            self._default_scan_interval = entry_data.get(CONF_SCAN_INTERVAL, 120)
+            self._default_id = entry_data.get(CONF_ID, "YOUR-SERIAL-HERE")
+            self._default_token = entry_data.get(CONF_TOKEN, "YOUR-API-KEY-HERE")
+            return await self.async_step_user_wan()
+        else:
+            self._selected_system = LAN
             self._default_scan_interval = entry_data.get(CONF_SCAN_INTERVAL, 30)
             self._default_host = entry_data.get(CONF_HOST, "YOUR-IP-OR-HOSTNAME-HERE")
             self._default_integration_type = entry_data.get(CONF_INTEGRATION_TYPE, INTG_TYPE.CHARGER.value)
             self._default_11kWLimit = entry_data.get(CONF_11KWLIMIT, False)
             return await self.async_step_user_lan()
-        elif self._selected_system == WAN:
-            self._default_scan_interval = entry_data.get(CONF_SCAN_INTERVAL, 120)
-            self._default_id = entry_data.get(CONF_ID, "YOUR-SERIAL-HERE")
-            self._default_token = entry_data.get(CONF_TOKEN, "YOUR-API-KEY-HERE")
-            return await self.async_step_user_wan()
-
 
     async def async_step_user(self, user_input=None):
         self._errors = {}
