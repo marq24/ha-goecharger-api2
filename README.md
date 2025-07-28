@@ -10,9 +10,24 @@ Support for all go-eCharger Wallboxes & go-eController's supporting the APIv2 �
 
 [![hacs_badge][hacsbadge]][hacs] [![github][ghsbadge]][ghs] [![BuyMeCoffee][buymecoffeebadge]][buymecoffee] [![PayPal][paypalbadge]][paypal] [![hainstall][hainstallbadge]][hainstall]
 
-## latest successful tests go-eCharger Firmware Version: 56.2 / go-eController Firmware Version: 1.1.1
+## latest successfully tested go-eCharger Firmware Versions / go-eController Firmware Versions
 
-The latest go-eCharger firmware 56.8 has not been fully tested with this integration (yet) — So if you have issues with this integration after you updated your go-eCharger firmware higher than 56.2 — as [reported here: #11](https://github.com/marq24/ha-goecharger-api2/issues/11) — then please be so kind and downgrade the firmware again. TIA
+Technically, there should be no issues using always the latest go-eCharger & go-eController firmware versions available. As long as the API will just add additional fields and not change the existing ones, this integration should work with all go-eCharger & go-eController firmware versions.
+
+### go-eCharger Firmware Versions
+
+List of confirmed working go-eCharger Firmware versions with this integration:
+- 59.4
+- 57.0 & 57.1
+- 56.2 - 56.11
+- 055.0, 055.5, 055.7, 055.8
+ 
+### go-eController Firmware Versions
+
+List of confirmed working go-eController Firmware versions with this integration:
+- 1.1.1
+
+If you have any issues with this integration after you updated your go-eCharger firmware — as [reported here: #11](https://github.com/marq24/ha-goecharger-api2/issues/11) — then please be so kind and downgrade the firmware again and create an issue. TIA
 
 ## Main features
  
