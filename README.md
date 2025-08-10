@@ -168,12 +168,13 @@ This repository includes a ready-to-use Home Assistant blueprint that automates 
 - Value inversion options for different inverter conventions
 
 #### Quick Setup
-1. Import blueprint: [![Import Blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A//raw.githubusercontent.com/marq24/ha-goecharger-api2/main/example/blueprint/automation/goe_pv_surplus_charging.yaml)
+1. Import blueprint:
+[![Import Blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A//raw.githubusercontent.com/marq24/ha-goecharger-api2/main/example/blueprint/automation/goe_pv_surplus_charging.yaml)
 2. Create automation from blueprint
 3. Configure your PV entities
 4. Enable ECO mode on go-eCharger
 
-For detailed configuration instructions, see [Blueprint Documentation](example/blueprint/automation/README.md).
+For detailed configuration instructions, see [Blueprint Documentation](example/blueprint/automation/readme.md).
 
 #### Manual PV Setup
 If you prefer manual automation setup, use this basic example:
