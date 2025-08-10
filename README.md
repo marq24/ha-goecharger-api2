@@ -157,6 +157,27 @@ The power in WATT your home-battery currently providing (positive — discharge 
 
 With other words, `pAkku` is expected to be negative when the home battery is charging (consume power) and positive when it's currently discharging (provide power).
 
+### Blueprint for PV Surplus Charging
+
+This repository includes a ready-to-use Home Assistant blueprint that automates PV surplus charging setup.
+
+#### Features
+- Supports multiple grid measurement methods (single entity, consumption + feed-in, 3-phase)
+- Automatic summation of multiple PV/battery entities
+- Organized input sections with clear descriptions
+- Value inversion options for different inverter conventions
+
+#### Quick Setup
+1. Import blueprint: [![Import Blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A//raw.githubusercontent.com/marq24/ha-goecharger-api2/main/example/blueprint/automation/goe_pv_surplus_charging.yaml)
+2. Create automation from blueprint
+3. Configure your PV entities
+4. Enable ECO mode on go-eCharger
+
+For detailed configuration instructions, see [Blueprint Documentation](example/blueprint/automation/README.md).
+
+#### Manual PV Setup
+If you prefer manual automation setup, use this basic example:
+
 ### Example automation
 
 Please note that this example is for a for SENEC.Home System — if you are using 'my' SENEC.Home Integration, you can use the code below 1:1 — in any other case: __You must adjust/replace the sensor identifiers!!!__. So if you are not a SENEC.Home user, please replace the following:
