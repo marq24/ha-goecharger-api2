@@ -1,0 +1,196 @@
+blueprint:
+  name: go-eCharger PV Surplus Charging
+  description: |
+    Flexible blueprint for transmitting solar system data to go-eCharger for PV surplus charging.
+
+    **Requirements:** This blueprint requires the go-eCharger API2 integration from 
+    [marq24/ha-goecharger-api2](https://github.com/marq24/ha-goecharger-api2)
+
+    **Data Transmission:** Sends PV data every 5 seconds during daylight hours (required by go-eCharger).
+
+    **Configuration Sections:** The input fields are organized into three grid power measurement methods:
+    - Single Entity: Use one entity with positive/negative values
+    - Consumption + Feed-in: Use separate entities for grid consumption and feed-in
+    - 3-Phase Entities: Use individual entities for L1, L2, L3 phases
+
+    Choose only ONE grid method that matches your inverter's entity structure.
+  domain: automation
+  author: OliEder
+  homeassistant:
+    min_version: 2024.6.0
+  input:
+    grid_single:
+      name: Grid Power - Single Entity
+      description: Use ONE entity with positive (import) and negative (export) values
+      collapsed: true
+      input:
+        grid_single_entity:
+          name: Grid Power Entity
+          description: Entity with +/- values (positive = import, negative = export)
+          default:
+          selector:
+            entity:
+              filter:
+                - domain: sensor
+                  device_class: power
+        grid_single_invert:
+          name: Invert Values
+          description: Enable if positive means export instead of import
+          default: false
+          selector:
+            boolean:
+
+    grid_dual:
+      name: Grid Power - Consumption + Feed-in
+      description: Use separate entities for grid consumption and feed-in (both always positive)
+      collapsed: true
+      input:
+        grid_consumption_entity:
+          name: Grid Consumption Entity
+          description: Grid consumption (always positive)
+          default:
+          selector:
+            entity:
+              filter:
+                - domain: sensor
+                  device_class: power
+        grid_feedin_entity:
+          name: Grid Feed-in Entity
+          description: Grid feed-in (always positive)
+          default:
+          selector:
+            entity:
+              filter:
+                - domain: sensor
+                  device_class: power
+
+    grid_phases:
+      name: Grid Power - 3-Phase Entities
+      description: Use individual entities for each phase (L1, L2, L3) - all three will be summed
+      collapsed: true
+      input:
+        grid_phase_entities:
+          name: Grid Phase Entities (L1, L2, L3)
+          description: Select exactly 3 entities for phases L1, L2, L3
+          default: []
+          selector:
+            entity:
+              multiple: true
+              filter:
+                - domain: sensor
+                  device_class: power
+        grid_phases_invert:
+          name: Invert Phase Values
+          description: Enable if positive means export instead of import
+          default: false
+          selector:
+            boolean:
+
+    pv_entities:
+      name: PV Power Entities
+      description: One or more PV entities (required)
+      selector:
+        entity:
+          multiple: true
+          filter:
+            - domain: sensor
+              device_class: power
+
+    pv_invert:
+      name: Invert PV Power Values
+      description: Enable if PV entities use negative values for generation
+      default: false
+      selector:
+        boolean:
+
+    battery_enabled:
+      name: Enable Battery Data Transmission
+      description: Send battery data to go-eCharger
+      default: true
+      selector:
+        boolean:
+
+    battery_entities:
+      name: Battery Power Entities
+      description: One or more battery entities (optional)
+      default: []
+      selector:
+        entity:
+          multiple: true
+          filter:
+            - domain: sensor
+              device_class: power
+
+    battery_invert:
+      name: Invert Battery Power Values
+      description: Enable if positive values mean charging instead of discharging
+      default: false
+      selector:
+        boolean:
+
+variables:
+  grid_single_entity: !input grid_single_entity
+  grid_single_invert: !input grid_single_invert
+  grid_consumption: !input grid_consumption_entity
+  grid_feedin: !input grid_feedin_entity
+  grid_phases: !input grid_phase_entities
+  grid_phases_invert: !input grid_phases_invert
+  pv_list: !input pv_entities
+  pv_invert_flag: !input pv_invert
+  battery_enable: !input battery_enabled
+  battery_list: !input battery_entities
+  battery_invert_flag: !input battery_invert
+
+  pgrid_value: >
+    {% if grid_single_entity %}
+      {% set value = states(grid_single_entity) | float(0) %}
+      {{ (value * -1) if grid_single_invert else value }}
+    {% elif grid_consumption and grid_feedin %}
+      {% set cons_val = states(grid_consumption) | float(0) %}
+      {% set feed_val = states(grid_feedin) | float(0) %}
+      {{ cons_val - feed_val }}
+    {% elif grid_phases | length >= 3 %}
+      {% set total = 0 %}
+      {% for entity in grid_phases[:3] %}
+        {% set total = total + (states(entity) | float(0)) %}
+      {% endfor %}
+      {{ (total * -1) if grid_phases_invert else total }}
+    {% else %}
+      0
+    {% endif %}
+
+  ppv_value: >
+    {% set total = 0 %}
+    {% for entity in pv_list %}
+      {% set total = total + (states(entity) | float(0)) %}
+    {% endfor %}
+    {{ (total * -1) if pv_invert_flag else total }}
+
+  pakku_value: >
+    {% if battery_enable %}
+      {% set total = 0 %}
+      {% for entity in battery_list %}
+        {% set total = total + (states(entity) | float(0)) %}
+      {% endfor %}
+      {{ (total * -1) if battery_invert_flag else total }}
+    {% else %}
+      0
+    {% endif %}
+
+triggers:
+  - trigger: time_pattern
+    seconds: /5
+
+conditions:
+  - condition: sun
+    after: sunrise
+    before: sunset
+
+actions:
+  - action: goecharger_api2.set_pv_data
+    data:
+      pgrid: "{{ pgrid_value | round(0) | int }}"
+      ppv: "{{ ppv_value | round(0) | int }}"
+      pakku: "{{ pakku_value | round(0) | int }}"
+
+mode: single
