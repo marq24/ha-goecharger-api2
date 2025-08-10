@@ -1,6 +1,5 @@
 from typing import Final
 
-from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag, IS_TRIGGER
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription, BinarySensorDeviceClass
 from homeassistant.components.button import ButtonEntityDescription
 from homeassistant.components.number import NumberEntityDescription, NumberDeviceClass, NumberMode
@@ -11,6 +10,8 @@ from homeassistant.const import (
     EntityCategory, UnitOfElectricCurrent, UnitOfEnergy, UnitOfTime, CURRENCY_CENT, UnitOfPower, UnitOfTemperature,
     UnitOfFrequency, UnitOfElectricPotential, PERCENTAGE, SIGNAL_STRENGTH_DECIBELS
 )
+
+from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag, IS_TRIGGER
 
 # Base component constants
 MANUFACTURER: Final = "go-e GmbH [Austria]"
@@ -23,7 +24,7 @@ CONFIG_MINOR_VERSION: Final = 0
 
 STARTUP_MESSAGE: Final = f"""
 -------------------------------------------------------------------
-{NAME}
+{NAME} - v%s
 This is a custom integration!
 If you have any issues with this you need to open an issue here:
 {ISSUE_URL}

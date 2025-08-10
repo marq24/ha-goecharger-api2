@@ -3,10 +3,8 @@ import logging
 from datetime import timedelta
 from typing import Any, Final
 
-from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bridge, TRANSLATIONS, INTG_TYPE
-from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from homeassistant.components.number import NumberDeviceClass
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_TYPE, CONF_ID, CONF_SCAN_INTERVAL, CONF_MODE, CONF_TOKEN
 from homeassistant.core import HomeAssistant, Event, SupportsResponse
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -17,6 +15,10 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.loader import async_get_integration
+
+from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bridge, TRANSLATIONS, INTG_TYPE
+from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from .const import (
     LAN,
     WAN,
@@ -59,9 +61,10 @@ async def async_setup(hass: HomeAssistant, config: dict):  # pylint: disable=unu
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     if DOMAIN not in hass.data:
-        value = "UNKOWN"
-        _LOGGER.info(STARTUP_MESSAGE)
-        hass.data.setdefault(DOMAIN, {"manifest_version": value})
+        the_integration = await async_get_integration(hass, DOMAIN)
+        intg_version = the_integration.version if the_integration is not None else "UNKNOWN"
+        _LOGGER.info(STARTUP_MESSAGE % intg_version)
+        hass.data.setdefault(DOMAIN, {"manifest_version": intg_version})
 
     coordinator = GoeChargerDataUpdateCoordinator(hass, config_entry)
     await coordinator.async_refresh()
