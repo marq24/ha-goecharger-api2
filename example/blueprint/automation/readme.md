@@ -21,7 +21,7 @@ This blueprint enables automatic PV surplus charging for go-eCharger wallboxes b
 ### Option 1: Direct Import
 1. Go to **Settings** → **Automations & Scenes** → **Blueprints**
 2. Click **Import Blueprint**
-3. Use this URL: `https://raw.githubusercontent.com/OliEder/ha-goecharger-api2/main/HA-blueprint/goe_pv_surplus_charging.yaml`
+3. Use this URL: `https://raw.githubusercontent.com/marq24/ha-goecharger-api2/refs/heads/main/example/blueprint/automation/go-echarger-pv-surplus-data.yaml`
 
 ### Option 2: Manual Installation
 1. Download `goe_pv_surplus_charging.yaml`

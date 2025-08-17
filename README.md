@@ -169,7 +169,7 @@ This repository includes a ready-to-use Home Assistant blueprint that automates 
 
 #### Quick Setup
 1. Import blueprint:
-[![Import Blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A//raw.githubusercontent.com/marq24/ha-goecharger-api2/main/example/blueprint/automation/goe_pv_surplus_charging.yaml)
+[![Import Blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A//raw.githubusercontent.com/marq24/ha-goecharger-api2/refs/heads/main/example/blueprint/automation/go-echarger-pv-surplus-data.yaml)
 2. Create automation from blueprint
 3. Configure your PV entities
 4. Enable ECO mode on go-eCharger
