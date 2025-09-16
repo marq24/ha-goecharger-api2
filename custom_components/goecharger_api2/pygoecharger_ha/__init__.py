@@ -176,8 +176,7 @@ class GoeChargerApiV2Bridge:
             headers = None
         async with self.web_session.get(f"{self.host_url}/api/status", headers=headers, params=args) as res:
             try:
-                res.raise_for_status()
-                if res.status == 200:
+                if res.status in [200, 400]:
                     try:
                         r_json = await res.json()
                         if r_json is not None and len(r_json) > 0:
@@ -217,8 +216,7 @@ class GoeChargerApiV2Bridge:
             headers = None
         async with self.web_session.get(f"{self.host_url}/api/status", headers=headers) as res:
             try:
-                res.raise_for_status()
-                if res.status == 200:
+                if res.status in [200, 400]:
                     try:
                         r_json = await res.json()
                         if r_json is not None and len(r_json) > 0:
