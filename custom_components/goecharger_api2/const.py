@@ -271,6 +271,7 @@ NUMBER_SENSORS = [
     # awp -> this is in €-CENT! - but api allow to specify 0.01 cent steps
     ExtNumberEntityDescription(
         key=Tag.AWP.key,
+        handle_as_float=True,
         native_max_value=1000,
         native_min_value=-100,
         native_step=0.01,
