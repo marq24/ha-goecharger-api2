@@ -132,6 +132,17 @@
       "zfo": {"name": "Zero Feed-in Offset"}
     },
     "select": {
+      "ct": {
+        "name": "Fahrzeug Kompatibilitätsmodus",
+        "state": {
+          "default":          "Standard",
+          "kiasoul":          "Kia Soul",
+          "renaultzoe":       "Renault Zoe",
+          "mitsubishiimiev":  "Mitsubishi iMiev",
+          "citroenczero":     "Citroën C-Zero",
+          "peugeotion":       "Peugeot iOn"
+        }
+      },
       "bac": {
         "name": "Wallbox Schalter: Stromänderung zulassen",
         "state": {

@@ -62,7 +62,7 @@ class Tag(ApiKey, Enum):
     AWCP = ApiKey(key="awcp", cat=CAT.STATUS)
     # useAwattar
     AWE = ApiKey(key="awe", cat=CAT.CONFIG, writeable=True)
-    # awattarMaxPrice in ct
+    # awattarMaxPrice in cent
     AWP = ApiKey(key="awp", cat=CAT.CONFIG, writeable=True)
     # Button allow Current change (0=AlwaysLock, 1=LockWhenCarIsConnected, 2=LockWhenCarIsCharging, 3=NeverLock)
     BAC = ApiKey(key="bac", cat=CAT.CONFIG, writeable=True)
@@ -98,6 +98,8 @@ class Tag(ApiKey, Enum):
     CLP = ApiKey(key="clp", cat=CAT.CONFIG, writeable=True)
     # Cable unlock status (Unknown=0, Unlocked=1, UnlockFailed=2, Locked=3, LockFailed=4, LockUnlockPowerout=5)
     CUS = ApiKey(key="cus", cat=CAT.STATUS)
+    # compatibility-mode (default -> then su:false / other: )
+    CT = ApiKey(key="ct", cat=CAT.CONFIG, writeable=True)
     # cloud websocket enabled"
     CWE = ApiKey(key="cwe", cat=CAT.CONFIG, writeable=True)
     # information about a paired and connected go-eController

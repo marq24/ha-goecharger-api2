@@ -297,6 +297,27 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
 
         return result
 
+    async def async_write_multiple_keys(self, attr:dict, key: str, value, entity: Entity = None) -> dict:
+        """Update single data"""
+        result = await self.bridge._write_values_int(attr, key, value)
+        _LOGGER.debug(f"write multiple result: {result}")
+
+        if key in result:
+            self.data[key] = result[key]
+        else:
+            _LOGGER.error(f"could not write multiple value: '{value}' to: {key} result was: {result}")
+
+        if entity is not None:
+            entity.async_schedule_update_ha_state(force_refresh=True)
+
+        if self.intg_type == INTG_TYPE.CHARGER.value:
+            # since we do not force an update when setting PV surplus data, we 'patch' internally our values
+            if key == Tag.IDS.key:
+                self.data = self.bridge._versions | self.bridge._states | self.bridge._config
+                self.async_update_listeners()
+
+        return result
+
     async def read_versions(self):
         await self.bridge.read_versions()
 

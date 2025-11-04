@@ -1,13 +1,16 @@
 import logging
 
-from custom_components.goecharger_api2.pygoecharger_ha import INTG_TYPE
-from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity
-from .const import DOMAIN, SELECT_SENSORS, CONTROLLER_SELECT_SENSORS, ExtSelectEntityDescription
+
+from custom_components.goecharger_api2 import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity
+from custom_components.goecharger_api2.const import DOMAIN, SELECT_SENSORS, CONTROLLER_SELECT_SENSORS, \
+    ExtSelectEntityDescription
+from custom_components.goecharger_api2.pygoecharger_ha import INTG_TYPE
+from custom_components.goecharger_api2.pygoecharger_ha.const import CT_VALUES, CT_VALUES_MAP
+from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,6 +77,10 @@ class GoeChargerSelect(GoeChargerBaseEntity, SelectEntity):
                     value = 'unknown'
             if isinstance(value, int):
                 value = str(value)
+
+            if self.data_key == Tag.CT.key:
+                value = value.lower()
+
         except KeyError:
             value = "unknown"
         except TypeError:
@@ -99,7 +106,29 @@ class GoeChargerSelect(GoeChargerBaseEntity, SelectEntity):
             else:
                 if str(option) == "null":
                     await self.coordinator.async_write_key(self.data_key, None, self)
+
                 else:
-                    await self.coordinator.async_write_key(self.data_key, int(option), self)
+                    if self.data_key == Tag.CT.key:
+                        # quite a quick hack - since normally we write multiple values via a service...
+                        args = {Tag.CT.key: '"'+str(CT_VALUES_MAP[option])+'"'}
+
+                        # simulateUnpluggingShort (su) false, when Default, true otherwise
+                        if option == CT_VALUES.DEFAULT.value:
+                            args[Tag.SU.key] = str(False).lower()
+                        else:
+                            args[Tag.SU.key] = str(True).lower()
+
+                        # setting the Minimum charging current (mca)
+                        if option == CT_VALUES.RENAULTZOE.value:
+                            # Zoe need's 10 as value
+                            args[Tag.MCA.key] = str(10).lower()
+                        else:
+                            args[Tag.MCA.key] = str(6).lower()
+
+                        # finally wringing the key...
+                        await self.coordinator.async_write_multiple_keys(args, self.data_key, option, self)
+
+                    else:
+                        await self.coordinator.async_write_key(self.data_key, int(option), self)
         except ValueError:
             return "unavailable"

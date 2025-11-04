@@ -253,11 +253,15 @@ class GoeChargerApiV2Bridge:
         else:
             args = {key: '"'+str(value)+'"'}
 
+        return await self._write_values_int(args, key, value)
+
+    async def _write_values_int(self, args, key, value) -> dict:
         _LOGGER.info(f"going to write {args} to {self._logkey}@{self.host_url}")
         if self.token:
             headers = {"Authorization": self.token}
         else:
             headers = None
+
         async with self.web_session.get(f"{self.host_url}/api/set", headers=headers, params=args) as res:
             try:
                 if res.status == 200:

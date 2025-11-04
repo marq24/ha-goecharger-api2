@@ -11,6 +11,7 @@ from homeassistant.const import (
     UnitOfFrequency, UnitOfElectricPotential, PERCENTAGE, SIGNAL_STRENGTH_DECIBELS
 )
 
+from custom_components.goecharger_api2.pygoecharger_ha.const import CT_VALUES
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag, IS_TRIGGER
 
 # Base component constants
@@ -683,6 +684,14 @@ NUMBER_SENSORS = [
     )
 ]
 SELECT_SENSORS = [
+    ExtSelectEntityDescription(
+        key=Tag.CT.key,
+        options=[el.value.lower() for el in CT_VALUES],
+        entity_category=EntityCategory.CONFIG,
+        device_class=None,
+        icon="mdi:ab-testing",
+        entity_registry_enabled_default=True
+    ),
     ExtSelectEntityDescription(
         key=Tag.BAC.key,
         options=["0", "1", "2", "3"],
@@ -1824,19 +1833,7 @@ SENSOR_SENSORS = [
         icon="mdi:lightning-bolt",
         device_class=SensorDeviceClass.ENERGY,
         entity_registry_enabled_default=False
-    ),
-    ExtSensorEntityDescription(
-        key=Tag.CARDS.key,
-        tuple_idx=[10, "energy"],
-        entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=2,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:lightning-bolt",
-        device_class=SensorDeviceClass.ENERGY,
-        entity_registry_enabled_default=False
-    ),
+    )
 ]
 
 SWITCH_SENSORS = [
