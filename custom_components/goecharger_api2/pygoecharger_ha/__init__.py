@@ -23,6 +23,10 @@ from custom_components.goecharger_api2.pygoecharger_ha.const import (
     FILTER_CONTROLER_TIMES_ADDON,
     FILTER_CONTROLER_ALL_STATES,
     FILTER_CONTROLER_ALL_CONFIG,
+    FILTER_CARDS_ID_CLASSIC,
+    FILTER_CARDS_ID_FWV60,
+    FILTER_CARDS_ENGY_CLASSIC,
+    FILTER_CARDS_ENGY_FWV60,
 )
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag, IS_TRIGGER
 
@@ -66,11 +70,13 @@ class GoeChargerApiV2Bridge:
             self._logkey = "go-eCharger"
             self._FILTER_SYSTEMS = FILTER_SYSTEMS
             self._FILTER_VERSIONS = FILTER_VERSIONS
+
             self._FILTER_MIN_STATES = FILTER_MIN_STATES
             self._FILTER_IDS_ADDON = FILTER_IDS_ADDON
             self._FILTER_TIMES_ADDON = FILTER_TIMES_ADDON
-            self._FILTER_ALL_STATES = FILTER_ALL_STATES
-            self._FILTER_ALL_CONFIG = FILTER_ALL_CONFIG
+
+            self._FILTER_ALL_STATES = FILTER_ALL_STATES.format(CARDS_ENERGY_FILTER=FILTER_CARDS_ENGY_CLASSIC)
+            self._FILTER_ALL_CONFIG = FILTER_ALL_CONFIG.format(CARDS_ID_FILTER=FILTER_CARDS_ID_CLASSIC)
 
         self.web_session = web_session
         self.lang_map = None
@@ -102,6 +108,19 @@ class GoeChargerApiV2Bridge:
 
     async def read_versions(self):
         self._versions = await self._read_filtered_data(filters=self._FILTER_VERSIONS, log_info="read_versions")
+        if self.isCharger:
+            # we must check, if this is firmware 60.0 or higher - since if this
+            # is the case, we must use a different filter for the cards-data
+            # Since in the 60.0 firmware the key 'cards' has been removed and
+            # has been replaced by 30 single keys (instead of using a json object)
+            # This must be special Austrian logic - but what do I know!
+            if float(self._versions.get(Tag.FWV.key, -1.0)) >= 60.0:
+                _LOGGER.info(f"{self._versions.get(Tag.FWV.key, -1.0)} FirmwareVersion detected - using keys: {FILTER_CARDS_ID_FWV60}")
+                self._FILTER_ALL_STATES = FILTER_ALL_STATES.format(CARDS_ENERGY_FILTER=FILTER_CARDS_ENGY_FWV60)
+                self._FILTER_ALL_CONFIG = FILTER_ALL_CONFIG.format(CARDS_ID_FILTER=FILTER_CARDS_ID_FWV60)
+            else:
+                self._FILTER_ALL_STATES = FILTER_ALL_STATES.format(CARDS_ENERGY_FILTER=FILTER_CARDS_ENGY_CLASSIC)
+                self._FILTER_ALL_CONFIG = FILTER_ALL_CONFIG.format(CARDS_ID_FILTER=FILTER_CARDS_ID_CLASSIC)
 
     async def read_all(self) -> dict:
         await self.read_all_states();
@@ -174,7 +193,7 @@ class GoeChargerApiV2Bridge:
             headers = {"Authorization": self.token}
         else:
             headers = None
-        async with self.web_session.get(f"{self.host_url}/api/status", headers=headers, params=args) as res:
+        async with (self.web_session.get(f"{self.host_url}/api/status", headers=headers, params=args) as res):
             try:
                 if res.status in [200, 400]:
                     try:
@@ -190,8 +209,7 @@ class GoeChargerApiV2Bridge:
                                     if a_req_key not in r_json:
                                         missing_fields_in_reponse.append(a_req_key)
 
-                                _LOGGER.info(
-                                    f"[missing fields: {len(missing_fields_in_reponse)} -> {missing_fields_in_reponse}] - not all requested fields where present in the response from from {self._logkey}@{self.host_url}")
+                                _LOGGER.debug(f"[missing fields: {len(missing_fields_in_reponse)} -> {missing_fields_in_reponse}] - not all requested fields where present in the response from from {self._logkey}@{self.host_url}")
                             return r_json
 
                     except JSONDecodeError as json_exc:

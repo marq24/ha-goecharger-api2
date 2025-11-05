@@ -3,13 +3,14 @@ import re
 from datetime import datetime, time
 from typing import Final
 
-from custom_components.goecharger_api2.pygoecharger_ha import INTG_TYPE
-from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+
+from custom_components.goecharger_api2.pygoecharger_ha import INTG_TYPE
+from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity
 from .const import DOMAIN, SENSOR_SENSORS, CONTROLLER_SENSOR_SENSORS, ExtSensorEntityDescription
 
@@ -62,7 +63,27 @@ class GoeChargerSensor(GoeChargerBaseEntity, SensorEntity, RestoreEntity):
             if self.entity_description.tuple_idx is not None and len(self.entity_description.tuple_idx) > 1:
                 subKey1 = self.entity_description.tuple_idx[0]
                 subKey2 = self.entity_description.tuple_idx[1]
-                value = self.coordinator.data[self.data_key][subKey1][subKey2]
+
+                # very special handling for 'energy by card' sensor - since in firmware 60.0
+                # the go-e will deliver the values now directly in the 'root' object and does
+                # not provide a card object any longer...
+                if self.data_key == Tag.CARDS.key and self.coordinator.is_fwv60_or_higher:
+                    the_patched_key = None
+                    # to my best knowledge only 'energy' is currently in use - but let's
+                    # prepare the code for all passible case
+                    if subKey2.lower() == "energy":
+                        the_patched_key = f"c{subKey1}e"
+                    elif subKey2.lower() == "name":
+                        the_patched_key = f"c{subKey1}n"
+                    elif subKey2.lower() == "cardid":
+                        the_patched_key = f"c{subKey1}i"
+
+                    if the_patched_key is not None:
+                        value = self.coordinator.data[the_patched_key]
+                    else:
+                        value = None
+                else:
+                    value = self.coordinator.data[self.data_key][subKey1][subKey2]
             elif self.entity_description.idx is not None:
                 value = self.coordinator.data[self.data_key][self.entity_description.idx]
             elif self.data_key == Tag.CLL.key:

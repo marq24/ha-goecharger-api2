@@ -4,16 +4,26 @@ from typing import Final
 ##############
 #   CHARGER  #
 ##############
+FILTER_CARDS_ID_CLASSIC: Final  = "cards"
+FILTER_CARDS_NAME_CLASSIC: Final = FILTER_CARDS_ID_CLASSIC
+FILTER_CARDS_ENGY_CLASSIC: Final = FILTER_CARDS_ID_CLASSIC
+FILTER_CARDS_ALL_CLASSIC: Final = FILTER_CARDS_ID_CLASSIC
+
+FILTER_CARDS_ID_FWV60: Final  = "c0i,c1i,c2i,c3i,c4i,c5i,c6i,c7i,c8i,c9i"
+FILTER_CARDS_NAME_FWV60: Final= "c0n,c1n,c2n,c3n,c4n,c5n,c6n,c7n,c8n,c9n"
+FILTER_CARDS_ENGY_FWV60: Final= "c0e,c1e,c2e,c3e,c4e,c5e,c6e,c7e,c8e,c9e"
+FILTER_CARDS_ALL_FWV60: Final = f"{FILTER_CARDS_ID_FWV60},{FILTER_CARDS_NAME_FWV60},{FILTER_CARDS_ENGY_FWV60}"
+
 FILTER_SYSTEMS: Final = "oem,sse,typ,var"
-FILTER_VERSIONS: Final = "ccrv,fwc,fwv,cards,var"
+FILTER_VERSIONS: Final = f"ccrv,fwc,fwv,var,{FILTER_CARDS_ID_CLASSIC},{FILTER_CARDS_ID_FWV60}"
 FILTER_MIN_STATES: Final = "car,modelStatus,err,nrg,tma,trx"
 FILTER_IDS_ADDON: Final = ",pakku,ppv,pgrid"
 
 # rbt: is the reboot time - and "looks like", that all other timestamps use the rbt "as" start point
 FILTER_TIMES_ADDON: Final = ",rbt,fsptws,inva,lbp,lccfc,lccfi,lcctc,lfspt,lmsc,lpsc,lcs"
 
-FILTER_ALL_STATES: Final = "acu,adi,amt,atp,awcp,car,cards,cbl,ccu,ccw,cdi,cll,cus,ctrls,deltaa,deltap,di1,err,eto,ffb,fhz,fsp,fsptws,inva,lbp,lccfc,lccfi,lcctc,lck,lfspt,lmsc,loa,lpsc,mcpea,mmp,modelStatus,nif,nrg,pakku,pgrid,pha,pnp,ppv,pvopt_averagePAkku,pvopt_averagePGrid,pvopt_averagePPv,pwm,rbc,rbt,rfb,rssi,rst,tlf,tls,tma,tpa,trx,wh,wsms,wst"
-FILTER_ALL_CONFIG: Final = "acp,acs,ama,amp,ara,ate,att,awc,awe,awp,bac,cards,cch,cco,cfi,cid,clp,cmse,ct,cwc,cwe,dwo,esk,fmt,fna,frc,frm,fst,fup,fzf,hsa,lbr,lmo,loe,lof,log,lop,lot,loty,lse,map,mca,mci,mcpd,mptwt,mpwst,nmo,pgt,po,psh,psm,psmd,rdbf,rdbs,rdef,rdes,rdre,rdpl,sch_satur,sch_sund,sch_week,sdp,sh,spl3,su,sua,sumd,tds,tof,upo,ust,zfo"
+FILTER_ALL_STATES: Final = "acu,adi,amt,atp,awcp,car,{CARDS_ENERGY_FILTER},ccu,ccw,cdi,cll,cus,ctrls,deltaa,deltap,di1,err,eto,ffb,fhz,fsp,fsptws,inva,lbp,lccfc,lccfi,lcctc,lck,lfspt,lmsc,loa,lpsc,mcpea,mmp,modelStatus,nif,nrg,pakku,pgrid,pha,pnp,ppv,pvopt_averagePAkku,pvopt_averagePGrid,pvopt_averagePPv,pwm,rbc,rbt,rfb,rssi,rst,tlf,tls,tma,tpa,trx,wh,wsms,wst"
+FILTER_ALL_CONFIG: Final = "acp,acs,ama,amp,ara,ate,att,awc,awe,awp,bac,{CARDS_ID_FILTER},cch,cco,cfi,cid,clp,cmse,ct,cwc,cwe,dwo,esk,fmt,fna,frc,frm,fst,fup,fzf,hsa,lbr,lmo,loe,lof,log,lop,lot,loty,lse,map,mca,mci,mcpd,mptwt,mpwst,nmo,pgt,po,psh,psm,psmd,rdbf,rdbs,rdef,rdes,rdre,rdpl,sch_satur,sch_sund,sch_week,sdp,sh,spl3,su,sua,sumd,tds,tof,upo,ust,zfo"
 
 FILTER_NOT_USED: Final = "mcc,mcca,mce,mcr,mcs,mcu,men,mlr,mlra,mqcn,mqg,mqss,msb,msp,msr,mtp,ocppai,ocppi,rdbfe,rdbse,rdefe,rdese,rdree,rdple"
 

@@ -324,6 +324,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         # charger and controller have both FWV tag...
         if Tag.FWV.key in self.bridge._versions:
             sw_version = self.bridge._versions[Tag.FWV.key]
+            self.is_fwv60_or_higher = float(sw_version) >= 60.0
         else:
             sw_version = "UNKNOWN"
 
@@ -358,15 +359,26 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                 # hw_version
             }
 
+        self.available_cards_idx = []
         # additional charger stuff...
         if self.intg_type == INTG_TYPE.CHARGER.value:
             # fetching the available cards that are enabled
-            self.available_cards_idx = []
             idx = 1
-            for a_card in self.bridge._versions[Tag.CARDS.key]:
-                if a_card["cardId"]:
-                    self.available_cards_idx.append(str(idx))
-                idx = idx + 1
+            # since FWV 60.0 there is no cards object any longer...
+            if self.is_fwv60_or_higher:
+                for a_card_number in range(0, 10):
+                    a_key_id = f"c{a_card_number}i"
+                    if self.bridge._versions.get(a_key_id, False):
+                        self.available_cards_idx.append(str(idx))
+                    idx = idx + 1
+
+            elif Tag.CARDS.key in self.bridge._versions:
+                for a_card in self.bridge._versions[Tag.CARDS.key]:
+                    if a_card["cardId"]:
+                        self.available_cards_idx.append(str(idx))
+                    idx = idx + 1
+            else:
+                _LOGGER.info(f"NO CARDS Object found!")
 
             _LOGGER.info(f"active cards {self.available_cards_idx}")
 
@@ -381,7 +393,6 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                 _LOGGER.info(f"LIMIT to 16A is active")
         else:
             # no additional controller stuff... but we need to init some variables
-            self.available_cards_idx = []
             self.check_for_max_of_16a = False
             self.limit_to16a = False
             pass

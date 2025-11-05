@@ -17,6 +17,7 @@ Technically, there should be no issues using always the latest go-eCharger & go-
 ### go-eCharger Firmware Versions
 
 List of confirmed working go-eCharger Firmware versions with this integration:
+- 60.0
 - 59.4
 - 57.0 & 57.1
 - 56.2 - 56.11
