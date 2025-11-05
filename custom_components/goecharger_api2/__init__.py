@@ -16,6 +16,7 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.loader import async_get_integration
+from packaging.version import Version
 
 from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bridge, TRANSLATIONS, INTG_TYPE
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
@@ -323,8 +324,10 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
 
         # charger and controller have both FWV tag...
         if Tag.FWV.key in self.bridge._versions:
-            sw_version = self.bridge._versions[Tag.FWV.key]
-            self.is_fwv60_or_higher = float(sw_version) >= 60.0
+            sw_version = self.bridge._versions.get(Tag.FWV.key, "0.0")
+            if self.intg_type == INTG_TYPE.CHARGER.value:
+                if Version(sw_version) >= Version("60.0"):
+                    self.is_fwv60_or_higher = True
         else:
             sw_version = "UNKNOWN"
 

@@ -4,6 +4,7 @@ from json import JSONDecodeError
 from time import time
 
 from aiohttp import ClientResponseError
+from packaging.version import Version
 
 from custom_components.goecharger_api2.pygoecharger_ha.const import (
     TRANSLATIONS,
@@ -114,8 +115,9 @@ class GoeChargerApiV2Bridge:
             # Since in the 60.0 firmware the key 'cards' has been removed and
             # has been replaced by 30 single keys (instead of using a json object)
             # This must be special Austrian logic - but what do I know!
-            if float(self._versions.get(Tag.FWV.key, -1.0)) >= 60.0:
-                _LOGGER.info(f"{self._versions.get(Tag.FWV.key, -1.0)} FirmwareVersion detected - using keys: {FILTER_CARDS_ID_FWV60}")
+            fwv = self._versions.get(Tag.FWV.key, "0.0")
+            if Version(fwv) >= Version("60.0"):
+                _LOGGER.info(f"'{fwv}' FirmwareVersion detected -> using 'card' keys: {FILTER_CARDS_ID_FWV60}")
                 self._FILTER_ALL_STATES = FILTER_ALL_STATES.format(CARDS_ENERGY_FILTER=FILTER_CARDS_ENGY_FWV60)
                 self._FILTER_ALL_CONFIG = FILTER_ALL_CONFIG.format(CARDS_ID_FILTER=FILTER_CARDS_ID_FWV60)
             else:

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Final
 
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription, BinarySensorDeviceClass
@@ -40,28 +41,34 @@ CONF_INTEGRATION_TYPE = "integration_type"
 WAN: Final = "wan"
 LAN: Final = "lan"
 
-class ExtBinarySensorEntityDescription(BinarySensorEntityDescription, frozen_or_thawed=True):
+@dataclass(frozen=True)
+class ExtBinarySensorEntityDescription(BinarySensorEntityDescription):
     idx: int | None = None
     tuple_idx: list | None = None
     icon_off: str | None = None
 
 
-class ExtButtonEntityDescription(ButtonEntityDescription, frozen_or_thawed=True):
+@dataclass(frozen=True)
+class ExtButtonEntityDescription(ButtonEntityDescription):
     payload: str | None = None
 
 
-class ExtNumberEntityDescription(NumberEntityDescription, frozen_or_thawed=True):
+@dataclass(frozen=True)
+class ExtNumberEntityDescription(NumberEntityDescription):
     write_zero_as_null: bool | None = None
     handle_as_float: bool | None = None
     factor: int | None = None
     idx: int | str | None = None
     check_16a_limit: bool | None = None
 
-class ExtSelectEntityDescription(SelectEntityDescription, frozen_or_thawed=True):
+
+@dataclass(frozen=True)
+class ExtSelectEntityDescription(SelectEntityDescription):
     idx: int | str | None = None
 
 
-class ExtSensorEntityDescription(SensorEntityDescription, frozen_or_thawed=True):
+@dataclass(frozen=True)
+class ExtSensorEntityDescription(SensorEntityDescription):
     idx: int | str | None = None
     tuple_idx: list | None = None
     factor: int | None = None
@@ -69,7 +76,8 @@ class ExtSensorEntityDescription(SensorEntityDescription, frozen_or_thawed=True)
     differential_base_key: str | None = None
 
 
-class ExtSwitchEntityDescription(SwitchEntityDescription, frozen_or_thawed=True):
+@dataclass(frozen=True)
+class ExtSwitchEntityDescription(SwitchEntityDescription):
     is_zero_or_one: bool | None = None
     icon_off: str | None = None
     idx: int | str | None = None
