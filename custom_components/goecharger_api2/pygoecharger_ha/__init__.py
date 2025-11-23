@@ -116,8 +116,12 @@ class GoeChargerApiV2Bridge:
             # has been replaced by 30 single keys (instead of using a json object)
             # This must be special Austrian logic - but what do I know!
             fwv = self._versions.get(Tag.FWV.key, "0.0")
+            if '-' in fwv:
+                _LOGGER.debug(f"read_versions(): firmware version must be patched! {fwv}")
+                fwv = fwv[:fwv.index('-')]
+
             if Version(fwv) >= Version("60.0"):
-                _LOGGER.info(f"'{fwv}' FirmwareVersion detected -> using 'card' keys: {FILTER_CARDS_ID_FWV60}")
+                _LOGGER.info(f"read_versions(): '{fwv}' FirmwareVersion detected -> using 'card' keys: {FILTER_CARDS_ID_FWV60}")
                 self._FILTER_ALL_STATES = FILTER_ALL_STATES.format(CARDS_ENERGY_FILTER=FILTER_CARDS_ENGY_FWV60)
                 self._FILTER_ALL_CONFIG = FILTER_ALL_CONFIG.format(CARDS_ID_FILTER=FILTER_CARDS_ID_FWV60)
             else:
