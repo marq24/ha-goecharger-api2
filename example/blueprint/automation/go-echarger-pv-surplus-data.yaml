@@ -150,29 +150,29 @@ variables:
       {% set feed_val = states(grid_feedin) | float(0) %}
       {{ cons_val - feed_val }}
     {% elif grid_phases | length >= 3 %}
-      {% set total = 0 %}
+      {% set ns = namespace(total=0) %}
       {% for entity in grid_phases[:3] %}
-        {% set total = total + (states(entity) | float(0)) %}
+        {% set ns.total = ns.total + (states(entity) | float(0)) %}
       {% endfor %}
-      {{ (total * -1) if grid_phases_invert else total }}
+      {{ (ns.total * -1) if grid_phases_invert else ns.total }}
     {% else %}
       0
     {% endif %}
 
   ppv_value: >
-    {% set total = 0 %}
+    {% set ns = namespace(total=0) %}
     {% for entity in pv_list %}
-      {% set total = total + (states(entity) | float(0)) %}
+      {% set ns.total = ns.total + (states(entity) | float(0)) %}
     {% endfor %}
-    {{ (total * -1) if pv_invert_flag else total }}
+    {{ (ns.total * -1) if pv_invert_flag else ns.total }}
 
   pakku_value: >
     {% if battery_enable %}
-      {% set total = 0 %}
+      {% set ns = namespace(total=0) %}
       {% for entity in battery_list %}
-        {% set total = total + (states(entity) | float(0)) %}
+        {% set ns.total = ns.total + (states(entity) | float(0)) %}
       {% endfor %}
-      {{ (total * -1) if battery_invert_flag else total }}
+      {{ (ns.total * -1) if battery_invert_flag else ns.total }}
     {% else %}
       0
     {% endif %}
