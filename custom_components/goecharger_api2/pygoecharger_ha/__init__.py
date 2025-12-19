@@ -3,7 +3,11 @@ import logging
 from json import JSONDecodeError
 from time import time
 
-from aiohttp import ClientResponseError
+from aiohttp import (
+    ClientResponseError,
+    ClientConnectorError,
+    ServerDisconnectedError
+)
 from packaging.version import Version
 
 from custom_components.goecharger_api2.pygoecharger_ha.const import (
@@ -36,7 +40,7 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 class GoeChargerApiV2Bridge:
 
-    def __init__(self, intg_type:str, host: str, serial:str, token:str, web_session, lang: str = "en") -> None:
+    def __init__(self, intg_type:str, host: str, serial:str, token:str, web_session, coordinator, lang: str = "en") -> None:
         if host is not None:
             self.host_url = f"http://{host}"
             self.token = None
@@ -79,6 +83,7 @@ class GoeChargerApiV2Bridge:
             self._FILTER_ALL_STATES = FILTER_ALL_STATES.format(CARDS_ENERGY_FILTER=FILTER_CARDS_ENGY_CLASSIC)
             self._FILTER_ALL_CONFIG = FILTER_ALL_CONFIG.format(CARDS_ID_FILTER=FILTER_CARDS_ID_CLASSIC)
 
+        self.coordinator = coordinator
         self.web_session = web_session
         self.lang_map = None
         if lang in TRANSLATIONS:
@@ -229,6 +234,12 @@ class GoeChargerApiV2Bridge:
 
             except ClientResponseError as io_exc:
                 _LOGGER.warning(f"APP-API: {log_info} failed cause: {io_exc}")
+            except (ClientConnectorError, ServerDisconnectedError) as exc:
+                _LOGGER.warning(f"APP-API _read_filtered_data: {type(exc).__name__}: {exc}")
+                if self.coordinator is not None:
+                    self.web_session = self.coordinator.get_new_client_session()
+            except BaseException as err:
+                _LOGGER.warning(f"APP-API _read_filtered_data BaseException: {type(err).__name__}: {err}")
 
         return {}
 
@@ -257,6 +268,12 @@ class GoeChargerApiV2Bridge:
 
             except ClientResponseError as io_exc:
                 _LOGGER.warning(f"APP-API: REQ_ALL failed cause: {io_exc}")
+            except (ClientConnectorError, ServerDisconnectedError) as exc:
+                _LOGGER.warning(f"APP-API _read_all_data: {type(exc).__name__}: {exc}")
+                if self.coordinator is not None:
+                    self.web_session = self.coordinator.get_new_client_session()
+            except BaseException as err:
+                _LOGGER.warning(f"APP-API _read_all_data BaseException: {type(err).__name__}: {err}")
 
         return {}
 
@@ -325,5 +342,11 @@ class GoeChargerApiV2Bridge:
 
             except ClientResponseError as io_exc:
                 _LOGGER.warning(f"APP-API: write_value failed cause: {io_exc}")
+            except (ClientConnectorError, ServerDisconnectedError) as exc:
+                _LOGGER.warning(f"APP-API _write_values_int: {type(exc).__name__}: {exc}")
+                if self.coordinator is not None:
+                    self.web_session = self.coordinator.get_new_client_session()
+            except BaseException as err:
+                _LOGGER.warning(f"APP-API _write_values_int: BaseException: {type(err).__name__}: {err}")
 
         return {}

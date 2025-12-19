@@ -8,9 +8,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_TYPE, CONF_ID, CONF_SCAN_INTERVAL, CONF_MODE, CONF_TOKEN
 from homeassistant.core import HomeAssistant, Event, SupportsResponse
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as config_val, entity_registry as entity_reg, \
+from homeassistant.helpers import (
+    config_validation as config_val,
+    entity_registry as entity_reg,
     device_registry as device_reg
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+)
+from homeassistant.helpers.aiohttp_client import async_get_clientsession, async_create_clientsession
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -205,6 +208,7 @@ async def check_device_registry(hass: HomeAssistant):
 class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, config_entry):
         lang = hass.config.language.lower()
+        self._hass = hass
         self.name = config_entry.title
 
         # are we a charger or a controller ?! (by default we are obvious a go-eCharger)
@@ -220,6 +224,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                 serial=config_entry.data.get(CONF_ID),
                 token=config_entry.data.get(CONF_TOKEN),
                 web_session=async_get_clientsession(hass),
+                coordinator=self,
                 lang=lang)
         else:
             self.mode = LAN
@@ -229,6 +234,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                 serial=None,
                 token=None,
                 web_session=async_get_clientsession(hass),
+                coordinator=self,
                 lang=lang)
 
         global SCAN_INTERVAL
@@ -245,6 +251,9 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         self._config_entry = config_entry
         self.is_charger_fw_version_60_0_or_higher = False
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+
+    async def get_new_client_session(self):
+        return async_create_clientsession(self._hass)
 
     # Callable[[Event], Any]
     def __call__(self, evt: Event) -> bool:

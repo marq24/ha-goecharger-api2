@@ -8,7 +8,7 @@ Support for all go-eCharger Wallboxes & go-eController's supporting the APIv2 â€
 > __Please note__, _that this integration is not official and not supported by the go-e development team. I am not affiliated with go-e.com in any way. This integration is based on the go-e API and the go-e API documentation._
 
 
-[![hacs_badge][hacsbadge]][hacs] [![github][ghsbadge]][ghs] [![BuyMeCoffee][buymecoffeebadge]][buymecoffee] [![PayPal][paypalbadge]][paypal] [![hainstall][hainstallbadge]][hainstall]
+[![hacs_badge][hacsbadge]][hacs] [![github][ghsbadge]][ghs] [![BuyMeCoffee][buymecoffeebadge]][buymecoffee]  [![BuyMeCoffee2][buymecoffeebadge2]][buymecoffee2] [![PayPal][paypalbadge]][paypal] [![hainstall][hainstallbadge]][hainstall]
 
 ## latest successfully tested go-eCharger Firmware Versions / go-eController Firmware Versions
 
@@ -441,9 +441,11 @@ Please consider [using my personal Tibber invitation link to join Tibber today](
 [buymecoffee]: https://www.buymeacoffee.com/marquardt24
 [buymecoffeebadge]: https://img.shields.io/badge/buy%20me%20a-coffee-blue.svg?style=for-the-badge&logo=buymeacoffee&logoColor=ccc
 
+[buymecoffee2]: https://buymeacoffee.com/marquardt24/membership
+[buymecoffeebadge2]: https://img.shields.io/badge/coffee-subs-blue.svg?style=for-the-badge&logo=buymeacoffee&logoColor=ccc
+
 [paypal]: https://paypal.me/marq24
 [paypalbadge]: https://img.shields.io/badge/paypal-me-blue.svg?style=for-the-badge&logo=paypal&logoColor=ccc
 
 [hainstall]: https://my.home-assistant.io/redirect/config_flow_start/?domain=goecharger_api2
-
 [hainstallbadge]: https://img.shields.io/badge/dynamic/json?style=for-the-badge&logo=home-assistant&logoColor=ccc&label=usage&suffix=%20installs&cacheSeconds=15600&url=https://analytics.home-assistant.io/custom_integrations.json&query=$.goecharger_api2.total
