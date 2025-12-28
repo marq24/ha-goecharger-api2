@@ -38,7 +38,7 @@ If you have any issues with this integration after you updated your go-eCharger 
  - Support for 'PV surplus charging' (PV-Überschuss Laden) __without additional hardware__ — no need to pay for evcc. In order to use this feature, a small additional manual setup process is required [[details can be found below](#enable-pv-surplus-charging-via-ha-automation)]
  - For all go-eCharger (status) fields that support a numeric status code, this code is available as a separate sensor
  - Multilanguage support: a German translation included (any feedback highly appreciated!) & looking forward to other language contributions
-- Hibernation-Mode: only request sensor data from wallbox when a system is in use [[details can be found below](#hibernation-mode---good-to-know-)]
+- Hibernation-Mode: only request sensor data from wallbox when a system is in use [[details can be found below](#hibernation-mode--good-to-know)]
   
   Please note that the configuration data will be read only every 24 hours from the hardware (to save data) — but you can update the sensors any time with an 'update' button.
 
