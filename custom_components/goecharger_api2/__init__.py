@@ -250,7 +250,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
 
         # config_entry only need for providing the '_device_info_dict'...
         self._config_entry = config_entry
-        self.is_charger_fw_version_60_0_or_higher = False
+        self.is_charger_fw_version_60_0_or_higher_and_no_cards_list_is_present = False
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
     async def get_new_client_session(self):
@@ -341,8 +341,11 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                 sw_version = sw_version[:sw_version.index('-')]
 
             if self.intg_type == INTG_TYPE.CHARGER.value:
-                if Version(sw_version) >= Version("60.0"):
-                    self.is_charger_fw_version_60_0_or_higher = True
+                # when we request the version info for the charger, then this request will/should also contain the
+                # key 'cards'. The cards array  has been removed in FW 60.0 - but currently in my 60.3 it's back
+                # again - so as long as this array is available, we can/should/will use it?!
+                if Version(sw_version) >= Version("60.0") and len(self.bridge._versions.get(Tag.CARDS.key, [])) == 0:
+                    self.is_charger_fw_version_60_0_or_higher_and_no_cards_list_is_present = True
         else:
             sw_version = "UNKNOWN"
 
@@ -382,7 +385,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         if self.intg_type == INTG_TYPE.CHARGER.value:
             # fetching the available cards that are enabled
             idx = 1
-            if Tag.CARDS.key not in self.bridge._versions and self.is_charger_fw_version_60_0_or_higher:
+            if self.is_charger_fw_version_60_0_or_higher_and_no_cards_list_is_present:
                 # since FWV 60.0 there is no cards object any longer...
                 for a_card_number in range(0, 10):
                     a_key_id = f"c{a_card_number}i"
