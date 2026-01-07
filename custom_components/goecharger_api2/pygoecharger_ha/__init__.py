@@ -114,24 +114,33 @@ class GoeChargerApiV2Bridge:
 
     async def read_versions(self):
         self._versions = await self._read_filtered_data(filters=self._FILTER_VERSIONS, log_info="read_versions")
+        if self._versions is None or len(self._versions) == 0:
+            _LOGGER.warning(f"read_versions(): no versions data available - enable debug log for details!")
+            return False
+
         if self.isCharger:
-            # we must check, if this is firmware 60.0 or higher - since if this
+            # we must check if this is firmware 60.0 or higher - since if this
             # is the case, we must use a different filter for the cards-data
             # Since in the 60.0 firmware the key 'cards' has been removed and
             # has been replaced by 30 single keys (instead of using a json object)
             # This must be special Austrian logic - but what do I know!
+            # 2026 Update:
+            # It looks like, that the cards[] have returned - at least in 60.3 the
+            # cards object has returned, so we include this in our check...
             fwv = self._versions.get(Tag.FWV.key, "0.0")
             if '-' in fwv:
                 _LOGGER.debug(f"read_versions(): firmware version must be patched! {fwv}")
                 fwv = fwv[:fwv.index('-')]
 
-            if Version(fwv) >= Version("60.0"):
+            if Version(fwv) >= Version("60.0") and len(self._versions.get(FILTER_CARDS_ID_CLASSIC, [])) == 0:
                 _LOGGER.info(f"read_versions(): '{fwv}' FirmwareVersion detected -> using 'card' keys: {FILTER_CARDS_ID_FWV60}")
                 self._FILTER_ALL_STATES = FILTER_ALL_STATES.format(CARDS_ENERGY_FILTER=FILTER_CARDS_ENGY_FWV60)
                 self._FILTER_ALL_CONFIG = FILTER_ALL_CONFIG.format(CARDS_ID_FILTER=FILTER_CARDS_ID_FWV60)
             else:
+                _LOGGER.info(f"read_versions(): '{fwv}' FirmwareVersion detected -> 'cards' list is present")
                 self._FILTER_ALL_STATES = FILTER_ALL_STATES.format(CARDS_ENERGY_FILTER=FILTER_CARDS_ENGY_CLASSIC)
                 self._FILTER_ALL_CONFIG = FILTER_ALL_CONFIG.format(CARDS_ID_FILTER=FILTER_CARDS_ID_CLASSIC)
+        return True
 
     async def read_all(self) -> dict:
         await self.read_all_states();

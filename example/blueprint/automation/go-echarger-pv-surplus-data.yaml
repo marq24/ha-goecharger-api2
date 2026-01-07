@@ -6,7 +6,7 @@ blueprint:
     **Requirements:** This blueprint requires the go-eCharger API2 integration from 
     [marq24/ha-goecharger-api2](https://github.com/marq24/ha-goecharger-api2)
 
-    **Data Transmission:** Sends PV data every 5 seconds during daylight hours (required by go-eCharger).
+    **Data Transmission:** Sends PV data every 5 seconds during daylight hours (required by go-eCharger), when a car is connected to the charger.
 
     **Configuration Sections:** The input fields are organized into three grid power measurement methods:
     - Single Entity: Use one entity with positive/negative values
@@ -19,6 +19,19 @@ blueprint:
   homeassistant:
     min_version: 2024.6.0
   input:
+    car_connected:
+      name: Car connected Entity
+      description: Entity from go-eCharger API2 integration that indicates the vehicle connection status
+      input:
+        car_connected_entity:
+          name: Car connected
+          description: Entity from go-eCharger API2 integration that indicates the vehicle connection status
+          selector:
+            target:
+              entity:
+                - integration: goecharger_api2
+                  domain: binary_sensor
+
     grid_single:
       name: Grid Power - Single Entity
       description: Use ONE entity with positive (import) and negative (export) values
@@ -129,6 +142,7 @@ blueprint:
         boolean:
 
 variables:
+  car_connected_entity: !input car_connected_entity
   grid_single_entity: !input grid_single_entity
   grid_single_invert: !input grid_single_invert
   grid_consumption: !input grid_consumption_entity
@@ -182,15 +196,20 @@ triggers:
     seconds: /5
 
 conditions:
-  - condition: sun
-    after: sunrise
-    before: sunset
+  - condition: and
+    conditions:
+      - condition: template
+        value_template: '{{ states(car_connected_entity.entity_id)=="on" }}'
+      - condition: sun
+        after: sunrise
+      - condition: sun
+        before: sunset
 
 actions:
   - action: goecharger_api2.set_pv_data
     data:
-      pgrid: "{{ pgrid_value | round(0) | int }}"
-      ppv: "{{ ppv_value | round(0) | int }}"
-      pakku: "{{ pakku_value | round(0) | int }}"
+      pgrid: '{{ pgrid_value | round(0) | int }}'
+      ppv: '{{ ppv_value | round(0) | int }}'
+      pakku: '{{ pakku_value | round(0) | int }}'
 
 mode: single

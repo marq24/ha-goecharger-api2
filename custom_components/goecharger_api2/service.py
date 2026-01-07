@@ -1,10 +1,13 @@
 import asyncio
 import datetime
 import logging
+from numbers import Number
 
-from homeassistant.core import ServiceCall, HomeAssistant
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import ServiceCall, HomeAssistant
 
+from custom_components.goecharger_api2.const import WAN
+from custom_components.goecharger_api2.pygoecharger_ha.const import INTG_TYPE
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -25,15 +28,27 @@ class GoeChargerApiV2Service():
             coordinator = next(iter(_COORDINATOR_PER_CONFIGENTRYID_MAP.values()))
         else:
             coordinator = _COORDINATOR_PER_CONFIGENTRYID_MAP[config_id]
-        _LOGGER.debug(f"Provided config_id: {config_id} -> using {coordinator.name} serial: {coordinator._serial}")
+        _LOGGER.debug(f"Service-set_pv_data(): Provided config_id: {config_id} -> using {coordinator.name} serial: {coordinator._serial}")
+
+        # before we're going to 'post' any data to the cloud, we will check if there is ANY vehicle connected
+        if coordinator.intg_type == INTG_TYPE.CHARGER.value and coordinator.mode == WAN:
+            # see also binary_sensor.py.is_on()
+            a_car_state = coordinator.data.get(Tag.CAR_CONNECTED.key, -1)
+            if isinstance(a_car_state, Number):
+                if int(a_car_state) < 2:
+                    _LOGGER.debug(f"Service-set_pv_data(): No CAR CONNECTED to the Wallbox: API returned 'car' value '{a_car_state}'")
+                    if call.return_response:
+                        return {"error": f"No CAR CONNECTED to the Wallbox: API returned 'car' value '{a_car_state}'"}
+                    else:
+                        return None
 
         pgrid = call.data.get('pgrid', None)
         ppv = call.data.get('ppv', 0)
         pakku = call.data.get('pakku', 0)
-        if pgrid is not None and isinstance(pgrid, (int, float)):
-            if not isinstance(ppv, (int, float)):
+        if pgrid is not None and isinstance(pgrid, Number):
+            if not isinstance(ppv, Number):
                 ppv = 0
-            if not isinstance(pakku, (int, float)):
+            if not isinstance(pakku, Number):
                 pakku = 0
 
             payload = {
@@ -41,7 +56,7 @@ class GoeChargerApiV2Service():
                 "pPv": float(ppv),
                 "pAkku": float(pakku)
             }
-            _LOGGER.debug(f"Service set PV data: {payload}")
+            _LOGGER.debug(f"Service-set_pv_data(): set PV data: {payload}")
             try:
                 resp = await coordinator.async_write_key(Tag.IDS.key, payload)
                 if call.return_response:

@@ -113,13 +113,13 @@ Use the following steps for a manual configuration by adding the custom integrat
 After the integration was added, you can use the 'config' button to adjust your settings, you can additionally modify the update interval
 <a id="pvsurplus"></a>
 
-Please note, that some of the available sensors are __not__ enabled by default.
+Please note that some of the available sensors are __not__ enabled by default.
 
 ## go-eCharger 
 
 ### Enable PV Surplus Charging via HA automation
 
-When you use this integration, you do not need the additional hardware (go-eController) in order to allow PV surplus charging. The only thing that is required to add a __Home Assistant automation__ fetching the data from your grid & solar power entities and provide this data to a service of this integration.
+When you use this integration, you do not need the additional hardware (go-eController) in order to allow PV surplus charging. The only thing that is required is to add a __Home Assistant automation__ fetching the data from your grid & solar power entities and provide this data to a service of this integration.
 
 __If you are not familiar with 'creating an automation in Home Assistant', then [you might like to start with a tutorial explaining the basics of automation in HA](https://www.home-assistant.io/getting-started/automation/).__ 
 
@@ -127,7 +127,10 @@ __If you are not familiar with 'creating an automation in Home Assistant', then 
 > __only__ the `pgrid` value is __required__ — the other two fields `ppv` & `pakku` are just _optional_.
 
 > [!NOTE]
-> The goeCharger will drop the __stored data after 5 seconds__ — so if the automation is not running/sending data every five seconds (or faster) to the wallbox the 'PV Surplus Charging' is __not going to work__!
+> The goeCharger will drop the __stored data after 5 seconds__ — so if the automation is not running/sending data every five seconds (or faster) to the wallbox the 'PV Surplus Charging' is __not going to work__! 
+
+> [!IMPORTANT]
+> When you are using the Cloud/WAN connection to communicate with your go-eCharger, then the service of this integration will additionally check __if the go-eCharger is connected with a vehicle__ (API-key `car`). If this is not the case, __the data will not be submitted to the cloud__ (to reduce the load of the cloud service). 
 
 ### Do not forget this important setting
 
@@ -182,6 +185,8 @@ If you prefer manual automation setup, use this basic example:
 
 ### Example automation
 
+Sending the information about PV Surplus is only relevant when a vehicle is connected to the wallbox. Therefore, any automation should contain the condition if there is a vehicle connected to the wallbox. This can be done via the `binary_sensor.goe_012345_car_0` sensor. (replace the `012345` with your serial number).
+
 Please note that this example is for a for SENEC.Home System — if you are using 'my' SENEC.Home Integration, you can use the code below 1:1 — in any other case: __You must adjust/replace the sensor identifiers!!!__. So if you are not a SENEC.Home user, please replace the following:
 
 - `sensor.senec_grid_state_power` with the entity that provides the information in WATT you're currently consuming from the grid (positive value), or you are exporting to the grid (negative value). Once the value is negative, the go-eCharger might use the available power to start charging your car.
@@ -200,6 +205,8 @@ trigger:
 conditions:
   - condition: and
     conditions:
+      - condition: template
+        value_template: "{{states('binary_sensor.goe_123456_car_0')=='on'}}"
       - condition: sun
         after: sunrise
       - condition: sun
@@ -245,6 +252,8 @@ _Please note that this is __only__ required if you have multiple go-eChargers co
 ### Finally: Verify if the wallbox receives your data from the automation
 
 After you have your automation up and running, you might want to verify that everything is correctly connected.
+
+When you use the Cloud/WAN connection, make sure that the wallbox is connected with a vehicle, since only then the integraion will send the pv-data will to the cloud.
 
 #### Via Integration sensors
 Search for the Integration Sensors `_pgrid`, `_ppv` & `_pakku` and check the values — or check the `pvopt_average` sensors for the current calculating average values.  
@@ -316,7 +325,7 @@ Once the __car__ status will switch from `idle` (=1) to something different the 
 
 ### List of (currently) not handled API keys (24/172)
 
-Just as reference here is the list of API keys that the current implementation of the integration will __not__ handle:
+Just as reference, here is the list of API keys that the current implementation of the integration will __not__ handle:
 
 - atp: nextTripPlanData (debug)
 - awc: awattar country (Austria=0, Germany=1)
@@ -344,7 +353,7 @@ Just as reference here is the list of API keys that the current implementation o
 - wsm: WiFi STA error message
 
 ## go-eController
-Implementation of eController features have been provided by [@s3ppo (Harald Wiesinger)](https://github.com/s3ppo) — thank you very much! 
+Implementation of eController features has been provided by [@s3ppo (Harald Wiesinger)](https://github.com/s3ppo) — thank you very much! 
 
 ## go-eCharger & go-eController [COMON]
 
