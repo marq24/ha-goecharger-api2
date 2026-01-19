@@ -80,6 +80,7 @@
       "pha_3": {"name": "Phase L1 vor Schutz"},
       "pha_4": {"name": "Phase L2 vor Schutz"},
       "pha_5": {"name": "Phase L3 vor Schutz"},
+      "alw": {"name": "Laden zugelassen"},
       "adi": {"name": "16A Adapter angeschlossen"},
       "esk": {"name": "Gesetzte Lademenge kWh (Anzeige)"},
       "fsp": {"name": "1-phasiges Laden erzwingen"},

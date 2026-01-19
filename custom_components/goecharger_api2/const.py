@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Final
 
+from custom_components.goecharger_api2.pygoecharger_ha.const import CT_VALUES
+from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag, IS_TRIGGER
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription, BinarySensorDeviceClass
 from homeassistant.components.button import ButtonEntityDescription
 from homeassistant.components.number import NumberEntityDescription, NumberDeviceClass, NumberMode
@@ -11,9 +13,6 @@ from homeassistant.const import (
     EntityCategory, UnitOfElectricCurrent, UnitOfEnergy, UnitOfTime, CURRENCY_CENT, UnitOfPower, UnitOfTemperature,
     UnitOfFrequency, UnitOfElectricPotential, PERCENTAGE, SIGNAL_STRENGTH_DECIBELS
 )
-
-from custom_components.goecharger_api2.pygoecharger_ha.const import CT_VALUES
-from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag, IS_TRIGGER
 
 # Base component constants
 MANUFACTURER: Final = "go-e GmbH [Austria]"
@@ -93,6 +92,14 @@ BINARY_SENSORS = [
         device_class=BinarySensorDeviceClass.PLUG,
         icon="mdi:car-connected",
         icon_off="mdi:car-off",
+        entity_registry_enabled_default=True
+    ),
+    ExtBinarySensorEntityDescription(
+        key=Tag.ALW.key,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=None,
+        icon="mdi:flash",
+        icon_off="mdi:flash-off",
         entity_registry_enabled_default=True
     ),
     ExtBinarySensorEntityDescription(

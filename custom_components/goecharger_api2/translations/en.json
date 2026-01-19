@@ -81,6 +81,7 @@
       "pha_4": {"name": "Phase L2 before contactor"},
       "pha_5": {"name": "Phase L3 before contactor"},
       "adi": {"name": "16A adapter used"},
+      "alw": {"name": "Charging allowed"},
       "esk": {"name": "energy set kwh (only stored for app)"},
       "fsp": {"name": "Force single phase"},
       "tlf": {"name": "Test charging finished"},
