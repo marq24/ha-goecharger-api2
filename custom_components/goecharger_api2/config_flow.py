@@ -51,6 +51,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._selected_system == WAN:
             self._default_scan_interval = entry_data.get(CONF_SCAN_INTERVAL, 120)
             self._default_id = entry_data.get(CONF_ID, "YOUR-SERIAL-HERE")
+            self._default_integration_type = entry_data.get(CONF_INTEGRATION_TYPE, INTG_TYPE.CHARGER.value)
             self._default_token = entry_data.get(CONF_TOKEN, "YOUR-API-KEY-HERE")
             return await self.async_step_user_wan()
         else:
@@ -161,17 +162,18 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             #valid = await self._test_host(intg_type=user_input[CONF_INTEGRATION_TYPE], host=None, serial=user_input[CONF_ID], token=user_input[CONF_TOKEN])
-            valid = await self._test_host(intg_type=INTG_TYPE.CHARGER.value, host=None, serial=user_input[CONF_ID], token=user_input[CONF_TOKEN])
+            valid = await self._test_host(intg_type=user_input[CONF_INTEGRATION_TYPE], host=None, serial=user_input[CONF_ID], token=user_input[CONF_TOKEN])
             if valid:
                 user_input[CONF_MODE] = WAN
                 user_input[CONF_SCAN_INTERVAL] = max(30, user_input[CONF_SCAN_INTERVAL])
                 user_input[CONF_ID] = self._serial
                 user_input[CONF_MODEL] = self._model.split(' ')[0]
-
-                #if(user_input[CONF_INTEGRATION_TYPE] == INTG_TYPE.CHARGER.value):
-                user_input[CONF_INTEGRATION_TYPE] = INTG_TYPE.CHARGER.value
-                user_input[CONF_TYPE] = f"{self._type} [{self._model}] Cloud"
-                title = f"go-eCharger API v2 [{self._serial}] Cloud"
+                if user_input[CONF_INTEGRATION_TYPE] == INTG_TYPE.CHARGER.value:
+                    user_input[CONF_TYPE] = f"{self._type} [{self._model}] Cloud"
+                    title = f"go-eCharger API v2 [{self._serial}] Cloud"
+                else:
+                    user_input[CONF_TYPE] = f"{self._type} Cloud"
+                    title = f"go-eController API v2 [{self._serial}] Cloud"
                 #else:
                 #    user_input[CONF_TYPE] = f"{self._type} Cloud"
                 #    title = f"go-eController API v2 [{self._serial}] Cloud"
@@ -185,23 +187,23 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 raise data_entry_flow.AbortFlow("auth_wan")
         else:
             user_input = {
-                #CONF_INTEGRATION_TYPE: INTG_TYPE.CHARGER.value,
-                CONF_ID:            self._default_id,
-                CONF_TOKEN:         self._default_token,
-                CONF_SCAN_INTERVAL: self._default_scan_interval if self.source == SOURCE_RECONFIGURE else 120
+                CONF_INTEGRATION_TYPE:  self._default_integration_type,
+                CONF_ID:                self._default_id,
+                CONF_TOKEN:             self._default_token,
+                CONF_SCAN_INTERVAL:     self._default_scan_interval if self.source == SOURCE_RECONFIGURE else 120
             }
 
         return self.async_show_form(
             step_id="user_wan",
             data_schema=vol.Schema({
-                # vol.Required(CONF_INTEGRATION_TYPE, default=user_input[CONF_INTEGRATION_TYPE]):
-                #     selector.SelectSelector(
-                #         selector.SelectSelectorConfig(
-                #             options=INTG_TYPE,
-                #             mode=selector.SelectSelectorMode.DROPDOWN,
-                #             translation_key=CONF_INTEGRATION_TYPE,
-                #         )
-                #     ),
+                vol.Required(CONF_INTEGRATION_TYPE, default=user_input[CONF_INTEGRATION_TYPE]):
+                    selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[INTG_TYPE.CHARGER.value, INTG_TYPE.CONTROLLER.value],
+                            mode=selector.SelectSelectorMode.DROPDOWN,
+                            translation_key=CONF_INTEGRATION_TYPE,
+                        )
+                    ),
                 vol.Required(CONF_ID, default=user_input[CONF_ID]): str,
                 vol.Required(CONF_TOKEN, default=user_input[CONF_TOKEN]): str,
                 vol.Required(CONF_SCAN_INTERVAL, default=user_input[CONF_SCAN_INTERVAL]): int,
