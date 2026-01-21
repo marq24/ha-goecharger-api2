@@ -45,17 +45,22 @@ class GoeChargerApiV2Bridge:
             self.host_url = f"http://{host}"
             self.token = None
         elif serial is not None and token is not None:
-            # the Cloud-API 2 endpoint!
-            if intg_type is not None and intg_type == INTG_TYPE.CONTROLLER.value:
-                # CONTROLLER:
-                # see: https://github.com/goecharger/go-eController-API/blob/main/cloudapi-en.md
-                # https://serial_number.api.controller.go-e.io/api/set
-                self.host_url = f"https://{serial}.api.controller.go-e.io"
-            else:
-                # CHARGER
-                # see: https://github.com/goecharger/go-eCharger-API-v2/blob/main/cloudapi-en.md
-                # https://serial_number.api.v3.go-e.io/api/set
-                self.host_url = f"https://{serial}.api.v3.go-e.io"
+            # the Cloud-API endpoint!
+
+            # looks like that CONTROLLER and CHARGER use the SAME API-Endpoint?!
+            # in contrast to the documentation :-/
+            self.host_url = f"https://{serial.zfill(6)}.api.v3.go-e.io"
+
+            # if intg_type is not None and intg_type == INTG_TYPE.CONTROLLER.value:
+            #     # CONTROLLER:
+            #     # see: https://github.com/goecharger/go-eController-API/blob/main/cloudapi-en.md
+            #     # https://serial_number.api.controller.go-e.io/api/set
+            #     self.host_url = f"https://{f_serial}.api.controller.go-e.io"
+            # else:
+            #     # CHARGER
+            #     # see: https://github.com/goecharger/go-eCharger-API-v2/blob/main/cloudapi-en.md
+            #     # https://serial_number.api.v3.go-e.io/api/set
+            #     self.host_url = f"https://{f_serial}.api.v3.go-e.io"
             self.token = f"Bearer {token}"
 
         if intg_type is not None and intg_type == INTG_TYPE.CONTROLLER.value:
