@@ -2,7 +2,7 @@ import logging
 from typing import Final, Any
 
 import voluptuous as vol
-from aiohttp import ClientConnectorError, ServerDisconnectedError
+from aiohttp import ClientConnectionError
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.config_entries import ConfigFlowResult, SOURCE_RECONFIGURE
 from homeassistant.const import CONF_ID, CONF_HOST, CONF_MODEL, CONF_TYPE, CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_MODE
@@ -233,7 +233,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self._serial = ret[Tag.SSE.key]
                 _LOGGER.info(f"successfully validated host for '{intg_type}' -> result: {ret}")
                 return True
-        except (ClientConnectorError, ServerDisconnectedError) as exc:
+        except ClientConnectionError as exc:
             _LOGGER.warning(f"Error while test credentials: {type(exc).__name__} {exc}")
         except Exception as exc:
             _LOGGER.error(f"Other Exception while test credentials: {type(exc).__name__} {exc}")

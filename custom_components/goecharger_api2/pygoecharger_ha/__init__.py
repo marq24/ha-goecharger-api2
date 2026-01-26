@@ -5,8 +5,7 @@ from time import time
 
 from aiohttp import (
     ClientResponseError,
-    ClientConnectorError,
-    ServerDisconnectedError
+    ClientConnectionError,
 )
 from packaging.version import Version
 
@@ -245,10 +244,9 @@ class GoeChargerApiV2Bridge:
 
                 else:
                     _LOGGER.warning(f"APP-API: {log_info} failed with http-status {res.status}")
-
             except ClientResponseError as io_exc:
                 _LOGGER.warning(f"APP-API: {log_info} failed cause: {io_exc}")
-            except (ClientConnectorError, ServerDisconnectedError) as exc:
+            except ClientConnectionError as exc:
                 _LOGGER.warning(f"APP-API _read_filtered_data: {type(exc).__name__}: {exc}")
                 if self.coordinator is not None:
                     self.web_session = self.coordinator.get_new_client_session()
@@ -282,7 +280,7 @@ class GoeChargerApiV2Bridge:
 
             except ClientResponseError as io_exc:
                 _LOGGER.warning(f"APP-API: REQ_ALL failed cause: {io_exc}")
-            except (ClientConnectorError, ServerDisconnectedError) as exc:
+            except ClientConnectionError as exc:
                 _LOGGER.warning(f"APP-API _read_all_data: {type(exc).__name__}: {exc}")
                 if self.coordinator is not None:
                     self.web_session = self.coordinator.get_new_client_session()
@@ -354,9 +352,10 @@ class GoeChargerApiV2Bridge:
                 else:
                     _LOGGER.warning(f"APP-API: write_value failed with http-status {res.status}")
 
+            #aiohttp.client_exceptions.ConnectionTimeoutError
             except ClientResponseError as io_exc:
                 _LOGGER.warning(f"APP-API: write_value failed cause: {io_exc}")
-            except (ClientConnectorError, ServerDisconnectedError) as exc:
+            except ClientConnectionError as exc:
                 _LOGGER.warning(f"APP-API _write_values_int: {type(exc).__name__}: {exc}")
                 if self.coordinator is not None:
                     self.web_session = self.coordinator.get_new_client_session()
