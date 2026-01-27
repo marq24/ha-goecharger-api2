@@ -2,7 +2,7 @@
   "selector": {
     "stype": {
       "options": {
-        "lan": "LAN: Lokale API v2 Zugriff übe das lokale Netzwerk [http]",
+        "lan": "LAN: Lokale API v2 Zugriff über das lokale Netzwerk [http]",
         "wan": "WAN: Cloud API v2 Zugriff über das Internet [https]"
       }
     },
