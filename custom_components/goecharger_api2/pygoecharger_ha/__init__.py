@@ -212,7 +212,7 @@ class GoeChargerApiV2Bridge:
     async def _read_filtered_data(self, filters: str, log_info: str) -> dict:
         args = {"filter": filters}
         req_field_count = len(args['filter'].split(','))
-        _LOGGER.debug(f"going to request {req_field_count} keys from {self._logkey}@{self.host_url}")
+        _LOGGER.debug(f"{log_info} going to request {req_field_count} keys from {self._logkey}@{self.host_url}")
         if self.token:
             headers = {"Authorization": self.token}
         else:
@@ -237,21 +237,21 @@ class GoeChargerApiV2Bridge:
                             return r_json
 
                     except JSONDecodeError as json_exc:
-                        _LOGGER.warning(f"APP-API: JSONDecodeError while 'await res.json(): {json_exc}")
+                        _LOGGER.warning(f"APP-API: {log_info} JSONDecodeError while 'await res.json(): {json_exc}")
 
                     except ClientResponseError as io_exc:
-                        _LOGGER.warning(f"APP-API: ClientResponseError while 'await res.json(): {io_exc}")
+                        _LOGGER.warning(f"APP-API: {log_info} ClientResponseError while 'await res.json(): {io_exc}")
 
                 else:
                     _LOGGER.warning(f"APP-API: {log_info} failed with http-status {res.status}")
             except ClientResponseError as io_exc:
                 _LOGGER.warning(f"APP-API: {log_info} failed cause: {io_exc}")
             except ClientConnectionError as exc:
-                _LOGGER.warning(f"APP-API _read_filtered_data: {type(exc).__name__}: {exc}")
+                _LOGGER.warning(f"APP-API: {log_info} _read_filtered_data: {type(exc).__name__}: {exc}")
                 if self.coordinator is not None:
                     self.web_session = self.coordinator.get_new_client_session()
             except BaseException as err:
-                _LOGGER.warning(f"APP-API _read_filtered_data BaseException: {type(err).__name__}: {err}")
+                _LOGGER.warning(f"APP-API: {log_info} _read_filtered_data BaseException: {type(err).__name__}: {err}")
 
         return {}
 
