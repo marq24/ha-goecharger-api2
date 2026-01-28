@@ -136,12 +136,12 @@
       "ct": {
         "name": "Fahrzeug Kompatibilitätsmodus",
         "state": {
-          "default":          "Standard",
-          "kiasoul":          "Kia Soul",
-          "renaultzoe":       "Renault Zoe",
-          "mitsubishiimiev":  "Mitsubishi iMiev",
-          "citroenczero":     "Citroën C-Zero",
-          "peugeotion":       "Peugeot iOn"
+          "default": "Standard",
+          "kiasoul": "Kia Soul",
+          "renaultzoe": "Renault Zoe",
+          "mitsubishiimiev": "Mitsubishi iMiev",
+          "citroenczero": "Citroën C-Zero",
+          "peugeotion": "Peugeot iOn"
         }
       },
       "bac": {
@@ -217,7 +217,7 @@
           "9": "entsperrt mit Karten-ID9",
           "10": "entsperrt mit Karten-ID10"
         }
-      } ,
+      },
       "ust": {
         "name": "Kable Entriegelung",
         "state": {
@@ -279,6 +279,36 @@
           "1": "L2",
           "2": "L3",
           "3": "N"
+        }
+      },
+      "sch_week_control": {
+        "name": "Ladetimer Werktage",
+        "state": {
+          "0": "Deaktiviert",
+          "1": "Laden",
+          "2": "Blockieren",
+          "3": "Laden (mit PV-Überschuss aktiv)",
+          "4": "Blockieren (Laden mit PV-Überschuss aktiv)"
+        }
+      },
+      "sch_satur_control": {
+        "name": "Ladetimer Samstags",
+        "state": {
+          "0": "Deaktiviert",
+          "1": "Laden",
+          "2": "Blockieren",
+          "3": "Laden (mit PV-Überschuss aktiv)",
+          "4": "Blockieren (Laden mit PV-Überschuss aktiv)"
+        }
+      },
+      "sch_sund_control": {
+        "name": "Ladetimer Sonntags",
+        "state": {
+          "0": "Deaktiviert",
+          "1": "Laden",
+          "2": "Blockieren",
+          "3": "Laden (mit PV-Überschuss aktiv)",
+          "4": "Blockieren (Laden mit PV-Überschuss aktiv)"
         }
       }
     },

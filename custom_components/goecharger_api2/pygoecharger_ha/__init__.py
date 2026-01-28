@@ -212,80 +212,95 @@ class GoeChargerApiV2Bridge:
     async def _read_filtered_data(self, filters: str, log_info: str) -> dict:
         args = {"filter": filters}
         req_field_count = len(args['filter'].split(','))
-        _LOGGER.debug(f"{log_info} going to request {req_field_count} keys from {self._logkey}@{self.host_url}")
+        _LOGGER.debug(f"_read_filtered_data(): {log_info} going to request {req_field_count} keys from {self._logkey}@{self.host_url}")
         if self.token:
             headers = {"Authorization": self.token}
         else:
             headers = None
-        async with (self.web_session.get(f"{self.host_url}/api/status", headers=headers, params=args) as res):
-            try:
-                if res.status in [200, 400]:
-                    try:
-                        r_json = await res.json()
-                        if r_json is not None and len(r_json) > 0:
-                            resp_field_count = len(r_json)
-                            if resp_field_count >= req_field_count:
-                                _LOGGER.debug(f"read {resp_field_count} values from {self._logkey}@{self.host_url}")
-                            else:
-                                missing_fields_in_reponse = []
-                                requested_fields = args['filter'].split(',')
-                                for a_req_key in requested_fields:
-                                    if a_req_key not in r_json:
-                                        missing_fields_in_reponse.append(a_req_key)
+        try:
+            async with (self.web_session.get(f"{self.host_url}/api/status", headers=headers, params=args) as res):
+                try:
+                    if res.status in [200, 400]:
+                        try:
+                            r_json = await res.json()
+                            if r_json is not None and len(r_json) > 0:
+                                resp_field_count = len(r_json)
+                                if resp_field_count >= req_field_count:
+                                    _LOGGER.debug(f"_read_filtered_data(): read {resp_field_count} values from {self._logkey}@{self.host_url}")
+                                else:
+                                    missing_fields_in_reponse = []
+                                    requested_fields = args['filter'].split(',')
+                                    for a_req_key in requested_fields:
+                                        if a_req_key not in r_json:
+                                            missing_fields_in_reponse.append(a_req_key)
 
-                                _LOGGER.debug(f"[missing fields: {len(missing_fields_in_reponse)} -> {missing_fields_in_reponse}] - not all requested fields where present in the response from from {self._logkey}@{self.host_url}")
-                            return r_json
+                                    _LOGGER.debug(f"_read_filtered_data(): [missing fields: {len(missing_fields_in_reponse)} -> {missing_fields_in_reponse}] - not all requested fields where present in the response from from {self._logkey}@{self.host_url}")
+                                return r_json
 
-                    except JSONDecodeError as json_exc:
-                        _LOGGER.warning(f"APP-API: {log_info} JSONDecodeError while 'await res.json(): {json_exc}")
+                        except JSONDecodeError as json_exc:
+                            _LOGGER.warning(f"_read_filtered_data(): {log_info} JSONDecodeError while 'await res.json(): {json_exc}")
 
-                    except ClientResponseError as io_exc:
-                        _LOGGER.warning(f"APP-API: {log_info} ClientResponseError while 'await res.json(): {io_exc}")
+                        except ClientResponseError as io_exc:
+                            _LOGGER.warning(f"_read_filtered_data(): {log_info} ClientResponseError while 'await res.json(): {io_exc}")
 
-                else:
-                    _LOGGER.warning(f"APP-API: {log_info} failed with http-status {res.status}")
-            except ClientResponseError as io_exc:
-                _LOGGER.warning(f"APP-API: {log_info} failed cause: {io_exc}")
-            except ClientConnectionError as exc:
-                _LOGGER.warning(f"APP-API: {log_info} _read_filtered_data: {type(exc).__name__}: {exc}")
-                if self.coordinator is not None:
-                    self.web_session = self.coordinator.get_new_client_session()
-            except BaseException as err:
-                _LOGGER.warning(f"APP-API: {log_info} _read_filtered_data BaseException: {type(err).__name__}: {err}")
+                    else:
+                        _LOGGER.warning(f"{log_info} failed with http-status {res.status}")
+                except ClientResponseError as io_exc:
+                    _LOGGER.warning(f"{log_info} failed cause: {io_exc}")
+                except ClientConnectionError as exc:
+                    _LOGGER.warning(f"_read_filtered_data(): {log_info} {type(exc).__name__}: {exc}")
+                    if self.coordinator is not None:
+                        self.web_session = self.coordinator.get_new_client_session()
+                except BaseException as err:
+                    _LOGGER.warning(f"_read_filtered_data(): {log_info} BaseException: {type(err).__name__}: {err}")
+        except ClientConnectionError as exc:
+            _LOGGER.warning(f"_read_filtered_data(): {log_info} OUTER {type(exc).__name__}: {exc}")
+            if self.coordinator is not None:
+                self.web_session = self.coordinator.get_new_client_session()
+        except BaseException as err:
+            _LOGGER.warning(f"_read_filtered_data(): {log_info} OUTER BaseException: {type(err).__name__}: {err}")
 
         return {}
 
     async def _read_all_data(self) -> dict:
-        _LOGGER.info(f"going to request ALL keys from {self._logkey}@{self.host_url}")
+        _LOGGER.info(f"_read_all_data(): going to request ALL keys from {self._logkey}@{self.host_url}")
         if self.token:
             headers = {"Authorization": self.token}
         else:
             headers = None
-        async with self.web_session.get(f"{self.host_url}/api/status", headers=headers) as res:
-            try:
-                if res.status in [200, 400]:
-                    try:
-                        r_json = await res.json()
-                        if r_json is not None and len(r_json) > 0:
-                            return r_json
+        try:
+            async with self.web_session.get(f"{self.host_url}/api/status", headers=headers) as res:
+                try:
+                    if res.status in [200, 400]:
+                        try:
+                            r_json = await res.json()
+                            if r_json is not None and len(r_json) > 0:
+                                return r_json
 
-                    except JSONDecodeError as json_exc:
-                        _LOGGER.warning(f"APP-API: JSONDecodeError while 'await res.json(): {json_exc}")
+                        except JSONDecodeError as json_exc:
+                            _LOGGER.warning(f"_read_all_data(): JSONDecodeError while 'await res.json(): {json_exc}")
 
-                    except ClientResponseError as io_exc:
-                        _LOGGER.warning(f"APP-API: ClientResponseError while 'await res.json(): {io_exc}")
+                        except ClientResponseError as io_exc:
+                            _LOGGER.warning(f"_read_all_data(): ClientResponseError while 'await res.json(): {io_exc}")
 
-                else:
-                    _LOGGER.warning(f"APP-API: REQ_ALL failed with http-status {res.status}")
+                    else:
+                        _LOGGER.warning(f"_read_all_data(): REQ_ALL failed with http-status {res.status}")
 
-            except ClientResponseError as io_exc:
-                _LOGGER.warning(f"APP-API: REQ_ALL failed cause: {io_exc}")
-            except ClientConnectionError as exc:
-                _LOGGER.warning(f"APP-API _read_all_data: {type(exc).__name__}: {exc}")
-                if self.coordinator is not None:
-                    self.web_session = self.coordinator.get_new_client_session()
-            except BaseException as err:
-                _LOGGER.warning(f"APP-API _read_all_data BaseException: {type(err).__name__}: {err}")
+                except ClientResponseError as io_exc:
+                    _LOGGER.warning(f"_read_all_data(): REQ_ALL failed cause: {io_exc}")
+                except ClientConnectionError as exc:
+                    _LOGGER.warning(f"_read_all_data(): {type(exc).__name__}: {exc}")
+                    if self.coordinator is not None:
+                        self.web_session = self.coordinator.get_new_client_session()
+                except BaseException as err:
+                    _LOGGER.warning(f"_read_all_data(): BaseException: {type(err).__name__}: {err}")
+
+        except ClientConnectionError as exc:
+            _LOGGER.warning(f"_read_all_data(): OUTER {type(exc).__name__}: {exc}")
+            if self.coordinator is not None:
+                self.web_session = self.coordinator.get_new_client_session()
+        except BaseException as err:
+            _LOGGER.warning(f"_read_all_data BaseException(): OUTER {type(err).__name__}: {err}")
 
         return {}
 
@@ -295,9 +310,9 @@ class GoeChargerApiV2Bridge:
         elif isinstance(value, (bool, int, float)):
             args = {key: str(value).lower()}
         elif isinstance(value, dict):
-            args = {key: json.dumps(value)}
+            args = {key: json.dumps(value).replace(' ','')}
         elif isinstance(value, str) and value == IS_TRIGGER:
-            # ok this are special trigger actions, that we want to call from the FE...
+            # ok, these are special trigger actions that we want to call from the FE...
             match key:
                 case Tag.INTERNAL_FORCE_CONFIG_READ.key:
                     await self.force_config_update()
@@ -309,57 +324,65 @@ class GoeChargerApiV2Bridge:
         return await self._write_values_int(args, key, value)
 
     async def _write_values_int(self, args, key, value) -> dict:
-        _LOGGER.info(f"going to write {args} to {self._logkey}@{self.host_url}")
+        _LOGGER.info(f"_write_values_int(): going to write {args} to {self._logkey}@{self.host_url}")
         if self.token:
             headers = {"Authorization": self.token}
         else:
             headers = None
 
-        async with self.web_session.get(f"{self.host_url}/api/set", headers=headers, params=args) as res:
-            try:
-                if res.status == 200:
-                    try:
-                        r_json = await res.json()
-                        if r_json is not None and len(r_json) > 0:
-                            if key in r_json and r_json[key]:
-                                # ignore 'force-update' for 'ids' (PV surplus charging)
-                                if key != Tag.IDS.key:
-                                    self._LAST_CONFIG_UPDATE_TS = 0
-                                    self._LAST_FULL_STATE_UPDATE_TS = 0
+        try:
+            async with self.web_session.get(f"{self.host_url}/api/set", headers=headers, params=args) as res:
+                try:
+                    if res.status == 200:
+                        try:
+                            r_json = await res.json()
+                            if r_json is not None and len(r_json) > 0:
+                                if key in r_json and r_json[key]:
+                                    # ignore 'force-update' for 'ids' (PV surplus charging)
+                                    if key != Tag.IDS.key:
+                                        self._LAST_CONFIG_UPDATE_TS = 0
+                                        self._LAST_FULL_STATE_UPDATE_TS = 0
+                                    else:
+                                        if self.isCharger:
+                                            self._REQUEST_IDS_DATA = True
+                                    return {key: value}
                                 else:
-                                    if self.isCharger:
-                                        self._REQUEST_IDS_DATA = True
-                                return {key: value}
-                            else:
-                                return {"err": r_json}
+                                    return {"err": r_json}
 
-                    except JSONDecodeError as json_exc:
-                        _LOGGER.warning(f"APP-API: JSONDecodeError while 'await res.json(): {json_exc}")
+                        except JSONDecodeError as json_exc:
+                            _LOGGER.warning(f"_write_values_int(): JSONDecodeError while 'await res.json(): {json_exc}")
 
-                    except ClientResponseError as io_exc:
-                        _LOGGER.warning(f"APP-API: ClientResponseError while 'await res.json(): {io_exc}")
+                        except ClientResponseError as io_exc:
+                            _LOGGER.warning(f"_write_values_int(): ClientResponseError while 'await res.json(): {io_exc}")
 
-                elif res.status == 500 and int(res.headers['Content-Length']) > 0:
-                    try:
-                        r_json = await res.json()
-                        return {"err": r_json}
-                    except JSONDecodeError as json_exc:
-                        _LOGGER.warning(f"APP-API: JSONDecodeError while 'res.status == 500 res.json(): {json_exc}")
+                    elif res.status == 500 and int(res.headers['Content-Length']) > 0:
+                        try:
+                            r_json = await res.json()
+                            return {"err": r_json}
+                        except JSONDecodeError as json_exc:
+                            _LOGGER.warning(f"_write_values_int(): JSONDecodeError while 'res.status == 500 res.json(): {json_exc}")
 
-                    except ClientResponseError as io_exc:
-                        _LOGGER.warning(f"APP-API: ClientResponseError while 'res.status == 500 res.json(): {io_exc}")
+                        except ClientResponseError as io_exc:
+                            _LOGGER.warning(f"_write_values_int(): ClientResponseError while 'res.status == 500 res.json(): {io_exc}")
 
-                else:
-                    _LOGGER.warning(f"APP-API: write_value failed with http-status {res.status}")
+                    else:
+                        _LOGGER.warning(f"_write_values_int(): failed with http-status {res.status}")
 
-            #aiohttp.client_exceptions.ConnectionTimeoutError
-            except ClientResponseError as io_exc:
-                _LOGGER.warning(f"APP-API: write_value failed cause: {io_exc}")
-            except ClientConnectionError as exc:
-                _LOGGER.warning(f"APP-API _write_values_int: {type(exc).__name__}: {exc}")
-                if self.coordinator is not None:
-                    self.web_session = self.coordinator.get_new_client_session()
-            except BaseException as err:
-                _LOGGER.warning(f"APP-API _write_values_int: BaseException: {type(err).__name__}: {err}")
+                #aiohttp.client_exceptions.ConnectionTimeoutError
+                except ClientResponseError as io_exc:
+                    _LOGGER.warning(f"_write_values_int(): failed cause: {io_exc}")
+                except ClientConnectionError as exc:
+                    _LOGGER.warning(f"_write_values_int(): {type(exc).__name__}: {exc}")
+                    if self.coordinator is not None:
+                        self.web_session = self.coordinator.get_new_client_session()
+                except BaseException as err:
+                    _LOGGER.warning(f"_write_values_int(): BaseException: {type(err).__name__}: {err}")
+
+        except ClientConnectionError as exc:
+            _LOGGER.warning(f"_write_values_int(): OUTER {type(exc).__name__}: {exc}")
+            if self.coordinator is not None:
+                self.web_session = self.coordinator.get_new_client_session()
+        except BaseException as err:
+            _LOGGER.warning(f"_write_values_int(): OUTER BaseException: {type(err).__name__}: {err}")
 
         return {}

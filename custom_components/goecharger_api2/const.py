@@ -700,6 +700,33 @@ NUMBER_SENSORS = [
 ]
 SELECT_SENSORS = [
     ExtSelectEntityDescription(
+        key=Tag.SCH_WEEK.key,
+        idx="control",
+        options=["0", "1", "2", "3", "4"],
+        entity_category=EntityCategory.CONFIG,
+        device_class=None,
+        icon="mdi:home-clock",
+        entity_registry_enabled_default=True
+    ),
+    ExtSelectEntityDescription(
+        key=Tag.SCH_SATUR.key,
+        idx="control",
+        options=["0", "1", "2", "3", "4"],
+        entity_category=EntityCategory.CONFIG,
+        device_class=None,
+        icon="mdi:sun-clock",
+        entity_registry_enabled_default=True
+    ),
+    ExtSelectEntityDescription(
+        key=Tag.SCH_SUND.key,
+        idx="control",
+        options=["0", "1", "2", "3", "4"],
+        entity_category=EntityCategory.CONFIG,
+        device_class=None,
+        icon="mdi:sun-clock",
+        entity_registry_enabled_default=True
+    ),
+    ExtSelectEntityDescription(
         key=Tag.CT.key,
         options=[el.value.lower() for el in CT_VALUES],
         entity_category=EntityCategory.CONFIG,

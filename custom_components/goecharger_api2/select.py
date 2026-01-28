@@ -97,6 +97,17 @@ class GoeChargerSelect(GoeChargerBaseEntity, SelectEntity):
                     if str(option) == "null":
                         obj[self.entity_description.idx] = None
                     else:
+                        if self.entity_description.key in [Tag.SCH_WEEK.key, Tag.SCH_SATUR.key, Tag.SCH_SUND.key]:
+                            # 1. we must post the new value as integer
+                            option = int(option)
+                            # 2. we must remove the 'second' object from the 'begin' & 'end' time information
+                            # this is quite ridiculous!
+                            for interval in obj["ranges"]:
+                                if "second" in interval["begin"]:
+                                    del interval["begin"]["second"]
+                                if "second" in interval["end"]:
+                                    del interval["end"]["second"]
+
                         obj[self.entity_description.idx] = option
 
                     await self.coordinator.async_write_key(self.data_key, obj, self)

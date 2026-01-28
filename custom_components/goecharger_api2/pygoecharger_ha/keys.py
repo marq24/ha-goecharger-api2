@@ -276,7 +276,7 @@ class Tag(ApiKey, Enum):
     SCAA = ApiKey(key="scaa", cat=CAT.STATUS)
     # wifi scan result (encryptionType: OPEN=0, WEP=1, WPA_PSK=2, WPA2_PSK=3, WPA_WPA2_PSK=4, WPA2_ENTERPRISE=5, WPA3_PSK=6, WPA2_WPA3_PSK=7)
     SCAN = ApiKey(key="scan", cat=CAT.STATUS)
-    # scheduler_saturday, control enum values: Disabled=0, Inside=1, Outside=2
+    # scheduler_saturday, control enum values: Disabled=0, Inside=1, Outside=2, Inside/Laden-WithPVSurPlus=3, Outside/Blockieren-WithPVSurPlus/WithPVSurPlus=4
     SCH_SATUR = ApiKey(key="sch_satur", cat=CAT.CONFIG, writeable=True)
     # scheduler_sunday, control enum values: Disabled=0, Inside=1, Outside=2
     SCH_SUND = ApiKey(key="sch_sund", cat=CAT.CONFIG, writeable=True)

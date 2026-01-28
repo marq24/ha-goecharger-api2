@@ -280,6 +280,36 @@
           "2": "L3",
           "3": "N"
         }
+      },
+      "sch_week_control": {
+        "name": "Scheduler Weekdays",
+        "state": {
+          "0": "Deactivated",
+          "1": "Loading",
+          "2": "Blocked",
+          "3": "Loading (Surplus active)",
+          "4": "Blocked (Surplus active)"
+        }
+      },
+      "sch_satur_control": {
+        "name": "Scheduler Saturdays",
+        "state": {
+          "0": "Deactivated",
+          "1": "Loading",
+          "2": "Blocked",
+          "3": "Loading (Surplus active)",
+          "4": "Blocked (Surplus active)"
+        }
+      },
+      "sch_sund_control": {
+        "name": "Scheduler Sundays",
+        "state": {
+          "0": "Deactivated",
+          "1": "Loading",
+          "2": "Blocked",
+          "3": "Loading (Surplus active)",
+          "4": "Blocked (Surplus active)"
+        }
       }
     },
     "sensor": {
