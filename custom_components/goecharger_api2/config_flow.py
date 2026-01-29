@@ -3,14 +3,14 @@ from typing import Final, Any
 
 import voluptuous as vol
 from aiohttp import ClientConnectionError
+
+from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bridge, INTG_TYPE
+from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.config_entries import ConfigFlowResult, SOURCE_RECONFIGURE
 from homeassistant.const import CONF_ID, CONF_HOST, CONF_MODEL, CONF_TYPE, CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_MODE
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-
-from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bridge, INTG_TYPE
-from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from .const import DOMAIN, CONF_11KWLIMIT, CONF_INTEGRATION_TYPE, LAN, WAN, CONFIG_VERSION, CONFIG_MINOR_VERSION
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -148,6 +148,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_SCAN_INTERVAL, default=user_input[CONF_SCAN_INTERVAL]): int,
                 vol.Required(CONF_11KWLIMIT, default=user_input[CONF_11KWLIMIT]): bool,
             }),
+            description_placeholders={"repo": "https://github.com/marq24/ha-goecharger-api2"},
             last_step=True,
             errors=self._errors
         )
@@ -208,6 +209,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_TOKEN, default=user_input[CONF_TOKEN]): str,
                 vol.Required(CONF_SCAN_INTERVAL, default=user_input[CONF_SCAN_INTERVAL]): int,
             }),
+            description_placeholders={"repo": "https://github.com/marq24/ha-goecharger-api2"},
             last_step=True,
             errors=self._errors
         )
