@@ -3,6 +3,10 @@ import logging
 from datetime import timedelta
 from typing import Any, Final
 
+from packaging.version import Version
+
+from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bridge, TRANSLATIONS, INTG_TYPE
+from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from homeassistant.components.number import NumberDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_TYPE, CONF_ID, CONF_SCAN_INTERVAL, CONF_MODE, CONF_TOKEN
@@ -19,10 +23,6 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.loader import async_get_integration
-from packaging.version import Version
-
-from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bridge, TRANSLATIONS, INTG_TYPE
-from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from .const import (
     LAN,
     WAN,
@@ -253,7 +253,8 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         self.is_charger_fw_version_60_0_or_higher_and_no_cards_list_is_present = False
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
-    async def get_new_client_session(self):
+    def get_new_client_session(self):
+        _LOGGER.debug(f"get_new_client_session(): Create new aiohttp.ClientSession")
         return async_create_clientsession(self._hass)
 
     # Callable[[Event], Any]
