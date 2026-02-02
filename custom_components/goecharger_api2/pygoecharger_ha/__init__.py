@@ -1,5 +1,6 @@
 import json
 import logging
+import asyncio
 from json import JSONDecodeError
 from time import time
 
@@ -84,8 +85,8 @@ class GoeChargerApiV2Bridge:
             self._FILTER_IDS_ADDON = FILTER_IDS_ADDON
             self._FILTER_TIMES_ADDON = FILTER_TIMES_ADDON
 
-            self._FILTER_ALL_STATES = FILTER_ALL_STATES.format(CARDS_ENERGY_FILTER=FILTER_CARDS_ENGY_CLASSIC)
-            self._FILTER_ALL_CONFIG = FILTER_ALL_CONFIG.format(CARDS_ID_FILTER=FILTER_CARDS_ID_CLASSIC)
+            self._FILTER_ALL_STATES = [f.format(CARDS_ENERGY_FILTER=FILTER_CARDS_ENGY_CLASSIC) for f in FILTER_ALL_STATES]
+            self._FILTER_ALL_CONFIG = [f.format(CARDS_ID_FILTER=FILTER_CARDS_ID_CLASSIC) for f in FILTER_ALL_CONFIG]
 
         self.coordinator = coordinator
         self.web_session = web_session
@@ -117,7 +118,13 @@ class GoeChargerApiV2Bridge:
         return await self._read_filtered_data(filters=self._FILTER_SYSTEMS, log_info="read_system")
 
     async def read_versions(self):
-        self._versions = await self._read_filtered_data(filters=self._FILTER_VERSIONS, log_info="read_versions")
+        for attempt in range(3):
+            self._versions = await self._read_filtered_data(filters=self._FILTER_VERSIONS, log_info=f"read_versions (attempt {attempt+1})")
+            if self._versions is not None and len(self._versions) > 0:
+                break
+            if attempt < 2:
+                await asyncio.sleep(2)
+
         if self._versions is None or len(self._versions) == 0:
             _LOGGER.warning(f"read_versions(): no versions data available - enable debug log for details!")
             return False
@@ -138,18 +145,21 @@ class GoeChargerApiV2Bridge:
 
             if Version(fwv) >= Version("60.0") and len(self._versions.get(FILTER_CARDS_ID_CLASSIC, [])) == 0:
                 _LOGGER.info(f"read_versions(): '{fwv}' FirmwareVersion detected -> using 'card' keys: {FILTER_CARDS_ID_FWV60}")
-                self._FILTER_ALL_STATES = FILTER_ALL_STATES.format(CARDS_ENERGY_FILTER=FILTER_CARDS_ENGY_FWV60)
-                self._FILTER_ALL_CONFIG = FILTER_ALL_CONFIG.format(CARDS_ID_FILTER=FILTER_CARDS_ID_FWV60)
+                self._FILTER_ALL_STATES = [f.format(CARDS_ENERGY_FILTER=FILTER_CARDS_ENGY_FWV60) for f in FILTER_ALL_STATES]
+                self._FILTER_ALL_CONFIG = [f.format(CARDS_ID_FILTER=FILTER_CARDS_ID_FWV60) for f in FILTER_ALL_CONFIG]
             else:
                 _LOGGER.info(f"read_versions(): '{fwv}' FirmwareVersion detected -> 'cards' list is present")
-                self._FILTER_ALL_STATES = FILTER_ALL_STATES.format(CARDS_ENERGY_FILTER=FILTER_CARDS_ENGY_CLASSIC)
-                self._FILTER_ALL_CONFIG = FILTER_ALL_CONFIG.format(CARDS_ID_FILTER=FILTER_CARDS_ID_CLASSIC)
+                self._FILTER_ALL_STATES = [f.format(CARDS_ENERGY_FILTER=FILTER_CARDS_ENGY_CLASSIC) for f in FILTER_ALL_STATES]
+                self._FILTER_ALL_CONFIG = [f.format(CARDS_ID_FILTER=FILTER_CARDS_ID_CLASSIC) for f in FILTER_ALL_CONFIG]
         return True
 
     async def read_all(self) -> dict:
         await self.read_all_states();
         # 1 day = 24h * 60min * 60sec = 86400 sec
         # 1 hour = 60min * 60sec = 3600 sec
+        # Check if we should update config.
+        # If last update was more than 1 hour ago (3600s), OR if it never happened (0).
+        # We also want to respect backoff if it failed recently.
         if self._LAST_CONFIG_UPDATE_TS + 3600 < time():
             await self.read_all_config();
 
@@ -170,7 +180,7 @@ class GoeChargerApiV2Bridge:
             filter = self._FILTER_MIN_STATES
             if self.isCharger and self._REQUEST_IDS_DATA:
                 filter = filter + self._FILTER_IDS_ADDON
-
+            
             # check what additional times do frequent update?!
             filter = filter+self._FILTER_TIMES_ADDON
 
@@ -178,8 +188,8 @@ class GoeChargerApiV2Bridge:
             if len(idle_states) > 0:
                 # copy all fields from 'idle_states' to self._states
                 self._states.update(idle_states)
-
-                # reset the '_REQUEST_IDS_DATA' flag (will be enabled again, if we post new PV data to the
+                
+                # reset the '_REQUEST_IDS_DATA' flag (will be enabled again, if we post new PV data to the 
                 # wallbox)
                 if self.isCharger and self._REQUEST_IDS_DATA:
                     self._REQUEST_IDS_DATA = False
@@ -187,11 +197,29 @@ class GoeChargerApiV2Bridge:
                 # check, if the car idle state have changed to something else
                 if self.isCharger and Tag.CAR.key in self._states and self._states[Tag.CAR.key] != CAR_VALUES.IDLE.value:
                     # the car state is not 'idle' - so we should fetch all states...
-                    _LAST_FULL_STATE_UPDATE_TS = 0
+
+                    self._LAST_FULL_STATE_UPDATE_TS = 0
                     await self.read_all_states()
 
         else:
-            self._states = await self._read_filtered_data(filters=self._FILTER_ALL_STATES, log_info="read_all_states")
+            if isinstance(self._FILTER_ALL_STATES, list):
+                # Request states in chunks to avoid URL length issues
+                full_states = {}
+                for i, filter_chunk in enumerate(self._FILTER_ALL_STATES):
+                    # Add delay between chunks
+                    if i > 0:
+                        await asyncio.sleep(0.5)
+
+                    chunk_states = await self._read_filtered_data(filters=filter_chunk, log_info=f"read_all_states_chunk_{i+1}")
+                    if len(chunk_states) > 0:
+                        full_states.update(chunk_states)
+                    else:
+                        _LOGGER.warning(f"read_all_states: chunk {i+1} failed or returned empty")
+                
+                self._states = full_states
+            else:
+                self._states = await self._read_filtered_data(filters=self._FILTER_ALL_STATES, log_info="read_all_states")
+
             if len(self._states) > 0:
                 self._LAST_FULL_STATE_UPDATE_TS = time()
 
@@ -202,9 +230,30 @@ class GoeChargerApiV2Bridge:
 
     async def read_all_config(self):
         if len(self._FILTER_ALL_CONFIG) > 0:
-            self._config = await self._read_filtered_data(filters=self._FILTER_ALL_CONFIG, log_info="read_all_config")
+            if isinstance(self._FILTER_ALL_CONFIG, list):
+                # Request config in chunks to avoid URL length issues
+                full_config = {}
+                for i, filter_chunk in enumerate(self._FILTER_ALL_CONFIG):
+                    # Add delay between chunks to be gentle
+                    if i > 0:
+                        await asyncio.sleep(0.5)
+
+                    chunk_config = await self._read_filtered_data(filters=filter_chunk, log_info=f"read_all_config_chunk_{i+1}")
+                    if len(chunk_config) > 0:
+                        full_config.update(chunk_config)
+                    else:
+                        _LOGGER.warning(f"read_all_config: chunk {i+1} failed or returned empty")
+                
+                self._config = full_config
+            else:
+                self._config = await self._read_filtered_data(filters=self._FILTER_ALL_CONFIG, log_info="read_all_config")
+
             if len(self._config) > 0:
                 self._LAST_CONFIG_UPDATE_TS = time()
+            else:
+                 # If config read fails, wait 5 minutes before retrying to prevent hammering
+                _LOGGER.warning("read_all_config failed: backing off for 5 minutes")
+                self._LAST_CONFIG_UPDATE_TS = time() - 3600 + 300 # Reset timer to 5 mins from now (300s left to 3600)
         else:
             # no configuration filter yet...
             pass
