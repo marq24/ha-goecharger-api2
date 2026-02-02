@@ -467,9 +467,9 @@ class GoeChargerBaseEntity(Entity):
         self.coordinator = coordinator
 
         if self.coordinator.mode == WAN:
-            self.entity_id = f"{entity_type}.goe_wan_{self.coordinator._serial}_{self._attr_translation_key}"
+            self.entity_id = f"{entity_type}.goe_wan_{self.coordinator._serial}_{self._attr_translation_key}".lower()
         else:
-            self.entity_id = f"{entity_type}.goe_{self.coordinator._serial}_{self._attr_translation_key}"
+            self.entity_id = f"{entity_type}.goe_{self.coordinator._serial}_{self._attr_translation_key}".lower()
 
     def _name_internal(self, device_class_name: str | None,
                        platform_translations: dict[str, Any], ) -> str | UndefinedType | None:
