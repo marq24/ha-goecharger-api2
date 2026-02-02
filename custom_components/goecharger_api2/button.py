@@ -3,6 +3,7 @@ import logging
 from custom_components.goecharger_api2.pygoecharger_ha import INTG_TYPE
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity
@@ -30,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
 
 class GoeChargerApiV2Button(GoeChargerBaseEntity, ButtonEntity):
     def __init__(self, coordinator: GoeChargerDataUpdateCoordinator, description: ExtButtonEntityDescription):
-        super().__init__(coordinator=coordinator, description=description)
+        super().__init__(entity_type=Platform.BUTTON, coordinator=coordinator, description=description)
 
     async def async_press(self, **kwargs):
         try:

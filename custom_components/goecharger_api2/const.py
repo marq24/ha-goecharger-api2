@@ -11,7 +11,8 @@ from homeassistant.components.sensor import SensorEntityDescription, SensorState
 from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.const import (
     EntityCategory, UnitOfElectricCurrent, UnitOfEnergy, UnitOfTime, CURRENCY_CENT, UnitOfPower, UnitOfTemperature,
-    UnitOfFrequency, UnitOfElectricPotential, PERCENTAGE, SIGNAL_STRENGTH_DECIBELS
+    UnitOfFrequency, UnitOfElectricPotential, PERCENTAGE, SIGNAL_STRENGTH_DECIBELS,
+    Platform
 )
 
 # Base component constants
@@ -82,7 +83,7 @@ class ExtSwitchEntityDescription(SwitchEntityDescription):
     idx: int | str | None = None
 
 
-PLATFORMS: Final = ["binary_sensor", "button", "number", "select", "sensor", "switch"]
+PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.NUMBER, Platform.SELECT, Platform.SENSOR, Platform.SWITCH]
 
 BINARY_SENSORS = [
     ExtBinarySensorEntityDescription(

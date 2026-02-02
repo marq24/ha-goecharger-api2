@@ -4,7 +4,7 @@ from custom_components.goecharger_api2.pygoecharger_ha import INTG_TYPE
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF
+from homeassistant.const import STATE_OFF, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity
@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
 
 class GoeChargerApiV2BinarySensor(GoeChargerBaseEntity, BinarySensorEntity):
     def __init__(self, coordinator: GoeChargerDataUpdateCoordinator, description: ExtBinarySensorEntityDescription):
-        super().__init__(coordinator=coordinator, description=description)
+        super().__init__(entity_type=Platform.BINARY_SENSOR, coordinator=coordinator, description=description)
         self._attr_icon_off = self.entity_description.icon_off
 
     @property

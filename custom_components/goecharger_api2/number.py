@@ -3,6 +3,7 @@ import logging
 from custom_components.goecharger_api2.pygoecharger_ha import INTG_TYPE
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity
@@ -62,7 +63,7 @@ class GoeChargerNumber(GoeChargerBaseEntity, NumberEntity):
                 idx = description.idx,
                 check_16a_limit = description.check_16a_limit
             )
-        super().__init__(coordinator=coordinator, description=description)
+        super().__init__(entity_type=Platform.NUMBER, coordinator=coordinator, description=description)
 
     @property
     def native_value(self):

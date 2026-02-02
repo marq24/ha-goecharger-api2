@@ -437,7 +437,7 @@ class GoeChargerBaseEntity(Entity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: GoeChargerDataUpdateCoordinator, description: EntityDescription) -> None:
+    def __init__(self, entity_type:str, coordinator: GoeChargerDataUpdateCoordinator, description: EntityDescription) -> None:
         # make sure that we keep the CASE of the key!
         self.data_key = description.key
 
@@ -467,9 +467,9 @@ class GoeChargerBaseEntity(Entity):
         self.coordinator = coordinator
 
         if self.coordinator.mode == WAN:
-            self.entity_id = f"{DOMAIN}.goe_wan_{self.coordinator._serial}_{self._attr_translation_key}"
+            self.entity_id = f"{entity_type}.goe_wan_{self.coordinator._serial}_{self._attr_translation_key}"
         else:
-            self.entity_id = f"{DOMAIN}.goe_{self.coordinator._serial}_{self._attr_translation_key}"
+            self.entity_id = f"{entity_type}.goe_{self.coordinator._serial}_{self._attr_translation_key}"
 
     def _name_internal(self, device_class_name: str | None,
                        platform_translations: dict[str, Any], ) -> str | UndefinedType | None:

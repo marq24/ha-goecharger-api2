@@ -4,7 +4,7 @@ from typing import Literal
 from custom_components.goecharger_api2.pygoecharger_ha import INTG_TYPE
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.const import STATE_ON, STATE_OFF, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity
@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
 
 class GoeChargerSwitch(GoeChargerBaseEntity, SwitchEntity):
     def __init__(self, coordinator: GoeChargerDataUpdateCoordinator, description: ExtSwitchEntityDescription):
-        super().__init__(coordinator=coordinator, description=description)
+        super().__init__(entity_type=Platform.SWITCH, coordinator=coordinator, description=description)
         self._attr_icon_off = self.entity_description.icon_off
 
     async def async_turn_on(self, **kwargs):

@@ -3,14 +3,14 @@ import re
 from datetime import datetime, time
 from typing import Final
 
+from custom_components.goecharger_api2.pygoecharger_ha import INTG_TYPE
+from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-
-from custom_components.goecharger_api2.pygoecharger_ha import INTG_TYPE
-from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity
 from .const import DOMAIN, SENSOR_SENSORS, CONTROLLER_SENSOR_SENSORS, ExtSensorEntityDescription
 
@@ -39,7 +39,7 @@ CC_P2: Final = re.compile(r"([a-z0-9])([A-Z])")
 class GoeChargerSensor(GoeChargerBaseEntity, SensorEntity, RestoreEntity):
 
     def __init__(self, coordinator: GoeChargerDataUpdateCoordinator, description: ExtSensorEntityDescription):
-        super().__init__(coordinator=coordinator, description=description)
+        super().__init__(entity_type=Platform.SENSOR, coordinator=coordinator, description=description)
 
     @staticmethod
     def _camel_to_snake(a_key: str):
