@@ -187,7 +187,7 @@ class GoeChargerApiV2Bridge:
                 # check, if the car idle state have changed to something else
                 if self.isCharger and Tag.CAR.key in self._states and self._states[Tag.CAR.key] != CAR_VALUES.IDLE.value:
                     # the car state is not 'idle' - so we should fetch all states...
-                    _LAST_FULL_STATE_UPDATE_TS = 0
+                    self._LAST_FULL_STATE_UPDATE_TS = 0
                     await self.read_all_states()
 
         else:
