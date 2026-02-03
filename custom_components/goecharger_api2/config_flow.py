@@ -218,7 +218,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             session = async_create_clientsession(self.hass)
             client = GoeChargerApiV2Bridge(intg_type=intg_type, host=host, serial=serial, token=token, web_session=session,
-                                           coordinator=None, lang=self.hass.config.language.lower())
+                                           lang=self.hass.config.language.lower())
 
             ret = await client.read_system()
             if ret is not None and len(ret) > 0:

@@ -1,8 +1,11 @@
 import asyncio
 import logging
+import random
 from datetime import timedelta
+from time import time
 from typing import Any, Final
 
+from aiohttp import ClientConnectionError
 from packaging.version import Version
 
 from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bridge, TRANSLATIONS, INTG_TYPE
@@ -17,7 +20,7 @@ from homeassistant.helpers import (
     entity_registry as entity_reg,
     device_registry as device_reg
 )
-from homeassistant.helpers.aiohttp_client import async_get_clientsession, async_create_clientsession
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -150,6 +153,7 @@ async def check_and_write_to_16a(hass: HomeAssistant, config_entry_id: str, brid
                             key_list.append(entity.translation_key)
 
             if len(key_list) > 0:
+                _LOGGER.info(f"16A checker: found {len(key_list)} entities with max current of {MAX_A}A - {key_list}")
                 final_key_list = []
                 final_dics = {}
                 for a_key in key_list:
@@ -170,9 +174,11 @@ async def check_and_write_to_16a(hass: HomeAssistant, config_entry_id: str, brid
                         res_obj = res[a_res_key]
                         if isinstance(res_obj, int):
                             if res_obj > MAX_A:
-                                keys_to_patch.append(a_res_key)
                                 res[a_res_key] = MAX_A
+                                if a_res_key not in keys_to_patch:
+                                    keys_to_patch.append(a_res_key)
                         elif isinstance(res_obj, dict):
+                            #_LOGGER.warning(f"found dict in 16A check: {res_obj}")
                             vals_to_check = final_dics.get(a_res_key)
                             for val in vals_to_check:
                                 if res_obj[val] > MAX_A:
@@ -180,9 +186,10 @@ async def check_and_write_to_16a(hass: HomeAssistant, config_entry_id: str, brid
                                     if a_res_key not in keys_to_patch:
                                         keys_to_patch.append(a_res_key)
 
+                    _LOGGER.info(f"reduce the following keys: {keys_to_patch}")
                     for a_key in keys_to_patch:
-                        _LOGGER.info(f"reduce {a_res_key} to 16A -> writing {res[a_key]}")
-                        await bridge.write_value_to_key(a_res_key, res[a_key])
+                        _LOGGER.info(f"reduce {a_key} to 16A -> writing {res[a_key]}")
+                        await bridge.write_value_to_key(a_key, res[a_key])
                 except Exception as e:
                     _LOGGER.error(f"Error while forcing 16A settings:", e)
 
@@ -225,7 +232,6 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                 serial=config_entry.data.get(CONF_ID),
                 token=config_entry.data.get(CONF_TOKEN),
                 web_session=async_get_clientsession(hass),
-                coordinator=self,
                 lang=lang)
         else:
             self.mode = LAN
@@ -235,7 +241,6 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                 serial=None,
                 token=None,
                 web_session=async_get_clientsession(hass),
-                coordinator=self,
                 lang=lang)
 
         global SCAN_INTERVAL
@@ -251,11 +256,10 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         # config_entry only need for providing the '_device_info_dict'...
         self._config_entry = config_entry
         self.is_charger_fw_version_60_0_or_higher_and_no_cards_list_is_present = False
+        self._CLIENT_COMMUNICATION_ERROR_TS = 0
+        self._CLIENT_COMMUNICATION_ERROR_COUNT = 0
+        self._RESTART_TRIGGERED = False
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
-
-    def get_new_client_session(self):
-        _LOGGER.debug(f"get_new_client_session(): Create new aiohttp.ClientSession")
-        return async_create_clientsession(self._hass)
 
     # Callable[[Event], Any]
     def __call__(self, evt: Event) -> bool:
@@ -265,22 +269,63 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
     def clear_data(self):
         self.bridge.clear_data()
         self.data.clear()
+        self._CLIENT_COMMUNICATION_ERROR_TS = 0
+        self._CLIENT_COMMUNICATION_ERROR_COUNT = 0
+        self._RESTART_TRIGGERED = False
+
+    async def trigger_restart_delayed(self) -> None:
+        # Generate a random sleep time between 5 and 10 minutes (300 and 600 seconds)
+        random_seconds = random.uniform(300, 600)
+        # random_seconds = random.uniform(60, 120)
+        _LOGGER.info(f"trigger_restart_delayed(): Sleeping for {random_seconds:.2f} seconds...")
+        await asyncio.sleep(random_seconds)
+        _LOGGER.info(f"trigger_restart_delayed(): --- RELOAD INTEGRATION NOW ---")
+        await self.hass.config_entries.async_reload(self._config_entry.entry_id)
 
     async def _async_update_data(self) -> dict:
         """Update data via library."""
-        try:
-            # if self.data is not None:
-            #    _LOGGER.debug(f"number of fields before query: {len(self.data)} ")
-            # result = await self.bridge.read_all()
-            # _LOGGER.debug(f"number of fields after query: {len(result)}")
-            # return result
+        if self._CLIENT_COMMUNICATION_ERROR_TS + 3600 > time():
+            _LOGGER.info(f"_async_update_data(): skipping update due to client communication error for the next {3600 - (time() - self._CLIENT_COMMUNICATION_ERROR_TS)} seconds")
+            return self.data
 
-            return await self.bridge.read_all()
+        if self._RESTART_TRIGGERED:
+            _LOGGER.info(f"_async_update_data(): RESTART is TRIGGERED (waiting for random sleep delay) - skipping update")
+            return self.data
+
+        try:
+            new_data = await self.bridge.read_all()
+            if new_data is not None and len(new_data) > 0:
+                self._CLIENT_COMMUNICATION_ERROR_TS = 0
+                self._CLIENT_COMMUNICATION_ERROR_COUNT = 0
+
+            # THIS is JUST FOR INTERNAL TESTING...
+            # if not self._RESTART_TRIGGERED:
+            #     _LOGGER.info(f"_async_update_data(): TRIGGER RESTART...")
+            #     self._RESTART_TRIGGERED = True
+            #     self.hass.async_create_task(self.trigger_restart_delayed())
+
+            return new_data
+
+        except ClientConnectionError as exception:
+            # ok, we have issues communicating with the Wallbox...
+            # let's delay the next request at least by 5 minutes
+            #  to allow the wallbox to become alive again?!
+            self._CLIENT_COMMUNICATION_ERROR_TS = time()
+            self._CLIENT_COMMUNICATION_ERROR_COUNT += 1
+            if self._CLIENT_COMMUNICATION_ERROR_COUNT > 8:
+                _LOGGER.warning(f"_async_update_data(): Too many ClientConnectionError #{self._CLIENT_COMMUNICATION_ERROR_COUNT} while fetching data: {exception} - will try to restart integration.")
+                if not self._RESTART_TRIGGERED:
+                    _LOGGER.info(f"_async_update_data(): TRIGGER RESTART...")
+                    self._RESTART_TRIGGERED = True
+                    self.hass.async_create_task(self.trigger_restart_delayed())
+            else:
+                _LOGGER.info(f"_async_update_data(): ClientConnectionError #{self._CLIENT_COMMUNICATION_ERROR_COUNT} while fetching data: {exception}")
+            raise UpdateFailed(f"Error while fetching data: {exception}") from exception
 
         except UpdateFailed as exception:
             raise UpdateFailed() from exception
         except Exception as other:
-            _LOGGER.error(f"unexpected: {other}")
+            _LOGGER.error(f"_async_update_data(): unexpected: {other}")
             raise UpdateFailed() from other
 
     # async def async_write_tags(self, kv_pairs: Collection[Tuple[WKHPTag, Any]]) -> dict:
