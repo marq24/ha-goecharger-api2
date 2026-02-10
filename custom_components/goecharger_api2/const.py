@@ -415,8 +415,7 @@ NUMBER_SENSORS = [
     ExtNumberEntityDescription(
         key=Tag.LOT.key,
         idx="dyn",
-        check_16a_limit=True,
-        native_max_value=32,
+        native_max_value=64,
         native_min_value=6,
         native_step=1,
         entity_category=EntityCategory.CONFIG,
