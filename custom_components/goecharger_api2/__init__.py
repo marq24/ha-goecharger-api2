@@ -104,8 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
 
 def check_unload_services(hass: HomeAssistant):
-    active_integration_configs = hass.config_entries.async_entries(domain=DOMAIN, include_disabled=False,
-                                                                   include_ignore=False)
+    active_integration_configs = hass.config_entries.async_entries(domain=DOMAIN, include_disabled=False, include_ignore=False)
     if active_integration_configs is not None and len(active_integration_configs) > 0:
         return False
     else:
@@ -214,6 +213,9 @@ async def check_device_registry(hass: HomeAssistant):
 
 
 class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
+
+    _debounced_update_task: asyncio.Task | None = None
+
     def __init__(self, hass: HomeAssistant, config_entry):
         lang = hass.config.language.lower()
         self._hass = hass
@@ -259,6 +261,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         self._CLIENT_COMMUNICATION_ERROR_TS = 0
         self._CLIENT_COMMUNICATION_ERROR_COUNT = 0
         self._RESTART_TRIGGERED = False
+        self._debounced_update_task = None
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
     # Callable[[Event], Any]
@@ -272,6 +275,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         self._CLIENT_COMMUNICATION_ERROR_TS = 0
         self._CLIENT_COMMUNICATION_ERROR_COUNT = 0
         self._RESTART_TRIGGERED = False
+        self._debounced_update_task = None
 
     async def trigger_restart_delayed(self) -> None:
         # Generate a random sleep time between 5 and 10 minutes (300 and 600 seconds)
@@ -284,6 +288,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict:
         """Update data via library."""
+        _LOGGER.debug(f"_async_update_data(): CALLED")
         if self._CLIENT_COMMUNICATION_ERROR_TS + 3600 > time():
             _LOGGER.info(f"_async_update_data(): skipping update due to client communication error for the next {3600 - (time() - self._CLIENT_COMMUNICATION_ERROR_TS)} seconds")
             return self.data
@@ -333,46 +338,45 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
     #    ret = await self.bridge.async_write_values(kv_pairs)
     #    return ret
 
-    async def async_write_key(self, key: str, value, entity: Entity = None) -> dict:
-        """Update single data"""
-        result = await self.bridge.write_value_to_key(key, value)
-        _LOGGER.debug(f"write result: {result}")
+    def _request_update_in_sec(self, seconds: int):
+        if self._debounced_update_task is not None and not self._debounced_update_task.done():
+            self._debounced_update_task.cancel()
+        self._debounced_update_task = asyncio.create_task(self._debounce_coordinator_update(seconds))
 
+    async def _debounce_coordinator_update(self, seconds: int):
+        await asyncio.sleep(seconds)
+        if self.bridge is not None:
+            self.bridge.reset_stored_update_ts()
+        await self.async_refresh()
+
+    def handle_write_resut(self, a_type, value, key, result, entity):
+        _LOGGER.debug(f"write {a_type} result: {result}")
         if key in result:
             self.data[key] = result[key]
         else:
-            _LOGGER.error(f"could not write value: '{value}' to: {key} result was: {result}")
+            _LOGGER.error(f"could not write {a_type} value: '{value}' to: {key} result was: {result}")
 
-        if entity is not None:
-            entity.async_schedule_update_ha_state(force_refresh=True)
-
+        do_refresh = True
         if self.intg_type == INTG_TYPE.CHARGER.value:
             # since we do not force an update when setting PV surplus data, we 'patch' internally our values
             if key == Tag.IDS.key:
                 self.data = self.bridge._versions | self.bridge._states | self.bridge._config
                 self.async_update_listeners()
+                do_refresh = False
 
+        if do_refresh:
+            if entity is not None:
+                entity.async_schedule_update_ha_state(force_refresh=True)
+            self._request_update_in_sec(10)
+
+    async def async_write_key(self, key: str, value, entity: Entity = None) -> dict:
+        result = await self.bridge.write_value_to_key(key, value)
+        self.handle_write_resut("single", value, key, result, entity)
         return result
 
     async def async_write_multiple_keys(self, attr:dict, key: str, value, entity: Entity = None) -> dict:
-        """Update single data"""
         result = await self.bridge._write_values_int(attr, key, value)
-        _LOGGER.debug(f"write multiple result: {result}")
-
-        if key in result:
-            self.data[key] = result[key]
-        else:
-            _LOGGER.error(f"could not write multiple value: '{value}' to: {key} result was: {result}")
-
-        if entity is not None:
-            entity.async_schedule_update_ha_state(force_refresh=True)
-
-        if self.intg_type == INTG_TYPE.CHARGER.value:
-            # since we do not force an update when setting PV surplus data, we 'patch' internally our values
-            if key == Tag.IDS.key:
-                self.data = self.bridge._versions | self.bridge._states | self.bridge._config
-                self.async_update_listeners()
-
+        self.handle_write_resut("multiple", value, key, result, entity)
         return result
 
     async def read_versions(self):

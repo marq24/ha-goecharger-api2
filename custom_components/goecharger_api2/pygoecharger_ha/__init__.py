@@ -99,6 +99,10 @@ class GoeChargerApiV2Bridge:
         self._states = {}
         self._config = {}
 
+    def reset_stored_update_ts(self):
+        self._LAST_CONFIG_UPDATE_TS = 0
+        self._LAST_FULL_STATE_UPDATE_TS = 0
+
     async def read_system(self) -> dict:
         return await self._read_filtered_data(filters=self._FILTER_SYSTEMS, log_info="read_system")
 
