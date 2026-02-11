@@ -349,9 +349,10 @@ class Tag(ApiKey, Enum):
     # see also https://github.com/goecharger/go-eCharger-API-v2/discussions/110
     IDS = ApiKey(key="ids", cat=CAT.STATUS, writeable=True, writeonly=True)
 
-    # none exsiting ApiKeys
+    # none existing ApiKeys
     CAR_CONNECTED = ApiKey(key="car", cat=CAT.STATUS)
     INTERNAL_FORCE_CONFIG_READ = ApiKey(key="zfocore", cat=CAT.CONFIG)
+    INTERNAL_FORCE_REFRESH_ALL = ApiKey(key="zforeal", cat=CAT.CONFIG)
 
     # NOT-DOCUMENTED
     # -> goe-Controller-Scan immer aktiviert

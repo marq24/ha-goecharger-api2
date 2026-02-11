@@ -229,6 +229,14 @@ BUTTONS = [
         icon="mdi:reload",
         entity_registry_enabled_default=True
     ),
+    ExtButtonEntityDescription(
+        key=Tag.INTERNAL_FORCE_REFRESH_ALL.key,
+        payload=IS_TRIGGER,
+        entity_category=EntityCategory.CONFIG,
+        device_class=None,
+        icon="mdi:reload",
+        entity_registry_enabled_default=True
+    ),
 ]
 NUMBER_SENSORS = [
     # ama

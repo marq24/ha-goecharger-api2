@@ -293,6 +293,12 @@ class GoeChargerApiV2Bridge:
             match key:
                 case Tag.INTERNAL_FORCE_CONFIG_READ.key:
                     await self.force_config_update()
+                case Tag.INTERNAL_FORCE_REFRESH_ALL.key:
+                    self.reset_stored_update_ts()
+                    # we do the actual request for the new data in the
+                    # DataUpdateCoordinator... (with a short delwy of some
+                    # seconds...)
+                    # await self.read_all()
 
             return {key: value}
         else:

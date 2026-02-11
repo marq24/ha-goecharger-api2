@@ -338,18 +338,16 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
     #    ret = await self.bridge.async_write_values(kv_pairs)
     #    return ret
 
-    def _request_update_in_sec(self, seconds: int):
+    def request_update_in_sec(self, seconds: float):
         if self._debounced_update_task is not None and not self._debounced_update_task.done():
             self._debounced_update_task.cancel()
         self._debounced_update_task = asyncio.create_task(self._debounce_coordinator_update(seconds))
 
-    async def _debounce_coordinator_update(self, seconds: int):
+    async def _debounce_coordinator_update(self, seconds: float):
         await asyncio.sleep(seconds)
-        if self.bridge is not None:
-            self.bridge.reset_stored_update_ts()
         await self.async_refresh()
 
-    def handle_write_resut(self, a_type, value, key, result, entity):
+    def handle_write_result(self, a_type, value, key, result, entity):
         _LOGGER.debug(f"write {a_type} result: {result}")
         if key in result:
             self.data[key] = result[key]
@@ -364,19 +362,23 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                 self.async_update_listeners()
                 do_refresh = False
 
+            elif key == Tag.INTERNAL_FORCE_REFRESH_ALL.key:
+                self.request_update_in_sec(2.5)
+                do_refresh = False
+
         if do_refresh:
             if entity is not None:
                 entity.async_schedule_update_ha_state(force_refresh=True)
-            self._request_update_in_sec(10)
+            #self.request_update_in_sec(10)
 
     async def async_write_key(self, key: str, value, entity: Entity = None) -> dict:
         result = await self.bridge.write_value_to_key(key, value)
-        self.handle_write_resut("single", value, key, result, entity)
+        self.handle_write_result("single", value, key, result, entity)
         return result
 
     async def async_write_multiple_keys(self, attr:dict, key: str, value, entity: Entity = None) -> dict:
         result = await self.bridge._write_values_int(attr, key, value)
-        self.handle_write_resut("multiple", value, key, result, entity)
+        self.handle_write_result("multiple", value, key, result, entity)
         return result
 
     async def read_versions(self):
