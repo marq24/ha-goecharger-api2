@@ -93,7 +93,7 @@
     "button": {
       "rst": {"name":  "go-e Neustarten"},
       "zfocore": {"name":  "Konfiguration erneut einlesen"},
-      "zforeal": {"name":  "Daten Sync erzwingen"}
+      "zforeal": {"name":  "Daten Sync anfordern"}
     },
     "number": {
       "ama": {"name": "Max. Stromlimit"},

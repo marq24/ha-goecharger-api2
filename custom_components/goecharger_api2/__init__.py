@@ -286,58 +286,6 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         _LOGGER.info(f"trigger_restart_delayed(): --- RELOAD INTEGRATION NOW ---")
         await self.hass.config_entries.async_reload(self._config_entry.entry_id)
 
-    async def _async_update_data(self) -> dict:
-        """Update data via library."""
-        _LOGGER.debug(f"_async_update_data(): CALLED")
-        if self._CLIENT_COMMUNICATION_ERROR_TS + 3600 > time():
-            _LOGGER.info(f"_async_update_data(): skipping update due to client communication error for the next {3600 - (time() - self._CLIENT_COMMUNICATION_ERROR_TS)} seconds")
-            return self.data
-
-        if self._RESTART_TRIGGERED:
-            _LOGGER.info(f"_async_update_data(): RESTART is TRIGGERED (waiting for random sleep delay) - skipping update")
-            return self.data
-
-        try:
-            new_data = await self.bridge.read_all()
-            if new_data is not None and len(new_data) > 0:
-                self._CLIENT_COMMUNICATION_ERROR_TS = 0
-                self._CLIENT_COMMUNICATION_ERROR_COUNT = 0
-
-            # THIS is JUST FOR INTERNAL TESTING...
-            # if not self._RESTART_TRIGGERED:
-            #     _LOGGER.info(f"_async_update_data(): TRIGGER RESTART...")
-            #     self._RESTART_TRIGGERED = True
-            #     self.hass.async_create_task(self.trigger_restart_delayed())
-
-            return new_data
-
-        except ClientConnectionError as exception:
-            # ok, we have issues communicating with the Wallbox...
-            # let's delay the next request at least by 5 minutes
-            #  to allow the wallbox to become alive again?!
-            self._CLIENT_COMMUNICATION_ERROR_TS = time()
-            self._CLIENT_COMMUNICATION_ERROR_COUNT += 1
-            if self._CLIENT_COMMUNICATION_ERROR_COUNT > 8:
-                _LOGGER.warning(f"_async_update_data(): Too many ClientConnectionError #{self._CLIENT_COMMUNICATION_ERROR_COUNT} while fetching data: {exception} - will try to restart integration.")
-                if not self._RESTART_TRIGGERED:
-                    _LOGGER.info(f"_async_update_data(): TRIGGER RESTART...")
-                    self._RESTART_TRIGGERED = True
-                    self.hass.async_create_task(self.trigger_restart_delayed())
-            else:
-                _LOGGER.info(f"_async_update_data(): ClientConnectionError #{self._CLIENT_COMMUNICATION_ERROR_COUNT} while fetching data: {exception}")
-            raise UpdateFailed(f"Error while fetching data: {exception}") from exception
-
-        except UpdateFailed as exception:
-            raise UpdateFailed() from exception
-        except Exception as other:
-            _LOGGER.error(f"_async_update_data(): unexpected: {other}")
-            raise UpdateFailed() from other
-
-    # async def async_write_tags(self, kv_pairs: Collection[Tuple[WKHPTag, Any]]) -> dict:
-    #    """Get data from the API."""
-    #    ret = await self.bridge.async_write_values(kv_pairs)
-    #    return ret
-
     def request_update_in_sec(self, seconds: float):
         if self._debounced_update_task is not None and not self._debounced_update_task.done():
             self._debounced_update_task.cancel()
@@ -371,15 +319,99 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                 entity.async_schedule_update_ha_state(force_refresh=True)
             #self.request_update_in_sec(10)
 
+    def _handle_client_connection_error(self, msg: str, exception: Exception):
+        # ok, we have issues communicating with the Wallbox...
+        # let's delay the next request at least by 5 minutes
+        #  to allow the wallbox to become alive again?!
+        self._CLIENT_COMMUNICATION_ERROR_TS = time()
+        self._CLIENT_COMMUNICATION_ERROR_COUNT += 1
+        if self._CLIENT_COMMUNICATION_ERROR_COUNT > 8:
+            _LOGGER.warning(f"{msg}: Too many ClientConnectionError #{self._CLIENT_COMMUNICATION_ERROR_COUNT} while fetching data: {exception} - will try to restart integration.")
+            if not self._RESTART_TRIGGERED:
+                _LOGGER.info(f"{msg}: TRIGGER RESTART...")
+                self._RESTART_TRIGGERED = True
+                self.hass.async_create_task(self.trigger_restart_delayed())
+        else:
+            _LOGGER.info(f"{msg}: ClientConnectionError #{self._CLIENT_COMMUNICATION_ERROR_COUNT} while fetching data: {exception}")
+
+    async def _async_update_data(self) -> dict:
+        """Update data via library."""
+        _LOGGER.debug(f"_async_update_data(): CALLED")
+        if self._CLIENT_COMMUNICATION_ERROR_TS + 3600 > time():
+            time_info = 3600 - (time() - self._CLIENT_COMMUNICATION_ERROR_TS)
+            _LOGGER.info(f"_async_update_data(): skipping update due to client communication error for the next {time_info} seconds")
+            return self.data
+        if self._RESTART_TRIGGERED:
+            _LOGGER.info(f"_async_update_data(): RESTART is TRIGGERED (waiting for random sleep delay) - skipping update")
+            return self.data
+
+        try:
+            new_data = await self.bridge.read_all()
+            if new_data is not None and len(new_data) > 0:
+                self._CLIENT_COMMUNICATION_ERROR_TS = 0
+                self._CLIENT_COMMUNICATION_ERROR_COUNT = 0
+            # THIS is JUST FOR INTERNAL TESTING...
+            # if not self._RESTART_TRIGGERED:
+            #     _LOGGER.info(f"_async_update_data(): TRIGGER RESTART...")
+            #     self._RESTART_TRIGGERED = True
+            #     self.hass.async_create_task(self.trigger_restart_delayed())
+            return new_data
+
+        except ClientConnectionError as exception:
+            self._handle_client_connection_error("_async_update_data()", exception)
+            raise UpdateFailed(f"Error while fetching data: {exception}") from exception
+        except UpdateFailed as exception:
+            raise UpdateFailed() from exception
+        except Exception as other:
+            _LOGGER.error(f"_async_update_data(): unexpected: {other}")
+            raise UpdateFailed() from other
+
+    # async def async_write_tags(self, kv_pairs: Collection[Tuple[WKHPTag, Any]]) -> dict:
+    #    """Get data from the API."""
+    #    ret = await self.bridge.async_write_values(kv_pairs)
+    #    return ret
+
     async def async_write_key(self, key: str, value, entity: Entity = None) -> dict:
-        result = await self.bridge.write_value_to_key(key, value)
-        self.handle_write_result("single", value, key, result, entity)
-        return result
+        if self._CLIENT_COMMUNICATION_ERROR_TS + 3600 > time():
+            time_info = 3600 - (time() - self._CLIENT_COMMUNICATION_ERROR_TS)
+            _LOGGER.info(f"async_write_key(): skipping due to client communication error for the next {time_info} seconds")
+            raise ValueError(f"async_write_key(): skipping due to client communication error for the next {time_info} seconds")
+        if self._RESTART_TRIGGERED:
+            _LOGGER.info(f"async_write_key(): RESTART is TRIGGERED (waiting for random sleep delay)")
+            raise ValueError("async_write_key(): RESTART is TRIGGERED (waiting for random sleep delay)")
+
+        try:
+            result = await self.bridge.write_value_to_key(key, value)
+            self.handle_write_result("single", value, key, result, entity)
+            return result
+
+        except ClientConnectionError as exception:
+            self._handle_client_connection_error("async_write_key()", exception)
+            raise ValueError(f"ClientConnectionError while writing {key} to wallbox: {exception}") from exception
+        except Exception as e:
+            _LOGGER.error(f"Error while writing single {key} to wallbox: {e}")
+            raise ValueError(f"Exception while writing {key} to wallbox: {e}") from e
 
     async def async_write_multiple_keys(self, attr:dict, key: str, value, entity: Entity = None) -> dict:
-        result = await self.bridge._write_values_int(attr, key, value)
-        self.handle_write_result("multiple", value, key, result, entity)
-        return result
+        if self._CLIENT_COMMUNICATION_ERROR_TS + 3600 > time():
+            time_info = 3600 - (time() - self._CLIENT_COMMUNICATION_ERROR_TS)
+            _LOGGER.info(f"async_write_multiple_keys(): skipping due to client communication error for the next {time_info} seconds")
+            raise ValueError(f"async_write_multiple_keys(): skipping due to client communication error for the next {time_info} seconds")
+        if self._RESTART_TRIGGERED:
+            _LOGGER.info(f"async_write_multiple_keys(): RESTART is TRIGGERED (waiting for random sleep delay)")
+            raise ValueError("async_write_multiple_keys(): RESTART is TRIGGERED (waiting for random sleep delay)")
+
+        try:
+            result = await self.bridge._write_values_int(attr, key, value)
+            self.handle_write_result("multiple", value, key, result, entity)
+            return result
+
+        except ClientConnectionError as exception:
+            self._handle_client_connection_error("async_write_multiple_keys()", exception)
+            raise ValueError(f"ClientConnectionError while writing multiple {key} to wallbox: {exception}") from exception
+        except Exception as e:
+            _LOGGER.error(f"Error while writing multiple {key} to wallbox: {e}")
+            raise ValueError(f"Exception while writing multiple {key} to wallbox: {e}") from e
 
     async def read_versions(self):
         if not await self.bridge.read_versions():

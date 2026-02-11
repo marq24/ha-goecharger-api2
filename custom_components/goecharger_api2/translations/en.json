@@ -93,7 +93,7 @@
     "button": {
       "rst": {"name":  "Restart go-e device"},
       "zfocore": {"name":  "Read Configuration"},
-      "zforeal": {"name":  "Force data sync"}
+      "zforeal": {"name":  "Request data sync"}
     },
     "number": {
       "ama": {"name": "Maximum current limit"},
