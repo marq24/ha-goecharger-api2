@@ -93,13 +93,20 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         if not await coordinator.read_versions():
             raise ConfigEntryNotReady("Could not read versions from charger/controller! - please enable debug logging to see more details!")
 
-    # ws watchdog...
-    if hass.state is CoreState.running:
-        _LOGGER.debug(f"starting watchdog INSTANTLY")
-        await coordinator.start_watchdog()
-    else:
-        _LOGGER.debug(f"starting watchdog delayed... (when EVENT_HOMEASSISTANT_STARTED is fired)")
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, coordinator.start_watchdog)
+    start_ws_watch_dog = False
+    if coordinator.intg_type == INTG_TYPE.CHARGER.value:
+        a_pwd = config_entry.data.get(CONF_PASSWORD, None)
+        if a_pwd is not None and len(a_pwd.strip()) > 0:
+            start_ws_watch_dog = True
+
+    if start_ws_watch_dog:
+        # ws watchdog...
+        if hass.state is CoreState.running:
+            _LOGGER.debug(f"starting watchdog INSTANTLY")
+            await coordinator.start_watchdog()
+        else:
+            _LOGGER.debug(f"starting watchdog delayed... (when EVENT_HOMEASSISTANT_STARTED is fired)")
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, coordinator.start_watchdog)
 
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
@@ -117,7 +124,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         asyncio.create_task(coordinator.check_for_16a_limit(hass, config_entry.entry_id))
 
     asyncio.create_task(coordinator.cleanup_device_registry(hass))
-    asyncio.create_task(coordinator._async_watchdog_check())
+
+    # double check, if the ws_watchdog should be started...
+    if start_ws_watch_dog and coordinator._ws_start_task is None:
+        asyncio.create_task(coordinator._async_watchdog_check())
+
     config_entry.async_on_unload(config_entry.add_update_listener(entry_update_listener))
     # ok we are done...
     return True

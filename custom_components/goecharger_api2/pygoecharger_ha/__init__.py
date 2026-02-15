@@ -45,25 +45,27 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 class GoeChargerApiV2Bridge:
 
     def __init__(self, intg_type:str, host: str, access_password:str, serial:str, token:str, web_session, lang: str = "en") -> None:
+        self.ws_url = None
         if host is not None:
             self.host_url = f"http://{host}"
+            self.token = None
+
+            # could we use the local websocket...?
             if access_password is not None and len(access_password.strip()) > 0:
                 self.access_password = access_password.strip()
                 self.ws_url = f"ws://{host}/ws"
-            else:
-                self.ws_url = None
-            self.token = None
+
         elif serial is not None and token is not None:
             # the Cloud-API endpoint!
             # looks like that CONTROLLER and CHARGER use the SAME API-Endpoint?!
             # in contrast to the documentation :-/
             self.host_url = f"https://{serial.zfill(6)}.api.v3.go-e.io"
+            self.token = f"Bearer {token}"
+
+            # could we use the wan websocket...?
             if access_password is not None and len(access_password.strip()) > 0:
                 self.access_password = access_password.strip()
-                self.ws_url = f"wss://{serial.zfill(6)}.api.v3.go-e.io/ws"
-            else:
-                self.ws_url = None
-            self.token = f"Bearer {token}"
+                self.ws_url = f"wss://app.v3.go-e.io/{serial}"
 
         if intg_type is not None and intg_type == INTG_TYPE.CONTROLLER.value:
             self.isController = True
@@ -104,6 +106,7 @@ class GoeChargerApiV2Bridge:
         self._states = {}
         self._config = {}
 
+        # the new ws stuff...
         self.ws_connected = False
         self.coordinator = None
         self._ws_connection = None
@@ -425,7 +428,11 @@ class GoeChargerApiV2Bridge:
 
     async def ws_close(self, ws):
         """Close the WebSocket connection cleanly."""
-        _LOGGER.debug(f"ws_close(): for {self._ws_serial} called")
+        if self._ws_serial is not None:
+            _LOGGER.debug(f"ws_close(): for '{self._ws_serial}' called")
+        else:
+            _LOGGER.debug(f"ws_close(): for '{self.ws_url}' called")
+
         self.ws_connected = False
         if ws is not None:
             try:
@@ -515,21 +522,27 @@ class GoeChargerApiV2Bridge:
             "value": value
         }
 
-        payload = json.dumps(original_message)
-        h = hmac.new(bytearray(self._ws_hashed_password), bytearray(payload.encode()), hashlib.sha256)
+        if self.token is not None:
+            # the cloud API can receive real JSON data...
+            _LOGGER.debug(f"_ws_send_command(): Sending {key}={value} as JSON")
+            await self._ws_connection.send_json(original_message)
+        else:
+            # the local websocket needs special handling...
+            payload = json.dumps(original_message)
+            h = hmac.new(bytearray(self._ws_hashed_password), bytearray(payload.encode()), hashlib.sha256)
+            secure_message = {
+                "type": "securedMsg",
+                "data": payload,
+                "requestId": f"{original_message['requestId']}sm",
+                "hmac": h.hexdigest()
+            }
 
-        secure_message = {
-            "type": "securedMsg",
-            "data": payload,
-            "requestId": f"{original_message['requestId']}sm",
-            "hmac": h.hexdigest()
-        }
+            # Pack as msgpack with 0x00 prefix
+            msg_packed = b'\x00' + msgpack.packb(secure_message)
 
-        # Pack as msgpack with 0x00 prefix
-        msg_packed = b'\x00' + msgpack.packb(secure_message)
+            _LOGGER.debug(f"_ws_send_command(): Sending {key}={value} as BYTES")
+            await self._ws_connection.send_bytes(msg_packed)
 
-        _LOGGER.debug(f"_ws_send_command(): Sending {key}={value}")
-        await self._ws_connection.send_bytes(msg_packed)
         return True
 
 
@@ -600,8 +613,13 @@ class GoeChargerApiV2Bridge:
                     "token3": token3,
                     "hash": auth_hash
                 }
-                auth_packed = b'\x00' + msgpack.packb(auth_response)
-                await ws.send_bytes(auth_packed)
+                if self.token is not None:
+                    # the cloud API can receive real JSON data...
+                    await ws.send_json(auth_response)
+                else:
+                    auth_packed = b'\x00' + msgpack.packb(auth_response)
+                    await ws.send_bytes(auth_packed)
+
                 _LOGGER.debug("ws_connect(): Sent authentication response")
 
                 # Step 6: Receive AUTH result
@@ -625,48 +643,7 @@ class GoeChargerApiV2Bridge:
                         try:
                             data = self._ws_decode_message(msg.data)
                             normalized = self._ws_normalize_dict(data)
-                            msg_type = normalized.get('type', 'unknown').lower()
-
-                            if msg_type == 'fullstatus':
-                                status_data = normalized.get('status', {})
-                                if status_data:
-                                    if normalized.get('partial', False):
-                                        self._ws_states.update(status_data)
-                                    else:
-                                        # Full update - but verify all existing keys are present
-                                        missing_keys = set(self._ws_states.keys()) - set(status_data.keys())
-                                        if missing_keys:
-                                            _LOGGER.info(f"ws_connect(): Full update missing {len(missing_keys)} - so we will preserve them!")
-                                            self._ws_states.update(status_data)
-                                        else:
-                                            self._ws_states = {k: v for k, v in status_data.items()}
-
-                                    new_data_arrived = True
-                                    _LOGGER.debug(f"ws_connect(): Received fullStatus with {len(status_data)} keys")
-
-                            elif msg_type == 'deltastatus':
-                                status_data = normalized.get('status', {})
-                                if status_data:
-                                    # Filter out keys we want to ignore
-                                    filtered_data = {k: v for k, v in status_data.items() if
-                                                     k not in API_KEYS_TO_IGNORE_FROM_WS}
-                                    if filtered_data:
-                                        self._ws_states.update(filtered_data)
-                                        new_data_arrived = True
-                                        _LOGGER.debug(f"ws_connect(): Received deltaStatus with {len(filtered_data)} changed keys")
-
-                            elif msg_type == 'response':
-                                if normalized.get('success'):
-                                    status_data = normalized.get('status', {})
-                                    if status_data:
-                                        self._ws_states.update(status_data)
-                                        new_data_arrived = True
-                                        _LOGGER.debug(f"ws_connect(): Received response with {len(status_data)} keys")
-                                else:
-                                    _LOGGER.warning(f"ws_connect(): Command failed: {normalized}")
-
-                            else:
-                                _LOGGER.debug(f"ws_connect(): Received {msg_type} message")
+                            new_data_arrived = self.extract_ws_message_data(normalized)
 
                         except Exception as e:
                             _LOGGER.warning(f"ws_connect(): Error processing BINARY message: {type(e).__name__} - {e}")
@@ -674,8 +651,8 @@ class GoeChargerApiV2Bridge:
                     elif msg.type == aiohttp.WSMsgType.TEXT:
                         try:
                             data = json.loads(msg.data)
-                            msg_type = data.get('type', 'unknown').lower()
-                            _LOGGER.info(f"ws_connect(): Received TEXT message type: {msg_type} - will ignore {data}")
+                            new_data_arrived = self.extract_ws_message_data(data)
+
                         except Exception as e:
                             _LOGGER.warning(f"ws_connect(): Error processing TEXT message: {type(e).__name__} - {e}")
 
@@ -715,3 +692,50 @@ class GoeChargerApiV2Bridge:
         self._ws_states = {}
         self._ws_LAST_UPDATE = 0
         return None
+
+    def extract_ws_message_data(self, data:dict):
+        new_data_arrived = False
+        msg_type = data.get('type', 'unknown').lower()
+
+        if msg_type == 'fullstatus':
+            status_data = data.get('status', {})
+            if status_data:
+                if data.get('partial', False):
+                    self._ws_states.update(status_data)
+                else:
+                    # Full update - but verify all existing keys are present
+                    missing_keys = set(self._ws_states.keys()) - set(status_data.keys())
+                    if missing_keys:
+                        _LOGGER.info(f"extract_ws_message_data(): Full update missing {len(missing_keys)} - so we will preserve them!")
+                        self._ws_states.update(status_data)
+                    else:
+                        self._ws_states = {k: v for k, v in status_data.items()}
+
+                new_data_arrived = True
+                _LOGGER.debug(f"extract_ws_message_data(): Received fullStatus with {len(status_data)} keys")
+
+        elif msg_type == 'deltastatus':
+            status_data = data.get('status', {})
+            if status_data:
+                # Filter out keys we want to ignore
+                filtered_data = {k: v for k, v in status_data.items() if
+                                 k not in API_KEYS_TO_IGNORE_FROM_WS}
+                if filtered_data:
+                    self._ws_states.update(filtered_data)
+                    new_data_arrived = True
+                    _LOGGER.debug(f"extract_ws_message_data(): Received deltaStatus with {len(filtered_data)} changed keys")
+
+        elif msg_type == 'response':
+            if data.get('success'):
+                status_data = data.get('status', {})
+                if status_data:
+                    self._ws_states.update(status_data)
+                    new_data_arrived = True
+                    _LOGGER.debug(f"extract_ws_message_data(): Received response with {len(status_data)} keys")
+            else:
+                _LOGGER.warning(f"extract_ws_message_data(): Command failed: {data}")
+
+        else:
+            _LOGGER.debug(f"extract_ws_message_data(): Received {msg_type} message")
+
+        return new_data_arrived
