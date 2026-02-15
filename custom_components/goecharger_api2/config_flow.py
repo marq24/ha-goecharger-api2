@@ -39,7 +39,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._default_11kWLimit = False
 
         self._default_id = "YOUR-SERIAL-HERE"
-        self._default_password = "YOUR-PASSWORD-HERE"
+        self._default_password = ""
         self._default_token = "YOUR-API-KEY-HERE"
 
         self._type = ""
@@ -53,7 +53,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._selected_system == WAN:
             self._default_scan_interval = entry_data.get(CONF_SCAN_INTERVAL, 120)
             self._default_id = entry_data.get(CONF_ID, "YOUR-SERIAL-HERE")
-            self._default_password = entry_data.get(CONF_PASSWORD, "YOUR-PASSWORD-HERE")
+            self._default_password = entry_data.get(CONF_PASSWORD, "")
             self._default_integration_type = entry_data.get(CONF_INTEGRATION_TYPE, INTG_TYPE.CHARGER.value)
             self._default_token = entry_data.get(CONF_TOKEN, "YOUR-API-KEY-HERE")
             return await self.async_step_user_wan()
@@ -61,7 +61,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._selected_system = LAN
             self._default_scan_interval = entry_data.get(CONF_SCAN_INTERVAL, 30)
             self._default_host = entry_data.get(CONF_HOST, "YOUR-IP-OR-HOSTNAME-HERE")
-            self._default_password = entry_data.get(CONF_PASSWORD, "YOUR-PASSWORD-HERE")
+            self._default_password = entry_data.get(CONF_PASSWORD, "")
             self._default_integration_type = entry_data.get(CONF_INTEGRATION_TYPE, INTG_TYPE.CHARGER.value)
             self._default_11kWLimit = entry_data.get(CONF_11KWLIMIT, False)
             return await self.async_step_user_lan()

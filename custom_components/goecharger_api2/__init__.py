@@ -12,8 +12,17 @@ from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bri
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from homeassistant.components.number import NumberDeviceClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_TYPE, CONF_ID, CONF_SCAN_INTERVAL, CONF_MODE, CONF_TOKEN, CONF_PASSWORD
-from homeassistant.core import HomeAssistant, Event, SupportsResponse
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_TYPE,
+    CONF_ID,
+    CONF_SCAN_INTERVAL,
+    CONF_MODE,
+    CONF_TOKEN,
+    CONF_PASSWORD,
+    EVENT_HOMEASSISTANT_STARTED
+)
+from homeassistant.core import HomeAssistant, Event, SupportsResponse, CoreState
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as config_val,
@@ -22,6 +31,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -46,6 +56,7 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
 CONFIG_SCHEMA = config_val.removed(DOMAIN, raise_if_present=False)
+WEBSOCKET_WATCHDOG_INTERVAL: Final = timedelta(seconds=182)
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
@@ -80,6 +91,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     else:
         if not await coordinator.read_versions():
             raise ConfigEntryNotReady("Could not read versions from charger/controller! - please enable debug logging to see more details!")
+
+    # ws watchdog...
+    if hass.state is CoreState.running:
+        await coordinator.start_watchdog()
+    else:
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, coordinator.start_watchdog)
 
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
@@ -117,6 +134,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     if unload_ok:
         if DOMAIN in hass.data and config_entry.entry_id in hass.data[DOMAIN]:
             coordinator = hass.data[DOMAIN][config_entry.entry_id]
+            coordinator.stop_watchdog()
             coordinator.clear_data()
             hass.data[DOMAIN].pop(config_entry.entry_id)
 
@@ -215,8 +233,14 @@ async def check_device_registry(hass: HomeAssistant):
 class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
 
     _debounced_update_task: asyncio.Task | None = None
+    _watchdog = None
+    _ws_start_task: asyncio.Task | None = None
 
     def __init__(self, hass: HomeAssistant, config_entry):
+        self._watchdog = None
+        self._ws_start_task = None
+        self._force_classic_requests = False
+
         lang = hass.config.language.lower()
         self._hass = hass
         self.name = config_entry.title
@@ -266,12 +290,49 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         self._debounced_update_task = None
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
+    async def start_watchdog(self, event=None):
+        """Start websocket watchdog."""
+        await self._async_watchdog_check()
+        self._watchdog = async_track_time_interval(
+            self.hass,
+            self._async_watchdog_check,
+            WEBSOCKET_WATCHDOG_INTERVAL,
+        )
+
+    def stop_watchdog(self):
+        if hasattr(self, "_watchdog") and self._watchdog is not None:
+            self._watchdog()
+
+    def _check_for_ws_task_and_cancel_if_running(self):
+        if self._ws_start_task is not None and not self._ws_start_task.done():
+            _LOGGER.debug(f"Watchdog: websocket connect task is still running - canceling it...")
+            try:
+                canceled = self._ws_start_task.cancel()
+                _LOGGER.debug(f"Watchdog: websocket connect task was CANCELED? {canceled}")
+            except BaseException as ex:
+                _LOGGER.info(f"Watchdog: websocket connect task cancel failed: {type(ex).__name__} - {ex}")
+            self._ws_start_task = None
+
+    async def _async_watchdog_check(self, *_):
+        if not self.bridge.ws_connected:
+            self._check_for_ws_task_and_cancel_if_running()
+            _LOGGER.info(f"Watchdog: websocket connect required")
+            self._ws_start_task = self._config_entry.async_create_background_task(self.hass, self.bridge.ws_connect(), "ws_connection")
+            if self._ws_start_task is not None:
+                _LOGGER.debug(f"Watchdog: task created {self._ws_start_task.get_coro()}")
+        else:
+            _LOGGER.debug(f"Watchdog: websocket is connected")
+            if not self.bridge.ws_check_last_update():
+                self._check_for_ws_task_and_cancel_if_running()
+
     # Callable[[Event], Any]
     def __call__(self, evt: Event) -> bool:
         _LOGGER.debug(f"Event arrived: {evt}")
         return True
 
     def clear_data(self):
+        _LOGGER.debug(f"clear_data called...")
+        self._check_for_ws_task_and_cancel_if_running()
         self.bridge.clear_data()
         self.data.clear()
         self._CLIENT_COMMUNICATION_ERROR_TS = 0
@@ -339,34 +400,38 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Update data via library."""
         _LOGGER.debug(f"_async_update_data(): CALLED")
-        if self._CLIENT_COMMUNICATION_ERROR_TS + 3600 > time():
-            time_info = 3600 - (time() - self._CLIENT_COMMUNICATION_ERROR_TS)
-            _LOGGER.info(f"_async_update_data(): skipping update due to client communication error for the next {time_info} seconds")
-            return self.data
-        if self._RESTART_TRIGGERED:
-            _LOGGER.info(f"_async_update_data(): RESTART is TRIGGERED (waiting for random sleep delay) - skipping update")
-            return self.data
-
-        try:
-            new_data = await self.bridge.read_all()
-            if new_data is not None and len(new_data) > 0:
-                self._CLIENT_COMMUNICATION_ERROR_TS = 0
-                self._CLIENT_COMMUNICATION_ERROR_COUNT = 0
-            # THIS is JUST FOR INTERNAL TESTING...
-            # if not self._RESTART_TRIGGERED:
-            #     _LOGGER.info(f"_async_update_data(): TRIGGER RESTART...")
-            #     self._RESTART_TRIGGERED = True
-            #     self.hass.async_create_task(self.trigger_restart_delayed())
-            return new_data
-
-        except ClientConnectionError as exception:
-            self._handle_client_connection_error("_async_update_data()", exception)
-            raise UpdateFailed(f"Error while fetching data: {exception}") from exception
-        except UpdateFailed as exception:
-            raise UpdateFailed() from exception
-        except Exception as other:
-            _LOGGER.error(f"_async_update_data(): unexpected: {other}")
-            raise UpdateFailed() from other
+        if self.bridge.ws_connected and self._force_classic_requests is False:
+            _LOGGER.debug(f"_async_update_data called (but websocket is active - no data will be requested!)")
+            return None
+        else:
+            if self._CLIENT_COMMUNICATION_ERROR_TS + 3600 > time():
+                time_info = 3600 - (time() - self._CLIENT_COMMUNICATION_ERROR_TS)
+                _LOGGER.info(f"_async_update_data(): skipping update due to client communication error for the next {time_info} seconds")
+                return self.data
+            if self._RESTART_TRIGGERED:
+                _LOGGER.info(f"_async_update_data(): RESTART is TRIGGERED (waiting for random sleep delay) - skipping update")
+                return self.data
+    
+            try:
+                new_data = await self.bridge.read_all()
+                if new_data is not None and len(new_data) > 0:
+                    self._CLIENT_COMMUNICATION_ERROR_TS = 0
+                    self._CLIENT_COMMUNICATION_ERROR_COUNT = 0
+                # THIS is JUST FOR INTERNAL TESTING...
+                # if not self._RESTART_TRIGGERED:
+                #     _LOGGER.info(f"_async_update_data(): TRIGGER RESTART...")
+                #     self._RESTART_TRIGGERED = True
+                #     self.hass.async_create_task(self.trigger_restart_delayed())
+                return new_data
+    
+            except ClientConnectionError as exception:
+                self._handle_client_connection_error("_async_update_data()", exception)
+                raise UpdateFailed(f"Error while fetching data: {exception}") from exception
+            except UpdateFailed as exception:
+                raise UpdateFailed() from exception
+            except Exception as other:
+                _LOGGER.error(f"_async_update_data(): unexpected: {other}")
+                raise UpdateFailed() from other
 
     # async def async_write_tags(self, kv_pairs: Collection[Tuple[WKHPTag, Any]]) -> dict:
     #    """Get data from the API."""
