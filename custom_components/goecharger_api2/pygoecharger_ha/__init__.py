@@ -6,13 +6,10 @@ import json
 import logging
 import random
 import secrets
-from asyncio import CancelledError
-from json import JSONDecodeError
 from time import time
 
 import aiohttp
 import msgpack
-from aiohttp import ClientConnectionError, ClientResponseError
 from packaging.version import Version
 
 from custom_components.goecharger_api2.pygoecharger_ha.const import (
@@ -143,7 +140,6 @@ class GoeChargerApiV2Bridge:
 
     async def read_versions(self):
         # TODO: WEBSOCKET
-
         for attempt in range(5):
             self._versions = await self._read_filtered_data(filters=self._FILTER_VERSIONS, log_info=f"read_versions (attempt {attempt+1})")
             if self._versions is not None and len(self._versions) > 0:
@@ -181,11 +177,11 @@ class GoeChargerApiV2Bridge:
         return True
 
     async def read_all(self) -> dict:
-        await self.read_all_states();
+        await self.read_all_states()
         # 1 day = 24h * 60min * 60sec = 86400 sec
         # 1 hour = 60min * 60sec = 3600 sec
         if self._LAST_CONFIG_UPDATE_TS + 3600 < time():
-            await self.read_all_config();
+            await self.read_all_config()
 
         return self._versions | self._states | self._config | self._ws_states
 
@@ -274,18 +270,121 @@ class GoeChargerApiV2Bridge:
                                 _LOGGER.debug(f"_read_filtered_data(): [missing fields: {len(missing_fields_in_reponse)} -> {missing_fields_in_reponse}] - not all requested fields where present in the response from from {self._logkey}@{self.host_url}")
                             return r_json
 
-                    except JSONDecodeError as json_exc:
+                    except json.JSONDecodeError as json_exc:
                         _LOGGER.warning(f"_read_filtered_data(): {log_info} JSONDecodeError while 'await res.json(): {json_exc}")
 
-                    except ClientResponseError as io_exc:
+                    except aiohttp.ClientResponseError as io_exc:
                         _LOGGER.warning(f"_read_filtered_data(): {log_info} ClientResponseError while 'await res.json(): {io_exc}")
 
                 else:
                     _LOGGER.warning(f"{log_info} failed with http-status {res.status}")
-            except ClientResponseError as io_exc:
+            except aiohttp.ClientResponseError as io_exc:
                 _LOGGER.warning(f"{log_info} failed cause: {io_exc}")
             except BaseException as err:
                 _LOGGER.warning(f"_read_filtered_data(): {log_info} BaseException: {type(err).__name__}: {err}")
+
+        return {}
+
+    async def _read_all_data(self) -> dict:
+        _LOGGER.info(f"_read_all_data(): going to request ALL keys from {self._logkey}@{self.host_url}")
+        if self.token:
+            headers = {"Authorization": self.token}
+        else:
+            headers = None
+        async with self.web_session.get(f"{self.host_url}/api/status", headers=headers) as res:
+            try:
+                if res.status in [200, 400]:
+                    try:
+                        r_json = await res.json()
+                        if r_json is not None and len(r_json) > 0:
+                            return r_json
+
+                    except json.JSONDecodeError as json_exc:
+                        _LOGGER.warning(f"_read_all_data(): JSONDecodeError while 'await res.json(): {json_exc}")
+
+                    except aiohttp.ClientResponseError as io_exc:
+                        _LOGGER.warning(f"_read_all_data(): ClientResponseError while 'await res.json(): {io_exc}")
+
+                else:
+                    _LOGGER.warning(f"_read_all_data(): REQ_ALL failed with http-status {res.status}")
+
+            except aiohttp.ClientResponseError as io_exc:
+                _LOGGER.warning(f"_read_all_data(): REQ_ALL failed cause: {io_exc}")
+            except BaseException as err:
+                _LOGGER.warning(f"_read_all_data(): BaseException: {type(err).__name__}: {err}")
+        return {}
+
+    async def write_value_to_key(self, key, value) -> dict:
+        if value is None:
+            args = f"{key}=null"
+        elif isinstance(value, (bool, int, float)):
+            args = {key: str(value).lower()}
+        elif isinstance(value, dict):
+            args = {key: json.dumps(value).replace(' ','')}
+        elif isinstance(value, str) and value == IS_TRIGGER:
+            # ok, these are special trigger actions that we want to call from the FE...
+            match key:
+                case Tag.INTERNAL_FORCE_CONFIG_READ.key:
+                    await self.force_config_update()
+                case Tag.INTERNAL_FORCE_REFRESH_ALL.key:
+                    self.reset_stored_update_ts()
+                    # we do the actual request for the new data in the
+                    # DataUpdateCoordinator... (with a short delwy of some
+                    # seconds...)
+                    # await self.read_all()
+
+            return {key: value}
+        else:
+            args = {key: '"'+str(value)+'"'}
+
+        return await self._write_values_int(args, key, value)
+
+    async def _write_values_int(self, args, key, value) -> dict:
+        _LOGGER.info(f"_write_values_int(): going to write {args} to {self._logkey}@{self.host_url}")
+        if self.token:
+            headers = {"Authorization": self.token}
+        else:
+            headers = None
+
+        async with self.web_session.get(f"{self.host_url}/api/set", headers=headers, params=args) as res:
+            try:
+                if res.status == 200:
+                    try:
+                        r_json = await res.json()
+                        if r_json is not None and len(r_json) > 0:
+                            if key in r_json and r_json[key]:
+                                # ignore 'force-update' for 'ids' (PV surplus charging)
+                                if key != Tag.IDS.key:
+                                    self._LAST_CONFIG_UPDATE_TS = 0
+                                    self._LAST_FULL_STATE_UPDATE_TS = 0
+                                else:
+                                    if self.isCharger:
+                                        self._REQUEST_IDS_DATA = True
+                                return {key: value}
+                            else:
+                                return {"err": r_json}
+
+                    except json.JSONDecodeError as json_exc:
+                        _LOGGER.warning(f"_write_values_int(): JSONDecodeError while 'await res.json(): {json_exc}")
+
+                    except aiohttp.ClientResponseError as io_exc:
+                        _LOGGER.warning(f"_write_values_int(): ClientResponseError while 'await res.json(): {io_exc}")
+
+                elif res.status == 500 and int(res.headers['Content-Length']) > 0:
+                    try:
+                        r_json = await res.json()
+                        return {"err": r_json}
+                    except json.JSONDecodeError as json_exc:
+                        _LOGGER.warning(f"_write_values_int(): JSONDecodeError while 'res.status == 500 res.json(): {json_exc}")
+                    except aiohttp.ClientResponseError as io_exc:
+                        _LOGGER.warning(f"_write_values_int(): ClientResponseError while 'res.status == 500 res.json(): {io_exc}")
+                else:
+                    _LOGGER.warning(f"_write_values_int(): failed with http-status {res.status}")
+
+            except aiohttp.ClientResponseError as io_exc:
+                _LOGGER.warning(f"_write_values_int(): failed cause: {io_exc}")
+            except BaseException as err:
+                _LOGGER.warning(f"_write_values_int(): BaseException: {type(err).__name__}: {err}")
 
         return {}
 
@@ -384,9 +483,9 @@ class GoeChargerApiV2Bridge:
         return result
 
     async def _ws_send_command(self, ws, key: str, value):
-        self._ws_request_id_counter += 1
-
         """Send a setValue command via WebSocket"""
+
+        self._ws_request_id_counter += 1
         original_message = {
             "type": "setValue",
             "requestId": self._ws_request_id_counter,
@@ -570,11 +669,11 @@ class GoeChargerApiV2Bridge:
                         self._ws_LAST_UPDATE = time()
                         self._ws_notify_for_new_data()
 
-        except ClientConnectionError as err:
+        except aiohttp.ClientConnectionError as err:
             _LOGGER.error(f"ws_connect(): Could not connect to websocket: {type(err).__name__} - {err}")
         except asyncio.TimeoutError as time_exc:
             _LOGGER.debug(f"ws_connect(): TimeoutError: No WebSocket message received within timeout period")
-        except CancelledError as canceled:
+        except asyncio.CancelledError as canceled:
             _LOGGER.info(f"ws_connect(): Terminated - {type(canceled).__name__}")
         except BaseException as x:
             _LOGGER.error(f"ws_connect(): Error: {type(x).__name__} - {x}")
@@ -590,65 +689,3 @@ class GoeChargerApiV2Bridge:
 
         self.ws_connected = False
         return None
-
-
-
-    # the WebSocket related handling...
-    # async def ws_connect(self):
-    #     _LOGGER.debug(f"ws_connect() STARTED...")
-    #     self.ws_connected = False
-    #
-    #     if self.token:
-    #         headers = {"Authorization": self.token}
-    #     else:
-    #         headers = None
-    #
-    #     try:
-    #         async with self.session.ws_connect(url=self.ws_url, headers=headers, timeout=self.timeout) as ws:
-    #             self.ws_connected = True
-    #
-    #             _LOGGER.info(f"connected to websocket: {self.ws_url}")
-    #             async for msg in ws:
-    #                 # store the last time we heard from the websocket
-    #                 self._ws_LAST_UPDATE = time.time()
-    #
-    #                 new_data_arrived = False
-    #                 do_housekeeping_checks = False
-    #                 if msg.type == aiohttp.WSMsgType.TEXT:
-    #                     try:
-    #                         pass
-    #                     except Exception as e:
-    #                         _LOGGER.debug(f"Could not read JSON from: {msg} - caused {e}")
-    #
-    #                 elif msg.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
-    #                     _LOGGER.debug(f"received CLOSED or ERROR - will terminate websocket session: {msg}")
-    #                     break
-    #
-    #                 else:
-    #                     _LOGGER.error(f"Unknown Message Type from: {msg}")
-    #
-    #                 # do we need to push new data event to the coordinator?
-    #                 if new_data_arrived:
-    #                     self._ws_notify_for_new_data()
-    #
-    #
-    #     except ClientConnectionError as err:
-    #         _LOGGER.error(f"ws_connect(): Could not connect to websocket: {type(err).__name__} - {err}")
-    #     except asyncio.TimeoutError as time_exc:
-    #         _LOGGER.debug(f"ws_connect(): TimeoutError: No WebSocket message received within timeout period")
-    #     except CancelledError as canceled:
-    #         _LOGGER.info(f"ws_connect(): Terminated? - {type(canceled).__name__} - {canceled}")
-    #     except BaseException as x:
-    #         _LOGGER.error(f"ws_connect(): !!! {type(x).__name__} - {x}")
-    #
-    #     _LOGGER.debug(f"ws_connect() ENDED")
-    #     try:
-    #         await self.ws_close(ws)
-    #     except UnboundLocalError as is_unbound:
-    #         _LOGGER.debug(f"ws_connect(): skipping ws_close() (since ws is unbound)")
-    #     except BaseException as e:
-    #         _LOGGER.error(f"ws_connect(): Error while calling ws_close(): {type(e).__name__} - {e}")
-    #
-    #     self.ws_connected = False
-    #     return None
-
