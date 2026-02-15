@@ -57,7 +57,7 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
 CONFIG_SCHEMA = config_val.removed(DOMAIN, raise_if_present=False)
-WEBSOCKET_WATCHDOG_INTERVAL: Final = timedelta(seconds=182)
+WEBSOCKET_WATCHDOG_INTERVAL: Final = timedelta(minutes=5, seconds=1)
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
@@ -95,8 +95,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     # ws watchdog...
     if hass.state is CoreState.running:
+        _LOGGER.debug(f"starting watchdog INSTANTLY")
         await coordinator.start_watchdog()
     else:
+        _LOGGER.debug(f"starting watchdog delayed... (when EVENT_HOMEASSISTANT_STARTED is fired)")
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, coordinator.start_watchdog)
 
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
@@ -115,7 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         asyncio.create_task(coordinator.check_for_16a_limit(hass, config_entry.entry_id))
 
     asyncio.create_task(coordinator.cleanup_device_registry(hass))
-
+    asyncio.create_task(coordinator._async_watchdog_check())
     config_entry.async_on_unload(config_entry.add_update_listener(entry_update_listener))
     # ok we are done...
     return True

@@ -711,4 +711,7 @@ class GoeChargerApiV2Bridge:
             _LOGGER.error(f"ws_connect(): Error in ws_close(): {type(e).__name__} - {e}")
 
         self.ws_connected = False
+        self._ws_connection = None
+        self._ws_states = {}
+        self._ws_LAST_UPDATE = 0
         return None
