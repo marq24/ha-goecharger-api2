@@ -2,7 +2,8 @@ from enum import Enum
 from typing import Final
 
 
-API_KEYS_TO_IGNORE_FROM_WS: Final = ["utc", "loc", "rssi", "wifis", "scan", "dns", "efh", "efh8", "efh32", "efi", "ehs", "emfh", "emhb"]
+# API_KEYS_TO_IGNORE_FROM_WS: Final = ["utc", "loc", "rssi", "wifis", "scan", "dns", "efh", "efh8", "efh32", "efi", "ehs", "emfh", "emhb"]
+API_KEYS_TO_IGNORE_FROM_WS: Final = ["rssi", "wifis", "scan", "dns", "efh", "efh8", "efh32", "efi", "ehs", "emfh", "emhb"]
 
 ##############
 #   CHARGER  #

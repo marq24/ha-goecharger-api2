@@ -283,12 +283,16 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
 
         # config_entry only need for providing the '_device_info_dict'...
         self._config_entry = config_entry
-        self.is_charger_fw_version_60_0_or_higher_and_no_cards_list_is_present = False
+        self._is_charger_fw_version_60_0_or_higher = False
+        self._no_cards_list_is_present = False
         self._CLIENT_COMMUNICATION_ERROR_TS = 0
         self._CLIENT_COMMUNICATION_ERROR_COUNT = 0
         self._RESTART_TRIGGERED = False
         self._debounced_update_task = None
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+
+    def cards_as_single_entries(self):
+        return self._is_charger_fw_version_60_0_or_higher and (self.bridge.ws_connected or self._no_cards_list_is_present)
 
     async def start_watchdog(self, event=None):
         """Start websocket watchdog."""
@@ -317,6 +321,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         if not self.bridge.ws_connected:
             self._check_for_ws_task_and_cancel_if_running()
             _LOGGER.info(f"Watchdog: websocket connect required")
+            self.bridge.ws_set_coordinator(coordinator=self)
             self._ws_start_task = self._config_entry.async_create_background_task(self.hass, self.bridge.ws_connect(), "ws_connection")
             if self._ws_start_task is not None:
                 _LOGGER.debug(f"Watchdog: task created {self._ws_start_task.get_coro()}")
@@ -334,7 +339,8 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         _LOGGER.debug(f"clear_data called...")
         self._check_for_ws_task_and_cancel_if_running()
         self.bridge.clear_data()
-        self.data.clear()
+        if self.data is not None:
+            self.data.clear()
         self._CLIENT_COMMUNICATION_ERROR_TS = 0
         self._CLIENT_COMMUNICATION_ERROR_COUNT = 0
         self._RESTART_TRIGGERED = False
@@ -369,7 +375,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         if self.intg_type == INTG_TYPE.CHARGER.value:
             # since we do not force an update when setting PV surplus data, we 'patch' internally our values
             if key == Tag.IDS.key:
-                self.data = self.bridge._versions | self.bridge._states | self.bridge._config
+                self.data = self.bridge._versions | self.bridge._states | self.bridge._config | self.bridge._ws_states
                 self.async_update_listeners()
                 do_refresh = False
 
@@ -433,11 +439,6 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                 _LOGGER.error(f"_async_update_data(): unexpected: {other}")
                 raise UpdateFailed() from other
 
-    # async def async_write_tags(self, kv_pairs: Collection[Tuple[WKHPTag, Any]]) -> dict:
-    #    """Get data from the API."""
-    #    ret = await self.bridge.async_write_values(kv_pairs)
-    #    return ret
-
     async def async_write_key(self, key: str, value, entity: Entity = None) -> dict:
         if self._CLIENT_COMMUNICATION_ERROR_TS + 3600 > time():
             time_info = 3600 - (time() - self._CLIENT_COMMUNICATION_ERROR_TS)
@@ -495,8 +496,9 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                 # when we request the version info for the charger, then this request will/should also contain the
                 # key 'cards'. The cards array  has been removed in FW 60.0 - but currently in my 60.3 it's back
                 # again - so as long as this array is available, we can/should/will use it?!
-                if Version(sw_version) >= Version("60.0") and len(self.bridge._versions.get(Tag.CARDS.key, [])) == 0:
-                    self.is_charger_fw_version_60_0_or_higher_and_no_cards_list_is_present = True
+                self._is_charger_fw_version_60_0_or_higher = Version(sw_version) >= Version("60.0")
+                if len(self.bridge._versions.get(Tag.CARDS.key, [])) == 0:
+                    self._no_cards_list_is_present = True
         else:
             sw_version = "UNKNOWN"
 
@@ -536,7 +538,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         if self.intg_type == INTG_TYPE.CHARGER.value:
             # fetching the available cards that are enabled
             idx = 1
-            if self.is_charger_fw_version_60_0_or_higher_and_no_cards_list_is_present:
+            if self._is_charger_fw_version_60_0_or_higher and self._no_cards_list_is_present:
                 # since FWV 60.0 there is no cards object any longer...
                 for a_card_number in range(0, 10):
                     a_key_id = f"c{a_card_number}i"

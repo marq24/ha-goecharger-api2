@@ -67,7 +67,8 @@ class GoeChargerSensor(GoeChargerBaseEntity, SensorEntity, RestoreEntity):
                 # very special handling for 'energy by card' sensor - since in firmware 60.0
                 # the go-e will deliver the values now directly in the 'root' object and does
                 # not provide a card object any longer...
-                if self.data_key == Tag.CARDS.key and self.coordinator.is_charger_fw_version_60_0_or_higher_and_no_cards_list_is_present:
+                # 2026/02/15 - When we make use of the websocket, then the card info is
+                if self.data_key == Tag.CARDS.key and self.coordinator.cards_as_single_entries():
                     the_patched_key = None
                     # to my best knowledge, only 'energy' is currently in use - but let's
                     # prepare the code for all passible cases
