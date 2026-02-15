@@ -12,7 +12,7 @@ from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bri
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from homeassistant.components.number import NumberDeviceClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_TYPE, CONF_ID, CONF_SCAN_INTERVAL, CONF_MODE, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_TYPE, CONF_ID, CONF_SCAN_INTERVAL, CONF_MODE, CONF_TOKEN, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, Event, SupportsResponse
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -231,6 +231,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             self.bridge = GoeChargerApiV2Bridge(
                 intg_type=self.intg_type,
                 host=None,
+                access_password=config_entry.data.get(CONF_PASSWORD, None),
                 serial=config_entry.data.get(CONF_ID),
                 token=config_entry.data.get(CONF_TOKEN),
                 web_session=async_get_clientsession(hass),
@@ -240,6 +241,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             self.bridge = GoeChargerApiV2Bridge(
                 intg_type=self.intg_type,
                 host=config_entry.data.get(CONF_HOST),
+                access_password=config_entry.data.get(CONF_PASSWORD, None),
                 serial=None,
                 token=None,
                 web_session=async_get_clientsession(hass),

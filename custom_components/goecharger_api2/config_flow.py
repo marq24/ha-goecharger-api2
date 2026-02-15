@@ -8,7 +8,8 @@ from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bri
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.config_entries import ConfigFlowResult, SOURCE_RECONFIGURE
-from homeassistant.const import CONF_ID, CONF_HOST, CONF_MODEL, CONF_TYPE, CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_MODE
+from homeassistant.const import CONF_ID, CONF_HOST, CONF_PASSWORD, CONF_MODEL, CONF_TYPE, CONF_SCAN_INTERVAL, \
+    CONF_TOKEN, CONF_MODE
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from .const import DOMAIN, CONF_11KWLIMIT, CONF_INTEGRATION_TYPE, LAN, WAN, CONFIG_VERSION, CONFIG_MINOR_VERSION
@@ -38,6 +39,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._default_11kWLimit = False
 
         self._default_id = "YOUR-SERIAL-HERE"
+        self._default_password = "YOUR-PASSWORD-HERE"
         self._default_token = "YOUR-API-KEY-HERE"
 
         self._type = ""
@@ -51,6 +53,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._selected_system == WAN:
             self._default_scan_interval = entry_data.get(CONF_SCAN_INTERVAL, 120)
             self._default_id = entry_data.get(CONF_ID, "YOUR-SERIAL-HERE")
+            self._default_password = entry_data.get(CONF_PASSWORD, "YOUR-PASSWORD-HERE")
             self._default_integration_type = entry_data.get(CONF_INTEGRATION_TYPE, INTG_TYPE.CHARGER.value)
             self._default_token = entry_data.get(CONF_TOKEN, "YOUR-API-KEY-HERE")
             return await self.async_step_user_wan()
@@ -58,6 +61,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._selected_system = LAN
             self._default_scan_interval = entry_data.get(CONF_SCAN_INTERVAL, 30)
             self._default_host = entry_data.get(CONF_HOST, "YOUR-IP-OR-HOSTNAME-HERE")
+            self._default_password = entry_data.get(CONF_PASSWORD, "YOUR-PASSWORD-HERE")
             self._default_integration_type = entry_data.get(CONF_INTEGRATION_TYPE, INTG_TYPE.CHARGER.value)
             self._default_11kWLimit = entry_data.get(CONF_11KWLIMIT, False)
             return await self.async_step_user_lan()
@@ -104,7 +108,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         #     return self.async_abort(reason="single_instance_allowed")
 
         if user_input is not None:
-            valid = await self._test_host(intg_type=user_input[CONF_INTEGRATION_TYPE], host=user_input[CONF_HOST], serial=None, token=None)
+            valid = await self._test_host(intg_type=user_input[CONF_INTEGRATION_TYPE], host=user_input[CONF_HOST], pwd=user_input[CONF_PASSWORD], serial=None, token=None)
             if valid:
                 user_input[CONF_MODE] = LAN
                 user_input[CONF_SCAN_INTERVAL] = max(5, user_input[CONF_SCAN_INTERVAL])
@@ -129,6 +133,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             user_input = {
                 CONF_INTEGRATION_TYPE:  self._default_integration_type,
                 CONF_HOST:              self._default_host,
+                CONF_PASSWORD:          self._default_password,
                 CONF_SCAN_INTERVAL:     self._default_scan_interval,
                 CONF_11KWLIMIT:         self._default_11kWLimit
             }
@@ -145,6 +150,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         )
                     ),
                 vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
+                vol.Optional(CONF_PASSWORD, default=user_input[CONF_PASSWORD]): str,
                 vol.Required(CONF_SCAN_INTERVAL, default=user_input[CONF_SCAN_INTERVAL]): int,
                 vol.Required(CONF_11KWLIMIT, default=user_input[CONF_11KWLIMIT]): bool,
             }),
@@ -163,7 +169,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             #valid = await self._test_host(intg_type=user_input[CONF_INTEGRATION_TYPE], host=None, serial=user_input[CONF_ID], token=user_input[CONF_TOKEN])
-            valid = await self._test_host(intg_type=user_input[CONF_INTEGRATION_TYPE], host=None, serial=user_input[CONF_ID], token=user_input[CONF_TOKEN])
+            valid = await self._test_host(intg_type=user_input[CONF_INTEGRATION_TYPE], host=None, pwd=user_input[CONF_PASSWORD], serial=user_input[CONF_ID], token=user_input[CONF_TOKEN])
             if valid:
                 user_input[CONF_MODE] = WAN
                 user_input[CONF_SCAN_INTERVAL] = max(30, user_input[CONF_SCAN_INTERVAL])
@@ -190,6 +196,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             user_input = {
                 CONF_INTEGRATION_TYPE:  self._default_integration_type,
                 CONF_ID:                self._default_id,
+                CONF_PASSWORD:          self._default_password,
                 CONF_TOKEN:             self._default_token,
                 CONF_SCAN_INTERVAL:     self._default_scan_interval if self.source == SOURCE_RECONFIGURE else 120
             }
@@ -206,6 +213,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         )
                     ),
                 vol.Required(CONF_ID, default=user_input[CONF_ID]): str,
+                vol.Optional(CONF_PASSWORD, default=user_input[CONF_PASSWORD]): str,
                 vol.Required(CONF_TOKEN, default=user_input[CONF_TOKEN]): str,
                 vol.Required(CONF_SCAN_INTERVAL, default=user_input[CONF_SCAN_INTERVAL]): int,
             }),
@@ -214,10 +222,10 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=self._errors
         )
 
-    async def _test_host(self, intg_type:str, host:str, serial:str, token:str):
+    async def _test_host(self, intg_type:str, host:str, pwd:str, serial:str, token:str):
         try:
             session = async_create_clientsession(self.hass)
-            client = GoeChargerApiV2Bridge(intg_type=intg_type, host=host, serial=serial, token=token, web_session=session,
+            client = GoeChargerApiV2Bridge(intg_type=intg_type, host=host, access_password=pwd, serial=serial, token=token, web_session=session,
                                            lang=self.hass.config.language.lower())
 
             ret = await client.read_system()

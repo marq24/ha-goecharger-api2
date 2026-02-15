@@ -32,6 +32,7 @@
         "data": {
           "integration_type": "Integration type: Charger or Controller?",
           "host": "Host or IP of your go-eCharger Wallbox",
+          "password": "Local WebSocket password (Optional)",
           "scan_interval": "Polling Interval in seconds [min: 5sec]",
           "limit_to_11kw": "Apply 11kW limit (for 22kW variants only) - will restrict all relevant settings to a max of 16A (instead of 32A)"
         }
@@ -42,6 +43,7 @@
           "integration_type": "Integration type: Charger or Controller?",
           "serial": "Your go-eCharger Wallbox Serial number",
           "token": "Your go-eCharger Cloud API-Key",
+          "password": "WebSocket Access password (Optional)",
           "scan_interval": "Polling Interval in seconds [min: 30sec]",
           "limit_to_11kw": "Apply 11kW limit (for 22kW variants only) - will restrict all relevant settings to a max of 16A (instead of 32A)"
         }

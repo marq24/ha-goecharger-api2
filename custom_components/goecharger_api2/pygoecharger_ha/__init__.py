@@ -38,15 +38,25 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 class GoeChargerApiV2Bridge:
 
-    def __init__(self, intg_type:str, host: str, serial:str, token:str, web_session, lang: str = "en") -> None:
+    def __init__(self, intg_type:str, host: str, access_password:str, serial:str, token:str, web_session, lang: str = "en") -> None:
         if host is not None:
             self.host_url = f"http://{host}"
+            if access_password is not None and len(access_password.strip()) > 0:
+                self.access_password = access_password.strip()
+                self.ws_url = f"ws://{host}/ws"
+            else:
+                self.ws_url = None
             self.token = None
         elif serial is not None and token is not None:
             # the Cloud-API endpoint!
             # looks like that CONTROLLER and CHARGER use the SAME API-Endpoint?!
             # in contrast to the documentation :-/
             self.host_url = f"https://{serial.zfill(6)}.api.v3.go-e.io"
+            if access_password is not None and len(access_password.strip()) > 0:
+                self.access_password = access_password.strip()
+                self.ws_url = f"wss://{serial.zfill(6)}.api.v3.go-e.io/ws"
+            else:
+                self.ws_url = None
             self.token = f"Bearer {token}"
 
         if intg_type is not None and intg_type == INTG_TYPE.CONTROLLER.value:
@@ -104,6 +114,7 @@ class GoeChargerApiV2Bridge:
         self._LAST_FULL_STATE_UPDATE_TS = 0
 
     async def read_system(self) -> dict:
+        # TODO: WEBSOCKET
         return await self._read_filtered_data(filters=self._FILTER_SYSTEMS, log_info="read_system")
 
     async def read_versions(self):
