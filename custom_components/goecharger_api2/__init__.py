@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import random
+from collections import ChainMap
 from datetime import timedelta
 from time import time
 from typing import Any, Final
@@ -365,17 +366,23 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         await self.async_refresh()
 
     def handle_write_result(self, a_type, value, key, result, entity):
-        _LOGGER.debug(f"write {a_type} result: {result}")
+        if result is None and self.bridge.ws_connected:
+            # when using websocket - the writing result will be handled
+            # already in the ws-response processor...
+            return
+        else:
+            _LOGGER.debug(f"handle_write_result() {a_type} result: {result}")
+
         if key in result:
             self.data[key] = result[key]
         else:
-            _LOGGER.error(f"could not write {a_type} value: '{value}' to: {key} result was: {result}")
+            _LOGGER.error(f"handle_write_result() could not write {a_type} value: '{value}' to: {key} result was: {result}")
 
         do_refresh = True
         if self.intg_type == INTG_TYPE.CHARGER.value:
             # since we do not force an update when setting PV surplus data, we 'patch' internally our values
             if key == Tag.IDS.key:
-                self.data = self.bridge._versions | self.bridge._states | self.bridge._config | self.bridge._ws_states
+                self.data = ChainMap(self.bridge._ws_states, self.bridge._config, self.bridge._states, self.bridge._versions)
                 self.async_update_listeners()
                 do_refresh = False
 
@@ -470,7 +477,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             raise ValueError("async_write_multiple_keys(): RESTART is TRIGGERED (waiting for random sleep delay)")
 
         try:
-            result = await self.bridge._write_values_int(attr, key, value)
+            result = await self.bridge.write_multiple_values_to_keys(attr, key, value)
             self.handle_write_result("multiple", value, key, result, entity)
             return result
 

@@ -6,6 +6,7 @@ import json
 import logging
 import random
 import secrets
+from collections import ChainMap
 from time import time
 
 import aiohttp
@@ -183,7 +184,7 @@ class GoeChargerApiV2Bridge:
         if self._LAST_CONFIG_UPDATE_TS + 3600 < time():
             await self.read_all_config()
 
-        return self._versions | self._states | self._config | self._ws_states
+        return ChainMap(self._ws_states, self._config, self._states, self._versions)
 
     async def read_all_states(self):
         do_minimal_status_update: bool = False
@@ -315,32 +316,49 @@ class GoeChargerApiV2Bridge:
         return {}
 
     async def write_value_to_key(self, key, value) -> dict:
-        if value is None:
-            args = f"{key}=null"
-        elif isinstance(value, (bool, int, float)):
-            args = {key: str(value).lower()}
-        elif isinstance(value, dict):
-            args = {key: json.dumps(value).replace(' ','')}
-        elif isinstance(value, str) and value == IS_TRIGGER:
-            # ok, these are special trigger actions that we want to call from the FE...
-            match key:
-                case Tag.INTERNAL_FORCE_CONFIG_READ.key:
-                    await self.force_config_update()
-                case Tag.INTERNAL_FORCE_REFRESH_ALL.key:
-                    self.reset_stored_update_ts()
-                    # we do the actual request for the new data in the
-                    # DataUpdateCoordinator... (with a short delwy of some
-                    # seconds...)
-                    # await self.read_all()
+        is_button_press = value is not None and str(value) == IS_TRIGGER
 
-            return {key: value}
+        if not is_button_press and self.ws_connected and self._ws_connection is not None:
+            await self._ws_send_command(key, value)
+            return None
         else:
-            args = {key: '"'+str(value)+'"'}
+            if value is None:
+                args = f"{key}=null"
+            elif isinstance(value, (bool, int, float)):
+                args = {key: str(value).lower()}
+            elif isinstance(value, dict):
+                args = {key: json.dumps(value).replace(' ','')}
+            elif isinstance(value, str) and value == IS_TRIGGER:
+                # ok, these are special trigger actions that we want to call from the FE...
+                match key:
+                    case Tag.INTERNAL_FORCE_CONFIG_READ.key:
+                        await self.force_config_update()
+                    case Tag.INTERNAL_FORCE_REFRESH_ALL.key:
+                        self.reset_stored_update_ts()
+                        # we do the actual request for the new data in the
+                        # DataUpdateCoordinator... (with a short delwy of some
+                        # seconds...)
+                        # await self.read_all()
 
-        return await self._write_values_int(args, key, value)
+                return {key: value}
+            else:
+                args = {key: '"'+str(value)+'"'}
 
-    async def _write_values_int(self, args, key, value) -> dict:
+            return await self._write_values_int(args, a_result_key = key, a_result_value = value)
+
+    async def write_multiple_values_to_keys(self, args, key, value) -> dict:
+        if self.ws_connected and self._ws_connection is not None:
+            for a_key, a_value in args.items():
+                await self._ws_send_command(a_key, a_value)
+                await asyncio.sleep(0.75)
+            return None
+        else:
+
+            return await self._write_values_int(args, a_result_key = key, a_result_value = value)
+
+    async def _write_values_int(self, args, a_result_key, a_result_value) -> dict:
         _LOGGER.info(f"_write_values_int(): going to write {args} to {self._logkey}@{self.host_url}")
+
         if self.token:
             headers = {"Authorization": self.token}
         else:
@@ -352,15 +370,15 @@ class GoeChargerApiV2Bridge:
                     try:
                         r_json = await res.json()
                         if r_json is not None and len(r_json) > 0:
-                            if key in r_json and r_json[key]:
+                            if a_result_key in r_json and r_json[a_result_key]:
                                 # ignore 'force-update' for 'ids' (PV surplus charging)
-                                if key != Tag.IDS.key:
+                                if a_result_key != Tag.IDS.key:
                                     self._LAST_CONFIG_UPDATE_TS = 0
                                     self._LAST_FULL_STATE_UPDATE_TS = 0
                                 else:
                                     if self.isCharger:
                                         self._REQUEST_IDS_DATA = True
-                                return {key: value}
+                                return {a_result_key: a_result_value}
                             else:
                                 return {"err": r_json}
 
@@ -428,7 +446,7 @@ class GoeChargerApiV2Bridge:
     async def _ws_debounce_coordinator_update(self):
         await asyncio.sleep(0.3)
         if hasattr(self, "coordinator") and self.coordinator is not None:
-            self.coordinator.async_set_updated_data(self._versions | self._states | self._config | self._ws_states)
+            self.coordinator.async_set_updated_data(ChainMap(self._ws_states, self._config, self._states, self._versions))
 
     def _ws_compute_hashed_password(self, password: str, serial: str) -> bytes:
         """Compute PBKDF2-SHA512 hashed password for WebSocket authentication"""
@@ -482,10 +500,14 @@ class GoeChargerApiV2Bridge:
             result[key_str] = self._ws_normalize_value(value)
         return result
 
-    async def _ws_send_command(self, ws, key: str, value):
+    async def _ws_send_command(self, key: str, value):
         """Send a setValue command via WebSocket"""
-
+        _LOGGER.debug(f"_ws_send_command(): Sending {key}:{value} via WebSocket...")
         self._ws_request_id_counter += 1
+
+        if value is None:
+            value = "null"
+
         original_message = {
             "type": "setValue",
             "requestId": self._ws_request_id_counter,
@@ -507,8 +529,9 @@ class GoeChargerApiV2Bridge:
         msg_packed = b'\x00' + msgpack.packb(secure_message)
 
         _LOGGER.debug(f"_ws_send_command(): Sending {key}={value}")
-        await ws.send_bytes(msg_packed)
+        await self._ws_connection.send_bytes(msg_packed)
         return True
+
 
     async def ws_connect(self):
         """Connect to WebSocket with full authentication and message handling"""
