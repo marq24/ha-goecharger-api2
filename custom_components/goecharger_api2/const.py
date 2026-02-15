@@ -938,6 +938,7 @@ SENSOR_SENSORS = [
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER_FACTOR,
+        suggested_display_precision=3,
         entity_registry_enabled_default=True
     ),
     ExtSensorEntityDescription(
@@ -947,6 +948,7 @@ SENSOR_SENSORS = [
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER_FACTOR,
+        suggested_display_precision=3,
         entity_registry_enabled_default=True
     ),
     ExtSensorEntityDescription(
@@ -956,6 +958,7 @@ SENSOR_SENSORS = [
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER_FACTOR,
+        suggested_display_precision=3,
         entity_registry_enabled_default=True
     ),
     ExtSensorEntityDescription(
@@ -965,6 +968,7 @@ SENSOR_SENSORS = [
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER_FACTOR,
+        suggested_display_precision=3,
         entity_registry_enabled_default=True
     ),
     # tma
