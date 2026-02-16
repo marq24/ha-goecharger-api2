@@ -234,6 +234,9 @@ async def check_device_registry(hass: HomeAssistant):
             for a_device_entry in list(a_device_reg.devices.values()):
                 if hasattr(a_device_entry, "identifiers"):
                     ident_value = a_device_entry.identifiers
+                    #if f"{ident_value}".__contains__(DOMAIN):
+                        #a_ident_value = next(iter(ident_value))
+                        #if len(a_ident_value) != 2 or len(a_ident_value[1].split('@.@')) == 1:
                     if f"{ident_value}".__contains__(DOMAIN) and len(next(iter(ident_value))) != 4:
                         _LOGGER.debug(f"found a OLD {DOMAIN} DeviceEntry: {a_device_entry}")
                         key_list.append(a_device_entry.id)
@@ -526,6 +529,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             self._device_info_dict = {
                 # be careful when adjusting the 'identifiers' -> since this will create probably new DeviceEntries
                 # and there exists also code which CLEAN all Devices that does not have 4 (four) identifier values!!
+                #"identifiers": {(DOMAIN, f"lan@.@{self.intg_type.lower()}@.@{self._serial}")},
                 "identifiers": {(
                     DOMAIN,
                     self._serial,
@@ -541,6 +545,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             self._device_info_dict = {
                 # be careful when adjusting the 'identifiers' -> since this will create probably new DeviceEntries
                 # and there exists also code which CLEAN all Devices that does not have 4 (four) identifier values!!
+                #"identifiers": {(DOMAIN, f"wan@.@{self.intg_type.lower()}@.@{self._serial}")},
                 "identifiers": {(
                     DOMAIN,
                     self._serial,
