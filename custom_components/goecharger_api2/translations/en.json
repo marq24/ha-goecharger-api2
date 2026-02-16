@@ -32,9 +32,12 @@
         "data": {
           "integration_type": "Integration type: Charger or Controller?",
           "host": "Host or IP of your go-eCharger Wallbox",
-          "password": "Local WebSocket password (Optional)",
+          "password": "Local WebSocket Wallbox password (Optional)",
           "scan_interval": "Polling Interval in seconds [min: 5sec]",
           "limit_to_11kw": "Apply 11kW limit (for 22kW variants only) - will restrict all relevant settings to a max of 16A (instead of 32A)"
+        },
+        "data_description": {
+          "password": "Providing the Password is optional. When you specify one, the integration will make use of the websocket communication. This makes the polling interval obsolete, and you will get the latest data in HA as soon as something changes. This includes any changes in the wallbox configuration."
         }
       },
       "user_wan": {
@@ -43,9 +46,13 @@
           "integration_type": "Integration type: Charger or Controller?",
           "serial": "Your go-eCharger Wallbox Serial number",
           "token": "Your go-eCharger Cloud API-Key",
-          "password": "WebSocket Access password (Optional)",
+          "password": "Cloud WebSocket Wallbox password (Optional)",
           "scan_interval": "Polling Interval in seconds [min: 30sec]",
           "limit_to_11kw": "Apply 11kW limit (for 22kW variants only) - will restrict all relevant settings to a max of 16A (instead of 32A)"
+        },
+        "data_description": {
+          "token": "You can find the Cloud API-Key in the go-eApp under Settings -> APIv2 -> Cloud API-Key",
+          "password": "Providing the Password is optional. When you specify one, the integration will make use of the websocket communication. This makes the polling interval obsolete, and you will get the latest data in HA as soon as something changes. This includes any changes in the wallbox configuration."
         }
       }
     },

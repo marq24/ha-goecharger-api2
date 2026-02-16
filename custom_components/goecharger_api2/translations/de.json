@@ -32,9 +32,12 @@
         "data": {
           "integration_type": "Integrationstyp: Charger oder Controller?",
           "host": "IP oder Hostname deiner go-eCharger Wallbox/deines go-eControllers",
-          "password": "Passwort für den lokalen WebSocket Zugriff (Optional)",
+          "password": "Wallbox Passwort für den lokalen WebSocket Zugriff (Optional)",
           "scan_interval": "Aktualisierungsintervall in Sekunden [min: 5sek]",
           "limit_to_11kw": "11-kW-Limit setzen (nur für 22-kW-Varianten) – alle relevanten Einstellungen werden auf maximal 16A beschränkt (statt der möglichen 32A)"
+        },
+        "data_description": {
+          "password": "Die Angabe des Passworts ist optional. Wenn Du hier das Passwort Deiner Wallbox einträgst, aktiviert dies die Websocket Kommunikation der Integration und das Abfrageintervall wird überflüssig. Jede Änderung der Wallbox-Daten ist auch sofort in in Home Assistant verfügbar. Dies umfasst auch alle Einstellungen der Wallbox-Konfiguration."
         }
       },
       "user_wan": {
@@ -43,9 +46,13 @@
           "integration_type": "Integrationstyp: Charger oder Controller?",
           "serial": "Deine Seriennummer der go-eCharger Wallbox / des go-eControllers",
           "token": "Dein Cloud API v2 Key",
-          "password": "Passwort für den WebSocket Zugriff (Optional)",
+          "password": "Wallbox Passwort für den Cloud-WebSocket Zugriff (Optional)",
           "scan_interval": "Aktualisierungsintervall in Sekunden [min: 30sek]",
           "limit_to_11kw": "11-kW-Limit setzen (nur für 22-kW-Varianten) – alle relevanten Einstellungen werden auf maximal 16A beschränkt (statt der möglichen 32A)"
+        },
+        "data_description": {
+          "token": "Du kannst den Cloud API-Key in der go-eApp unter Einstellungen -> APIv2 -> Cloud API-Key finden",
+          "password": "Die Angabe des Passworts ist optional. Wenn Du hier das Passwort Deiner Wallbox einträgst, aktiviert dies die Websocket Kommunikation der Integration und das Abfrageintervall wird überflüssig. Jede Änderung der Wallbox-Daten ist auch sofort in in Home Assistant verfügbar. Dies umfasst auch alle Einstellungen der Wallbox-Konfiguration."
         }
       }
     },

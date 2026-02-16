@@ -699,7 +699,7 @@ class GoeChargerApiV2Bridge:
 
         if msg_type == 'fullstatus':
             status_data = data.get('status', {})
-            if status_data:
+            if status_data and len(status_data) > 0:
                 if data.get('partial', False):
                     self._ws_states.update(status_data)
                 else:
@@ -712,26 +712,26 @@ class GoeChargerApiV2Bridge:
                         self._ws_states = {k: v for k, v in status_data.items()}
 
                 new_data_arrived = True
-                _LOGGER.debug(f"extract_ws_message_data(): Received fullStatus with {len(status_data)} keys")
+                _LOGGER.debug(f"extract_ws_message_data(): Received 'fullStatus' with {len(status_data)} keys")
 
         elif msg_type == 'deltastatus':
             status_data = data.get('status', {})
-            if status_data:
+            if status_data and len(status_data) > 0:
                 # Filter out keys we want to ignore
                 filtered_data = {k: v for k, v in status_data.items() if
                                  k not in API_KEYS_TO_IGNORE_FROM_WS}
                 if filtered_data:
                     self._ws_states.update(filtered_data)
                     new_data_arrived = True
-                    _LOGGER.debug(f"extract_ws_message_data(): Received deltaStatus with {len(filtered_data)} changed keys")
+                    _LOGGER.debug(f"extract_ws_message_data(): Received 'deltaStatus' with {len(filtered_data)} keys")
 
         elif msg_type == 'response':
             if data.get('success'):
                 status_data = data.get('status', {})
-                if status_data:
+                if status_data and len(status_data) > 0:
                     self._ws_states.update(status_data)
                     new_data_arrived = True
-                    _LOGGER.debug(f"extract_ws_message_data(): Received response with {len(status_data)} keys")
+                    _LOGGER.debug(f"extract_ws_message_data(): Received 'response' with {len(status_data)} keys")
             else:
                 _LOGGER.warning(f"extract_ws_message_data(): Command failed: {data}")
 

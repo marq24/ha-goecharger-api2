@@ -58,11 +58,11 @@ If you have any issues with this integration after you updated your go-eCharger 
 ## Requirements
 
 ### go-eCharger
-- go-eCharger Wallbox running Firmware version __56.1__ (or higher) — tested successfully with 56.2 BETA
+- go-eCharger Wallbox running Firmware version __56.1__ (or higher)
 - enabled APIv2 [[see instructions](#enable-http-api-v2-in-go-e-app)]
 
 ### go-eController
-- enabled APIv2 Controller running Firmware version __1.1.1__ (or higher) — tested successfully with 1.1.2 BETA
+- enabled APIv2 Controller running Firmware version __1.1.1__ (or higher)
 - enabled APIv2 [[see instructions](#enable-http-api-v2-in-go-e-app)]
 
 ## Installation
@@ -108,7 +108,7 @@ Use the following steps for a manual configuration by adding the custom integrat
 - Go to `Configuration -> Integrations` and add "go-e APIv2 Connect" integration
 - Select what go-e device you would like to install: `go-eCharger` or `go-eController`
 - Provide the IP address (or hostname) of your go-eCharger or go-eController web server
-- Provide area where the wallbox/controller is located
+- Provide an area/room where the wallbox/controller is located
 
 After the integration was added, you can use the 'config' button to adjust your settings, you can additionally modify the update interval
 <a id="pvsurplus"></a>
@@ -116,6 +116,20 @@ After the integration was added, you can use the 'config' button to adjust your 
 Please note that some of the available sensors are __not__ enabled by default.
 
 ## go-eCharger 
+
+### Websocket – use local/cloud push (instead of polling)
+
+The integration can use the (undocumented) go-eCharger Websocket API to receive the current status of your wallbox (or sending data to the wallbox). 
+
+Using the websocket communication makes the polling interval obsolete, and you will get the latest data in HA as soon as something changes. This includes any changes in the wallbox configuration (this makes the _refresh_/_configuration sync_ button obsolete).
+
+To enable the websocket communication, you need to provide a password for your charger. This password is used to authenticate the websocket connection and to prevent unauthorized access to your wallbox data.
+
+Open the Integration configuration and provide the password for your go-eCharger. Once a password is available for the integration, it will use the websocket communication. This applies to the local and the cloud connection variants.
+
+If you can't remember the password, you can set a new one via the go-eApp:
+
+![set-password](https://github.com/marq24/ha-goecharger-api2/raw/main/res/app006.png)
 
 ### Enable PV Surplus Charging via HA automation
 
