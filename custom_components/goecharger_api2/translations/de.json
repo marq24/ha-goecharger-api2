@@ -37,7 +37,7 @@
           "limit_to_11kw": "11-kW-Limit setzen (nur für 22-kW-Varianten) – alle relevanten Einstellungen werden auf maximal 16A beschränkt (statt der möglichen 32A)"
         },
         "data_description": {
-          "password": "Die Angabe des Passworts ist optional. Wenn Du hier das Passwort Deiner Wallbox einträgst, aktiviert dies die Websocket Kommunikation der Integration und das Abfrageintervall wird überflüssig. Jede Änderung der Wallbox-Daten ist auch sofort in in Home Assistant verfügbar. Dies umfasst auch alle Einstellungen der Wallbox-Konfiguration."
+          "password": "Die Angabe des Passworts ist optional. Wenn Du hier das Passwort Deiner Wallbox einträgst, aktiviert dies die WebSocket Kommunikation der Integration und das Abfrageintervall wird überflüssig. Jede Änderung der Wallbox-Daten ist auch sofort in in Home Assistant verfügbar. Dies umfasst auch alle Einstellungen der Wallbox-Konfiguration."
         }
       },
       "user_wan": {
@@ -52,7 +52,7 @@
         },
         "data_description": {
           "token": "Du kannst den Cloud API-Key in der go-eApp unter Einstellungen -> APIv2 -> Cloud API-Key finden",
-          "password": "Die Angabe des Passworts ist optional. Wenn Du hier das Passwort Deiner Wallbox einträgst, aktiviert dies die Websocket Kommunikation der Integration und das Abfrageintervall wird überflüssig. Jede Änderung der Wallbox-Daten ist auch sofort in in Home Assistant verfügbar. Dies umfasst auch alle Einstellungen der Wallbox-Konfiguration."
+          "password": "Die Angabe des Passworts ist optional. Wenn Du hier das Passwort Deiner Wallbox einträgst, aktiviert dies die WebSocket Kommunikation der Integration und das Abfrageintervall wird überflüssig. Jede Änderung der Wallbox-Daten ist auch sofort in in Home Assistant verfügbar. Dies umfasst auch alle Einstellungen der Wallbox-Konfiguration."
         }
       }
     },
@@ -517,7 +517,7 @@
       "ara": {"name": "Next-Trip: Weiter im Eco-Modus laden"},
       "awe": {"name": "Mit günstigen Strompreisen laden"},
       "cmse": {"name": "Controller-Scan immer aktiviert"},
-      "cwe": {"name": "Cloud-Websocket aktiviert"},
+      "cwe": {"name": "Cloud-WebSocket aktiviert"},
       "esk": {"name": "Lademenge (nur für App) setzen"},
       "fup": {"name": "Mit PV-Überschuss laden"},
       "fzf": {"name": "Zero Feed-in"},

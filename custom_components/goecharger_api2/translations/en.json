@@ -517,7 +517,7 @@
       "ara": {"name": "Automatic Stop remain in Awattar"},
       "awe": {"name": "Use Awattar (Charge when price is low)"},
       "cmse": {"name": "Controller-Scan always active"},
-      "cwe": {"name": "Cloud Websocket enabled"},
+      "cwe": {"name": "Cloud WebSocket enabled"},
       "esk": {"name": "Energy set kWh (only stored for app)"},
       "fup": {"name": "Use PV surplus"},
       "fzf": {"name": "Zero Feed-in"},

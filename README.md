@@ -59,11 +59,12 @@ If you have any issues with this integration after you updated your go-eCharger 
 
 ### go-eCharger
 - go-eCharger Wallbox running Firmware version __56.1__ (or higher)
-- enabled APIv2 [[see instructions](#enable-http-api-v2-in-go-e-app)]
+- enabled APIv2 [[see instructions](#enableapiv2)]
+- [_optional_] Your Wallbox password to enable the WebSocket implementation [(details see below)](#websocket)
 
 ### go-eController
 - enabled APIv2 Controller running Firmware version __1.1.1__ (or higher)
-- enabled APIv2 [[see instructions](#enable-http-api-v2-in-go-e-app)]
+- enabled APIv2 [[see instructions](#enableapiv2)]
 
 ## Installation
 
@@ -115,207 +116,50 @@ After the integration was added, you can use the 'config' button to adjust your 
 
 Please note that some of the available sensors are __not__ enabled by default.
 
-## go-eCharger 
+<a id="websocket"></a>
 
-### Websocket – use local/cloud push (instead of polling)
+## WebSocket – use local/cloud push (instead of polling)
 
-The integration can use the (undocumented) go-eCharger Websocket API to receive the current status of your wallbox (or sending data to the wallbox). 
+The integration can use the (undocumented) go-eCharger WebSocket API to receive the current status of your wallbox (or sending data to the wallbox). 
 
-Using the websocket communication makes the polling interval obsolete, and you will get the latest data in HA as soon as something changes. This includes any changes in the wallbox configuration (this makes the _refresh_/_configuration sync_ button obsolete).
+Using the WebSocket communication makes the polling interval __obsolete__, and you will get the latest data in HA as soon as something changes at your wallbox. This includes any changes of the wallbox configuration. When using the WebSocket feature, the _refresh_/_configuration sync_ buttons are obsolete and also the [_hibernation-mode_](#hibernation) is disabled.
 
-To enable the websocket communication, you need to provide a password for your charger. This password is used to authenticate the websocket connection and to prevent unauthorized access to your wallbox data.
+To enable the WebSocket communication, you __need to provide a password for your go-eCharger__. This password is used to authenticate the WebSocket connection and to prevent unauthorized access to your wallbox data. [This is a go-e requirement.]
 
-Open the Integration configuration and provide the password for your go-eCharger. Once a password is available for the integration, it will use the websocket communication. This applies to the local and the cloud connection variants.
+Open the Integration configuration and provide the password for your go-eCharger. Once a password is available for the integration, it will use the WebSocket communication. This applies to the __local__ and the __cloud__ connection variants.
 
 If you can't remember the password, you can set a new one via the go-eApp:
 
 ![set-password](https://github.com/marq24/ha-goecharger-api2/raw/main/res/app006.png)
 
-### Enable PV Surplus Charging via HA automation
+### What is the difference between pull (http get) vs. push (WebSocket)?
 
-When you use this integration, you do not need the additional hardware (go-eController) in order to allow PV surplus charging. The only thing that is required is to add a __Home Assistant automation__ fetching the data from your grid & solar power entities and provide this data to a service of this integration.
+A WebSocket connection provides a persistent, two-way communication channel between a client and a server, whereas an HTTP GET is a one-time request that typically ends after the server responds.
+The primary advantages of using WebSockets over traditional HTTP GET requests include:
+- __Full-Duplex Communication__: Both the client and server can send data simultaneously and independently. In contrast, HTTP is half-duplex, meaning data flows in only one direction at a time.
+- __Reduced Overhead__: After the initial handshake, WebSocket messages (frames) are sent with very small headers (as little as 2 bytes). HTTP GET requests must include full headers (e.g., cookies, user-agent) with every request, which can be hundreds of bytes.
+- __Lower Latency__: Since the connection remains open, there is no need for the "handshake" process (TCP three-way handshake and TLS setup) for every interaction. This makes data exchange nearly instantaneous, which is critical for real-time apps.
+- __Server Push Capabilities__: In a WebSocket connection, the server can proactively push data to the client as soon as it is available. With HTTP GET, the client must usually "poll" the server periodically to see if there is new data, which is inefficient and creates delays.
+- __Persistent State__ (not relevant for this integration): WebSockets are inherently stateful, meaning the server can easily track the client's session over the single, long-lived connection. HTTP is stateless, requiring extra mechanisms like cookies or tokens to maintain context between separate GET requests.
 
-__If you are not familiar with 'creating an automation in Home Assistant', then [you might like to start with a tutorial explaining the basics of automation in HA](https://www.home-assistant.io/getting-started/automation/).__ 
 
-> [!NOTE]
-> __only__ the `pgrid` value is __required__ — the other two fields `ppv` & `pakku` are just _optional_.
+## go-eCharger
 
-> [!NOTE]
-> The goeCharger will drop the __stored data after 5 seconds__ — so if the automation is not running/sending data every five seconds (or faster) to the wallbox the 'PV Surplus Charging' is __not going to work__! 
+### PV Surplus Charging via HA automation 
 
-> [!IMPORTANT]
-> When you are using the Cloud/WAN connection to communicate with your go-eCharger, then the service of this integration will additionally check __if the go-eCharger is connected with a vehicle__ (API-key `car`). If this is not the case, __the data will not be submitted to the cloud__ (to reduce the load of the cloud service). 
+The information about PV surplus charging can be found in a separate document. Please follow this link: [PV Surplus Charging via HA automation](https://github.com/marq24/ha-goecharger-api2/blob/main/docs/PVSURPLUS.md)
 
-### Do not forget this important setting
-
-Once you have enabled the automation, you also need to:
-
-- __Select the 'logic mode': 'Awattar [Eco]' [API-Key 'lmo']__<br/>[Logik/Modus: ECO-Modus]
-- __enable the 'Use PV surplus' [API-Key 'fup']__<br/>[Mit PV-Überschuss laden]
-- __enable the 'Allow Charge Pause (car compatibility)'  [API-Key 'acp']__<br/>[Ladepausen zulassen (Fahrzeug Kompatibilität)]
-- double check in the _PV surplus settings_, that you have selected:
-    - __Power preference: _Prefer power to grid___
-    - you have a __negative Grid Target value (e.g. -500W)__
-
-in the setting of your go-eCharger — (this can be done via the integration)
-
-__Please note: in order to be able to enable 'Use PV surplus' in the go-eCharger Application you must also configure the "Flexibler Energietarif" [specify "Preisgrenze", "Country", "Anbieter", "Tarif" and so on] even though the "Flexibler Energietarif" switch is "OFF"__ Probably a bug in the go-echarger software?
-
-### Service fields explained
-
-#### pgrid [**required**]
-The power in WATT you're currently consuming from the grid (positive value) or you are exporting to the grid (negative value). So when `pgrid` value is negative, the go-eCharger have the information that there is power available that can be used to charge your car.
-
-So once the value is negative, the go-eCharger might use the available power to start  charging your car (instead of exporting power to the grid).
-
-#### ppv [_optional_]
-The power in WATT your PV system currently generating — this value must be positive.
-#### pakku [_optional_]
-The power in WATT your home-battery currently providing (positive — discharge — power from the battery to your home) or consuming (negative — charge — power form grid/PV to your battery).
-
-With other words, `pAkku` is expected to be negative when the home battery is charging (consume power) and positive when it's currently discharging (provide power).
-
-### Blueprint for PV Surplus Charging
-
-This repository includes a ready-to-use Home Assistant blueprint that automates PV surplus charging setup.
-
-#### Features
-- Supports multiple grid measurement methods (single entity, consumption + feed-in, 3-phase)
-- Automatic summation of multiple PV/battery entities
-- Organized input sections with clear descriptions
-- Value inversion options for different inverter conventions
-
-#### Quick Setup
-1. Import blueprint:
-[![Import Blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A//raw.githubusercontent.com/marq24/ha-goecharger-api2/refs/heads/main/example/blueprint/automation/go-echarger-pv-surplus-data.yaml)
-2. Create automation from blueprint
-3. Configure your PV entities
-4. Enable ECO mode on go-eCharger
-
-For detailed configuration instructions, see [Blueprint Documentation](example/blueprint/automation/readme.md).
-
-#### Manual PV Setup
-If you prefer manual automation setup, use this basic example:
-
-### Example automation
-
-Sending the information about PV Surplus is only relevant when a vehicle is connected to the wallbox. Therefore, any automation should contain the condition if there is a vehicle connected to the wallbox. This can be done via the `binary_sensor.goe_012345_car_0` sensor. (replace the `012345` with your serial number).
-
-Please note that this example is for a for SENEC.Home System — if you are using 'my' SENEC.Home Integration, you can use the code below 1:1 — in any other case: __You must adjust/replace the sensor identifiers!!!__. So if you are not a SENEC.Home user, please replace the following:
-
-- `sensor.senec_grid_state_power` with the entity that provides the information in WATT you're currently consuming from the grid (positive value), or you are exporting to the grid (negative value). Once the value is negative, the go-eCharger might use the available power to start charging your car.
-
-- `sensor.senec_solar_generated_power` with the entity that provided the total power generation by your PV (in WATT)
-
-- `sensor.senec_battery_state_power` with the entity that provided the power in WATT currently will be used to charge an additional battery (negative value) or will be consumed from the battery (positive value).
-
-```
-alias: go-e PV surplus charging brigde
-description: >-
-  Simple automation to provide your go-eChargers with the required data so that the wallbox can support PV surplus charging.
-trigger:
-  - platform: time_pattern
-    seconds: /5
-conditions:
-  - condition: and
-    conditions:
-      - condition: template
-        value_template: "{{states('binary_sensor.goe_123456_car_0')=='on'}}"
-      - condition: sun
-        after: sunrise
-      - condition: sun
-        before: sunset
-action:
-  - service: goecharger_api2.set_pv_data
-    data:
-      pgrid: "{{states('sensor.senec_grid_state_power')}}"
-      ppv:  "{{states('sensor.senec_solar_generated_power')}}"
-      pakku: "{{states('sensor.senec_battery_state_power')}}"
-mode: single
-```
-
-### In case when your `pgrid` (or `pakku`) value provided by the sensor needs to be inverted
-
-In some cases (when using other solar system integrations) you might run into the situation that the pgrid sensor value is positive when you are exporting power to the grid (and negative when you import power from the grid). In this case, you need to ___invert___ the value of your grid sensor. In HA this can be done very easily via the so-called 'pipe' functionality inside templates.
-
-Here is a simple example (just inserted a `| float * -1`) — which takes the sensor value and _convert_ it to a floating point number (from a string) and then multiply it with `-1`)
-```
-action:
-  - service: goecharger_api2.set_pv_data
-    data:
-      pgrid: "{{states('sensor.other_grid_state_power')|float*-1}}"
-      ...
-```
-
-### Having multiple go-eChargers in your HA installation?
-
-When you have more than one go-eCharger in your HA installation, you must provide an additional attribute `configid` in order to let the service know which charger should be used! This configid is the ConfigEntryId of the Integration for your multiple chargers and can look like this `01J4GR20JPFQ7M888Q4C9YAR31`.
-
-The simple way to find the corresponding ConfigEntryId's of your multiple configured go-eCharger integrations is by using the GUI of the Service, activate the optional selection field, select the charger and then switch (from GUI) to YAML-Mode mode — this will show you the configid you must use. [[See this image for details](https://raw.githubusercontent.com/marq24/ha-goecharger-api2/main/res/configid.png)]
-
-```
-action:
-  - service: goecharger_api2.set_pv_data
-    data:
-      configid: 01J4GR20JPFQ7M888Q4C9YAR31
-    ...
-```
-
-_Please note that this is __only__ required if you have multiple go-eChargers configured via this integration your HA installation._
-
-### Finally: Verify if the wallbox receives your data from the automation
-
-After you have your automation up and running, you might want to verify that everything is correctly connected.
-
-When you use the Cloud/WAN connection, make sure that the wallbox is connected with a vehicle, since only then the integraion will send the pv-data will to the cloud.
-
-#### Via Integration sensors
-Search for the Integration Sensors `_pgrid`, `_ppv` & `_pakku` and check the values — or check the `pvopt_average` sensors for the current calculating average values.  
-
-#### Via direct accessing the API (via browser)
-Replace in the URLs the `[wallbox-ip]` with the ip-address or hostname of your go-eCharger.
-
-`http://[wallbox-ip]/api/status?filter=pakku,ppv,pgrid`
-
-Please note that the wallbox drops the stored data after 5 seconds — so if the automation is not running/sending data to the wallbox these values become 'null'.  
-
-So you might like to check the average values (to verify if the wallbox received in the recent past some data):
-
-`http://[wallbox-ip]/api/status?filter=pvopt_averagePAkku,pvopt_averagePGrid,pvopt_averagePPv`
-
-### _Optional_ — Force stop charging when PV power is too low
-
-Unfortunately, it might happen [reported by a user] that the go-eCharger __does not finish charging in ECO mode__ using the PV power (in a timely manner). If you run into the same situation, then you can ensure that charging stops when there is no longer enough PV power, by adding the following automation:
-
-You need to adjust the entity ids: `switch.goe_012345_fup`, `sensor.goe_012345_nrg_11` and `sensor.goe_012345_pvopt_averagepgrid` (replace the `012345` with your serial number) and your preferred threshold when this automation should be executed (the `above: -200` for the `pvopt_averagepgrid` means, that as soon as the average power you export to the grid is less than 200 watt the automation will be triggered).
-
-```
-alias: go-e FORCE STOP of PV surplus charging
-description: >-
-  Simple automation to ensure that the go-eCharger will stop charging when average PV will drop below given threshold
-trigger:
-  - platform: time_pattern
-    seconds: /5
-condition:
-  - condition: state
-    entity_id: switch.goe_012345_fup
-    state: "on"
-  - condition: numeric_state
-    entity_id: sensor.goe_012345_nrg_11
-    above: 200    
-  - condition: numeric_state
-    entity_id: sensor.goe_012345_pvopt_averagepgrid
-    above: -200
-action:
-  - service: goecharger_api2.stop_charging
-mode: single
-```
+---
 
 <a id="hibernation"></a>
 
-### Hibernation-Mode — Good to know 
+### Hibernation-Mode — Good to know [ONLY in polling mode]
 
-This integration will __not always fetch all sensor data from your wallbox__. For example, the configuration values — they probably do not change every 5 sec. — so to reduce the overall system load the integration, will refresh the configuration entities just every 24h — OR when you make adjustments to any of the go-eCharger settings via HA. If you want to manually sync the configuration sensors, then you can use the `button.goe_[serial]_zfocore` [^1] ['Read Configuration' button].
+When you do not use the WebSocket implementation, this integration has implemented a special hibernation-mode.
+
+The integration will __not always fetch all sensor data from your wallbox__ (when you do not have specified the wallbox password in the integration configuration).
+
+For example, the configuration values — they probably do not change every 5 sec. — so to reduce the overall system load, the integration will refresh the configuration entities just every 24h — OR when you make adjustments to any of the go-eCharger settings via HA. If you want to manually sync the configuration sensors, then you can use the `button.goe_[serial]_zfocore` [^1] ['Read Configuration' button].
 
 Additionally, to the configuration values, the number of entities that will be refreshed when no vehicle is connected (car state = 'Idle') is also drastically reduced. In this case, the integration will __only__ read the full data set __every 5 minutes__ from your wallbox.
 
@@ -328,14 +172,15 @@ So the integration has some _sort of hibernation-mode_ in which only the followi
  - __trx__: authorization required/unlocked (with Card ID)
  - __tma__: temperature values
  
-and when you make use of the PV Surplus Charging fature additionally the values for: 
+and when you make use of the PV Surplus Charging feature, additionally the values for: 
  - pgrid
  - ppv
  - pakku
 
 Once the __car__ status will switch from `idle` (=1) to something different the integration will leave the hibernation-mode and update all the (none configuration) entities with the configured update interval.
 
-<a id="enableapiv2"></a>
+
+<a id="notimplementedkeys"></a>
 
 ### List of (currently) not handled API keys (21/172)
 
@@ -366,6 +211,9 @@ Just as reference, here is the list of API keys that the current implementation 
 ## go-eController
 Implementation of eController features has been provided by [@s3ppo (Harald Wiesinger)](https://github.com/s3ppo) — thank you very much! 
 
+
+<a id="enableapiv2"></a>
+
 ## go-eCharger & go-eController [COMON]
 
 ### Enable HTTP API v2 in go-e App [v4.x]
@@ -373,7 +221,7 @@ Implementation of eController features has been provided by [@s3ppo (Harald Wies
 
 1. Start the go-er App
 2. Select '_Setting_' (lower main button bar)
-3. Select '_Connection_' section as shown here:
+3. Select the '_Connection_' section as shown here:
 
    '![step1](https://github.com/marq24/ha-goecharger-api2/raw/main/res/app003.png)
 
@@ -397,7 +245,6 @@ Implementation of eController features has been provided by [@s3ppo (Harald Wies
    ![step1](https://github.com/marq24/ha-goecharger-api2/raw/main/res/app002.png)
 5. __DO not forget__ to press the save Icon!
 
-<a id="notimplementedkeys"></a>
 
 ### Want to report an issue?
 
@@ -408,7 +255,7 @@ Please use the [GitHub Issues](https://github.com/marq24/ha-goecharger-api2/issu
 To speed up the support process, you might like to already prepare and provide DEBUG log output. In the case of a technical issue, I would need this DEBUG log output to be able to help/fix the issue. There is a short [tutorial/guide 'How to provide DEBUG log' here](https://github.com/marq24/ha-senec-v3/blob/main/docs/HA_DEBUG.md) — please take the time to quickly go through it.
 
 For this integration, you need to add:
-```
+```yaml
 logger:
   default: warning
   logs:
@@ -417,7 +264,7 @@ logger:
 
 #### 2. In case of implausible data
 
-It will happen that the data that is displayed by this integration does not make much sense (to you) — aka 'the data is not plausible.' __Of course,__ it could be the case, that something in this integration has been messed up — but so far — in all reported issues the root cause of implausible data was/is, that the go-e device itself already provided this data [you can check this by directly requesting the attribute from the wallbox]
+It will happen that the data that is displayed by this integration makes little sense (to you) — aka 'the data is not plausible.' __Of course,__ it could be the case that something in this integration has been messed up — but so far — in all reported issues the root cause of implausible data was/is, that the go-e device itself already provided this data [you can check this by directly requesting the attribute from the wallbox]
 
 Each sensor of this integration has an API-Key identifier in its entity ID. You can manually request values from your wallbox by using this __API key__ via a regular web browser.
 
@@ -431,9 +278,9 @@ so the pattern is:
 
 If the plain data that will be returned in such a request is matching the data displayed by the integration, then I would kindly ask to get in contact with go-e, since in such a case the integration is just the 'messenger.'
 
-## 
 
 ---
+
 ###### Advertisement / Werbung — alternative way to support me
 
 ### Switch to Tibber!
@@ -442,6 +289,7 @@ Be smart switch to Tibber — that's what I did in october 2023. If you want to 
 
 Please consider [using my personal Tibber invitation link to join Tibber today](https://invite.tibber.com/6o0kqvzf) or Enter the following code: 6o0kqvzf (six, oscar, zero, kilo, quebec, victor, zulu, foxtrot) afterward in the Tibber App — TIA!
 
+
 ---
 
 ### References
@@ -449,7 +297,7 @@ Please consider [using my personal Tibber invitation link to join Tibber today](
 - https://github.com/goecharger/go-eCharger-API-v2/blob/main/apikeys-en.md
 - https://github.com/goecharger/go-eController-API/blob/main/apikeys-en.md
 
-[^1]: `focore` stands for: FOrce COnfiguration REquest
+[^1]: `focore` stands for: **fo**rce **co**nfiguration **re**quest
 
 
 [hacs]: https://hacs.xyz
