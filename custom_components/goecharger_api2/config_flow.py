@@ -108,8 +108,11 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         #     return self.async_abort(reason="single_instance_allowed")
 
         if user_input is not None:
-            valid = await self._test_host(intg_type=user_input[CONF_INTEGRATION_TYPE], host=user_input[CONF_HOST], pwd=user_input[CONF_PASSWORD], serial=None, token=None)
+            a_user_pwd = user_input.get(CONF_PASSWORD, "").strip()
+            valid = await self._test_host(intg_type=user_input[CONF_INTEGRATION_TYPE], host=user_input[CONF_HOST], pwd=a_user_pwd, serial=None, token=None)
             if valid:
+                if len(a_user_pwd) == 0 and CONF_PASSWORD in user_input:
+                    user_input.pop(CONF_PASSWORD)
                 user_input[CONF_MODE] = LAN
                 user_input[CONF_SCAN_INTERVAL] = max(5, user_input[CONF_SCAN_INTERVAL])
                 user_input[CONF_ID] = self._serial
@@ -150,7 +153,9 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         )
                     ),
                 vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
-                vol.Optional(CONF_PASSWORD, default=user_input[CONF_PASSWORD]): str,
+                vol.Optional(CONF_PASSWORD, description={"suggested_value": user_input[CONF_PASSWORD]}): selector.TextSelector(
+                    selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+                ),
                 vol.Required(CONF_SCAN_INTERVAL, default=user_input[CONF_SCAN_INTERVAL]): int,
                 vol.Required(CONF_11KWLIMIT, default=user_input[CONF_11KWLIMIT]): bool,
             }),
@@ -168,9 +173,12 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         #     return self.async_abort(reason="single_instance_allowed")
 
         if user_input is not None:
+            a_user_pwd = user_input.get(CONF_PASSWORD, "").strip()
             #valid = await self._test_host(intg_type=user_input[CONF_INTEGRATION_TYPE], host=None, serial=user_input[CONF_ID], token=user_input[CONF_TOKEN])
-            valid = await self._test_host(intg_type=user_input[CONF_INTEGRATION_TYPE], host=None, pwd=user_input[CONF_PASSWORD], serial=user_input[CONF_ID], token=user_input[CONF_TOKEN])
+            valid = await self._test_host(intg_type=user_input[CONF_INTEGRATION_TYPE], host=None, pwd=a_user_pwd, serial=user_input[CONF_ID], token=user_input[CONF_TOKEN])
             if valid:
+                if len(a_user_pwd) == 0 and CONF_PASSWORD in user_input:
+                    user_input.pop(CONF_PASSWORD)
                 user_input[CONF_MODE] = WAN
                 user_input[CONF_SCAN_INTERVAL] = max(30, user_input[CONF_SCAN_INTERVAL])
                 user_input[CONF_ID] = self._serial
@@ -213,7 +221,9 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         )
                     ),
                 vol.Required(CONF_ID, default=user_input[CONF_ID]): str,
-                vol.Optional(CONF_PASSWORD, default=user_input[CONF_PASSWORD]): str,
+                vol.Optional(CONF_PASSWORD, description={"suggested_value": user_input[CONF_PASSWORD]}): selector.TextSelector(
+                    selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+                ),
                 vol.Required(CONF_TOKEN, default=user_input[CONF_TOKEN]): str,
                 vol.Required(CONF_SCAN_INTERVAL, default=user_input[CONF_SCAN_INTERVAL]): int,
             }),
