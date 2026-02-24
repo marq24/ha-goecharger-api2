@@ -117,6 +117,9 @@ class GoeChargerApiV2Bridge:
         self._ws_device_info = {}
         self._ws_states = {}
         self._ws_serial = None
+        self._ws_secured = False
+        self._ws_proto = -1
+        self._ws_protocol = -1
 
     def available_fields(self) -> int:
         return len(self._versions) + len(self._states) + len(self._config) + len(self._ws_states)
@@ -132,6 +135,9 @@ class GoeChargerApiV2Bridge:
         self._ws_device_info = {}
         self._ws_states = {}
         self._ws_serial = None
+        self._ws_secured = False
+        self._ws_proto = -1
+        self._ws_protocol = -1
 
     def reset_stored_update_ts(self):
         self._LAST_CONFIG_UPDATE_TS = 0
@@ -522,11 +528,7 @@ class GoeChargerApiV2Bridge:
             "value": value
         }
 
-        if self.token is not None:
-            # the cloud API can receive real JSON data...
-            _LOGGER.debug(f"_ws_send_command(): Sending {key}={value} as JSON")
-            await self._ws_connection.send_json(original_message)
-        else:
+        if self._ws_secured:
             # the local websocket needs special handling...
             payload = json.dumps(original_message)
             h = hmac.new(bytearray(self._ws_hashed_password), bytearray(payload.encode()), hashlib.sha256)
@@ -542,6 +544,10 @@ class GoeChargerApiV2Bridge:
 
             _LOGGER.debug(f"_ws_send_command(): Sending {key}={value} as BYTES")
             await self._ws_connection.send_bytes(msg_packed)
+        else:
+            # the cloud API can receive real JSON data...
+            _LOGGER.debug(f"_ws_send_command(): Sending {key}={value} as JSON")
+            await self._ws_connection.send_json(original_message)
 
         return True
 
@@ -576,7 +582,10 @@ class GoeChargerApiV2Bridge:
                     return None
 
                 self._ws_serial = serial
-                _LOGGER.debug(f"ws_connect(): Extracted the device serial: {serial}")
+                self._ws_secured = normalized_hello.get('secured', False)
+                self._ws_proto = normalized_hello.get('proto', -1)
+                self._ws_protocol = normalized_hello.get('protocol', -1)
+                _LOGGER.debug(f"ws_connect(): Extracted the device serial: {self._ws_serial} [secured: {self._ws_secured}, proto: {self._ws_proto}, protocol: {self._ws_protocol}]")
                 self._ws_device_info = {k: v for k, v in normalized_hello.items()}
                 if 'type' in self._ws_device_info:
                     self._ws_device_info.pop('type', None)
