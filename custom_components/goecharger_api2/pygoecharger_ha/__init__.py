@@ -477,7 +477,10 @@ class GoeChargerApiV2Bridge:
             # initially found @ https://github.com/joscha82/wattpilot/issues/46#issuecomment-3289810024
             # and then took it from wattpilot!
             # https://github.com/mk-maddin/wattpilot-HA/blob/master/custom_components/wattpilot/wattpilot/src/wattpilot/__init__.py#L498
-            return self.__bcrypt_hash_password(password, serial).encode()
+            iterations = 8
+            password_hash = hashlib.sha256(password.encode()).hexdigest()
+            salt = f"$2a${iterations:02d}${bcryptjs_encode_base64(serial, 16)}"
+            return bcrypt.hashpw(password_hash.encode(), salt.encode())[len(salt):]
 
         return None
 
@@ -767,68 +770,44 @@ class GoeChargerApiV2Bridge:
 
         return new_data_arrived
 
-    def __bcryptjs_base64_encode(self,b: bytes, length: int) -> str:
-        BASE64_CODE = list("./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
-        off = 0
-        rs = []
+@staticmethod
+def bcryptjs_base64_encode(b: bytes, length: int) -> str:
+    BASE64_CODE = "./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 
-        if length <= 0 or length > len(b):
-            raise ValueError(f"Illegal len: {length}")
+    if not 0 < length <= len(b):
+        raise ValueError(f"Illegal len: {length}")
 
-        while off < length:
-            c1 = b[off] & 0xff
-            off += 1
-            rs.append(BASE64_CODE[(c1 >> 2) & 0x3f])
-            c1 = (c1 & 0x03) << 4
-            if off >= length:
-                rs.append(BASE64_CODE[c1 & 0x3f])
-                break
+    rs = []
+    i = 0
 
-            c2 = b[off] & 0xff
-            off += 1
-            c1 |= (c2 >> 4) & 0x0f
-            rs.append(BASE64_CODE[c1 & 0x3f])
-            c1 = (c2 & 0x0f) << 2
-            if off >= length:
-                rs.append(BASE64_CODE[c1 & 0x3f])
-                break
+    while i < length:
+        c1 = (b[i] & 0x03) << 4
+        rs.append(BASE64_CODE[b[i] >> 2])
+        i += 1
 
-            c2 = b[off] & 0xff
-            off += 1
-            c1 |= (c2 >> 6) & 0x03
-            rs.append(BASE64_CODE[c1 & 0x3f])
-            rs.append(BASE64_CODE[c2 & 0x3f])
+        if i >= length:
+            rs.append(BASE64_CODE[c1])
+            break
 
-        return "".join(rs)
+        rs.append(BASE64_CODE[c1 | (b[i] >> 4)])
+        c1 = (b[i] & 0x0f) << 2
+        i += 1
 
-    def __bcryptjs_encode_base64(self, s: str, length: int) -> str:
-        if s.isdigit(): #numeric only serial
-            vals = [ord(ch) - ord('0') for ch in s]
-            b = bytes([0] * (length - len(vals)) + vals)
-        else: #not sure about serials in future - fallback
-            _LOGGER.warning(f"__bcryptjs_encodeBase64: check serial string - should be digits only: {s}")
-            raise ValueError(f"Check serial string - should be digits only: {s}")
+        if i >= length:
+            rs.append(BASE64_CODE[c1])
+            break
 
-        return self.__bcryptjs_base64_encode(b,length)
+        rs.append(BASE64_CODE[c1 | (b[i] >> 6)])
+        rs.append(BASE64_CODE[b[i] & 0x3f])
+        i += 1
 
-    def __bcrypt_hash_password(self, password, serial, iterations=8) -> str:
-        password_hash_sha256 = hashlib.sha256(password.encode('utf-8')).hexdigest()
-        serial_b64 = self.__bcryptjs_encode_base64(serial, 16)
+    return "".join(rs)
 
-        # don't remove this (or do not simplify this to
-        # salt = ["$2a$"]
-        salt = []
-        salt.append("$2a$")
+@staticmethod
+def bcryptjs_encode_base64(s: str, length: int) -> str:
+    if not s.isdigit():
+        _LOGGER.warning(f"bcryptjs_encode_base64(): check serial string - should be digits only: {s}")
+        raise ValueError(f"Check serial string - should be digits only: {s}")
 
-        if iterations < 10:
-            salt.append("0")
-        salt.append(str(iterations))
-        salt.append("$")
-        salt.append(serial_b64)
-        salt=''.join(salt)
-        bsalt = salt.encode("utf-8")
-        bpassword = password_hash_sha256.encode('utf-8')
-        pwhash = bcrypt.hashpw(bpassword, bsalt)
-        salt_length = len(salt)
-        pwhash_sub = pwhash[salt_length:].decode('ascii')
-        return pwhash_sub
+    b = bytes([0] * (length - len(s)) + [int(ch) for ch in s])
+    return bcryptjs_base64_encode(b, length)
