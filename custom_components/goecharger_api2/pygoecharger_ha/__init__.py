@@ -464,7 +464,7 @@ class GoeChargerApiV2Bridge:
 
     def _ws_compute_hashed_password(self, hash_type: str, password: str, serial: str) -> bytes:
         if hash_type == "pbkdf2":
-            """Compute PBKDF2-SHA512 hashed password for WebSocket authentication"""
+            # Compute PBKDF2-SHA512 hashed password for WebSocket authentication
             hashed = hashlib.pbkdf2_hmac(
                 'sha512',
                 password.encode('utf-8'),
@@ -579,7 +579,7 @@ class GoeChargerApiV2Bridge:
             headers = None
 
         try:
-            async with self.web_session.ws_connect(url=self.ws_url, headers=headers) as ws:
+            async with (self.web_session.ws_connect(url=self.ws_url, headers=headers) as ws):
                 self._ws_connection = ws
                 _LOGGER.info(f"ws_connect(): Connected to WebSocket: {self.ws_url}")
 
@@ -598,9 +598,6 @@ class GoeChargerApiV2Bridge:
                 self._ws_proto = normalized_hello.get('proto', -1)
                 self._ws_protocol = normalized_hello.get('protocol', -1)
 
-                # 'devicetype': 'go-eCharger_V4'
-                # 'devicetype': 'go-eCharger_Phoenix', 'devicesubtype': 'core_cable',
-
                 _LOGGER.debug(f"ws_connect(): Extracted the device serial: {self._ws_serial} [secured: {self._ws_secured}, proto: {self._ws_proto}, protocol: {self._ws_protocol}]")
                 self._ws_device_info = {k: v for k, v in normalized_hello.items()}
                 if 'type' in self._ws_device_info:
@@ -613,8 +610,20 @@ class GoeChargerApiV2Bridge:
                 auth_data = self._ws_decode_message(auth_req_msg.data)
                 normalized_auth = self._ws_normalize_dict(auth_data)
 
-                hash_type = normalized_auth.get('hash', 'pbkdf2').lower()
-                if hash_type not in ['pbkdf2', 'bcrypt']:
+                hash_type = normalized_auth.get('hash', '').lower()
+                _LOGGER.debug(f"ws_connect(): Extracted the auth type: '{hash_type}' - source was: '{normalized_auth.get('hash')}'")
+                if hash_type is None or len(hash_type) == 0:
+                    _LOGGER.info("ws_connect(): No authentication hash type in AUTH REQUIRED message found...")
+                    # the default fallback is always 'pbkdf2' for the older devices...
+                    # 'devicetype': 'go-eCharger_V4'
+                    hash_type = "pbkdf2"
+
+                    # 'devicetype': 'go-eCharger_Phoenix', 'devicesubtype': 'core_cable',
+                    if ("_phoenix" in self._ws_device_info.get("devicetype", "").lower() or
+                        "core" in self._ws_device_info.get("devicesubtype", "").lower()):
+                        hash_type = "bcrypt"
+
+                if hash_type not in ["pbkdf2", "bcrypt"]:
                     _LOGGER.info(f"ws_connect(): Unsupported authentication hash type: {hash_type}")
                     return None
 
@@ -625,12 +634,12 @@ class GoeChargerApiV2Bridge:
 
                 self._ws_hashed_password = self._ws_compute_hashed_password(hash_type, self.access_password, serial)
                 _logging_pwd = self._ws_hashed_password.decode('utf-8')
-                _LOGGER.debug(f"ws_connect(): Computed hashed password {_logging_pwd[:6]}...{_logging_pwd[-6:]}")
+                _LOGGER.debug(f"ws_connect(): Computed hashed password {hash_type}: {_logging_pwd[:6]}...{_logging_pwd[-6:]}")
 
                 token1 = normalized_auth.get('token1')
                 token2 = normalized_auth.get('token2')
                 if not token1 or not token2:
-                    _LOGGER.warning("ws_connect(): Missing authentication tokens")
+                    _LOGGER.warning("ws_connect(): Missing authentication tokens in AUTH REQUIRED message!")
                     return None
 
                 # Step 4: Generate token3 and compute auth hash
