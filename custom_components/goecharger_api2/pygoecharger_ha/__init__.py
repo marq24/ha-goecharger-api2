@@ -475,11 +475,12 @@ class GoeChargerApiV2Bridge:
             return base64.b64encode(hashed)[:32]
         elif hash_type == "bcrypt":
             # initially found @ https://github.com/joscha82/wattpilot/issues/46#issuecomment-3289810024
-            # and then took it from wattpilot!
+            # and then got inspired by Fronius wattpilot...
             # https://github.com/mk-maddin/wattpilot-HA/blob/master/custom_components/wattpilot/wattpilot/src/wattpilot/__init__.py#L498
-            iterations = 8
             password_hash = hashlib.sha256(password.encode()).hexdigest()
-            salt = f"$2a${iterations:02d}${bcryptjs_encode_base64(serial, 16)}"
+            # $2a: the bcrypt-salt-header
+            # $08: the number of iterations (we have hardcoded '8' (with a trailing zero)
+            salt = f"$2a$08${bcryptjs_base64_encode_serial(serial, 16)}"
             return bcrypt.hashpw(password_hash.encode(), salt.encode())[len(salt):]
 
         return None
@@ -780,43 +781,40 @@ class GoeChargerApiV2Bridge:
         return new_data_arrived
 
 @staticmethod
-def bcryptjs_base64_encode(b: bytes, length: int) -> str:
-    BASE64_CODE = "./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+def bcryptjs_base64_encode_serial(serial: str, length: int = 16) -> str:
+    """
+    Encode a numeric serial to bcrypt's non-standard base64 for salt generation.
 
-    if not 0 < length <= len(b):
-        raise ValueError(f"Illegal len: {length}")
+    bcrypt uses a modified base64 alphabet: ./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789
+    (different from standard base64: A-Za-z0-9+/)
 
-    rs = []
+    This matches bcrypt.js behavior for WebSocket authentication with go-e devices.
+    """
+    BCRYPT_BASE64 = "./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+
+    if not serial.isdigit():
+        _LOGGER.warning(f"bcryptjs_base64_encode_serial(): check serial string - should be digits only: {serial}")
+        raise ValueError(f"Serial must be digits only: {serial}")
+
+    # Pad serial with leading zeros as byte values
+    b = bytes([0] * (length - len(serial)) + [int(ch) for ch in serial])
+
+    result = []
     i = 0
-
     while i < length:
         c1 = (b[i] & 0x03) << 4
-        rs.append(BASE64_CODE[b[i] >> 2])
+        result.append(BCRYPT_BASE64[b[i] >> 2])
         i += 1
-
         if i >= length:
-            rs.append(BASE64_CODE[c1])
+            result.append(BCRYPT_BASE64[c1])
             break
-
-        rs.append(BASE64_CODE[c1 | (b[i] >> 4)])
+        result.append(BCRYPT_BASE64[c1 | (b[i] >> 4)])
         c1 = (b[i] & 0x0f) << 2
         i += 1
-
         if i >= length:
-            rs.append(BASE64_CODE[c1])
+            result.append(BCRYPT_BASE64[c1])
             break
-
-        rs.append(BASE64_CODE[c1 | (b[i] >> 6)])
-        rs.append(BASE64_CODE[b[i] & 0x3f])
+        result.append(BCRYPT_BASE64[c1 | (b[i] >> 6)])
+        result.append(BCRYPT_BASE64[b[i] & 0x3f])
         i += 1
-
-    return "".join(rs)
-
-@staticmethod
-def bcryptjs_encode_base64(s: str, length: int) -> str:
-    if not s.isdigit():
-        _LOGGER.warning(f"bcryptjs_encode_base64(): check serial string - should be digits only: {s}")
-        raise ValueError(f"Check serial string - should be digits only: {s}")
-
-    b = bytes([0] * (length - len(s)) + [int(ch) for ch in s])
-    return bcryptjs_base64_encode(b, length)
+    return "".join(result)

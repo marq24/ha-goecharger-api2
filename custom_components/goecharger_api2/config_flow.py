@@ -221,10 +221,12 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         )
                     ),
                 vol.Required(CONF_ID, default=user_input[CONF_ID]): str,
+                vol.Required(CONF_TOKEN, description={"suggested_value": user_input[CONF_TOKEN]}): selector.TextSelector(
+                    selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+                ),
                 vol.Optional(CONF_PASSWORD, description={"suggested_value": user_input[CONF_PASSWORD]}): selector.TextSelector(
                     selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
                 ),
-                vol.Required(CONF_TOKEN, default=user_input[CONF_TOKEN]): str,
                 vol.Required(CONF_SCAN_INTERVAL, default=user_input[CONF_SCAN_INTERVAL]): int,
             }),
             description_placeholders={"repo": "https://github.com/marq24/ha-goecharger-api2"},
