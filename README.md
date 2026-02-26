@@ -1,16 +1,19 @@
-# Home Assistant Integration 'go-eCharger & go-eController [via APIv2]'
+# Home Assistant Integration 'go-eCharger & go-eController [via WebSocket & APIv2]'
 
 ![logo](https://github.com/marq24/ha-goecharger-api2/raw/main/logo.png)
 
-Support for all go-eCharger Wallboxes & go-eController's supporting the APIv2 — __of course__ the APIv2 has to be enabled via the go-e mobile app, __before__ you can use this integration [[see instructions](#enable-http-api-v2-in-go-echarger-app)].
+Support for all go-eCharger Wallboxes & go-eController's supporting the APIv2 or a WebSocket connection.
+
+__Of course__ the APIv2 has to be enabled via the go-e mobile app, __before__ you can use this integration [[see instructions](#enable-http-api-v2-in-go-echarger-app)].
+
 
 > [!IMPORTANT]
-> __Please note__, _that this integration is not official and not supported by the go-e development team. I am not affiliated with go-e.com in any way. This integration is based on the go-e API and the go-e API documentation._
+> __Please note__, _that this integration is __not official__, nor is it supported by the go-e manufacture from Austrian. I (marq24) am not affiliated with go-e.com in any way. This integration is based on the go-e API and the available go-e API documentation. (and some reverse engineering)_.
 
 
 [![hacs_badge][hacsbadge]][hacs] [![hainstall][hainstallbadge]][hainstall] [![Wero][werobadge]][wero] [![Revolut][revolutbadge]][revolut] [![PayPal][paypalbadge]][paypal] [![github][ghsbadge]][ghs] [![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
 
-## latest successfully tested go-eCharger Firmware Versions / go-eController Firmware Versions
+## Latest successfully tested go-eCharger Firmware Versions / go-eController Firmware Versions
 
 Technically, there should be no issues using always the latest go-eCharger & go-eController firmware versions available. As long as the API will just add additional fields and not change the existing ones, this integration should work with all go-eCharger & go-eController firmware versions.
 
