@@ -32,7 +32,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity, EntityDescription
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_track_time_interval, async_call_later
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -58,7 +58,8 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(seconds=10)
 CONFIG_SCHEMA = config_val.removed(DOMAIN, raise_if_present=False)
 WEBSOCKET_WATCHDOG_INTERVAL: Final = timedelta(minutes=5, seconds=1)
-
+COMMUNICATION_MODE_WEBSOCKET: Final = "WEBSOCKET"
+COMMUNICATION_MODE_HTTPGET: Final = "HTTPGET"
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     if config_entry.version < CONFIG_VERSION:
@@ -93,11 +94,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         if not await coordinator.read_versions():
             raise ConfigEntryNotReady("Could not read versions from charger/controller! - please enable debug logging to see more details!")
 
-    start_ws_watch_dog = False
-    if coordinator.intg_type == INTG_TYPE.CHARGER.value:
-        a_pwd = config_entry.data.get(CONF_PASSWORD, None)
-        if a_pwd is not None and len(a_pwd.strip()) > 0:
-            start_ws_watch_dog = True
+    a_pwd = config_entry.data.get(CONF_PASSWORD, None)
+    if a_pwd is not None and len(a_pwd.strip()) > 0:
+        start_ws_watch_dog = True
+    else:
+        start_ws_watch_dog = False
 
     if start_ws_watch_dog:
         # ws watchdog...
@@ -125,7 +126,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     asyncio.create_task(coordinator.cleanup_device_registry(hass))
 
-    # double check, if the ws_watchdog should be started...
+    # double check if the ws_watchdog should be started...
     if start_ws_watch_dog and coordinator._ws_start_task is None:
         asyncio.create_task(coordinator._async_watchdog_check())
 
@@ -259,7 +260,6 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         self._force_classic_requests = False
 
         lang = hass.config.language.lower()
-        self._hass = hass
         self.name = config_entry.title
 
         # are we a charger or a controller ?! (by default we are obvious a go-eCharger)
@@ -300,6 +300,14 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
 
         # config_entry only need for providing the '_device_info_dict'...
         self._config_entry = config_entry
+        self._device_info_dict = {}
+        self._device_info_model_raw = None
+        a_comm_mode = self._config_entry.data.get(CONF_PASSWORD, None)
+        if a_comm_mode is not None and len(a_comm_mode.strip()) > 0:
+            self._comm_mode = COMMUNICATION_MODE_WEBSOCKET
+        else:
+            self._comm_mode = COMMUNICATION_MODE_HTTPGET
+
         self._is_charger_fw_version_60_0_or_higher = False
         self._no_cards_list_is_present = False
         self._CLIENT_COMMUNICATION_ERROR_TS = 0
@@ -307,6 +315,25 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         self._RESTART_TRIGGERED = False
         self._debounced_update_task = None
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+
+    async def call_later_update_device_registry(self, now:Any):
+        _LOGGER.debug(f"call_later_update_device_registry(): called with '{now}'")
+        if self._comm_mode == COMMUNICATION_MODE_WEBSOCKET:
+            if self.hass is not None:
+                a_device_reg = device_reg.async_get(self.hass)
+                if a_device_reg is not None:
+                    device = a_device_reg.async_get_device(identifiers=self._device_info_dict["identifiers"])
+                    if device:
+                        _LOGGER.info(f"call_later_update_device_registry(): device registry update triggered for device {device.name}")
+                        if self.bridge.ws_connected and self.bridge.ws_check_last_update():
+                            f_model = f"{self._device_info_model_raw} ✅"
+                        else:
+                            f_model = f"{self._device_info_model_raw} ⛔"
+
+                        a_device_reg.async_update_device(
+                            device.id,
+                            model=f_model
+                        )
 
     def cards_as_single_entries(self):
         return self._is_charger_fw_version_60_0_or_higher and (self.bridge.ws_connected or self._no_cards_list_is_present)
@@ -323,6 +350,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
     def stop_watchdog(self):
         if hasattr(self, "_watchdog") and self._watchdog is not None:
             self._watchdog()
+            async_call_later(self.hass, 5, self.call_later_update_device_registry)
 
     def _check_for_ws_task_and_cancel_if_running(self):
         if self._ws_start_task is not None and not self._ws_start_task.done():
@@ -342,10 +370,12 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             self._ws_start_task = self._config_entry.async_create_background_task(self.hass, self.bridge.ws_connect(), "ws_connection")
             if self._ws_start_task is not None:
                 _LOGGER.debug(f"Watchdog: task created {self._ws_start_task.get_coro()}")
+                async_call_later(self.hass, 10, self.call_later_update_device_registry)
         else:
             _LOGGER.debug(f"Watchdog: websocket is connected")
             if not self.bridge.ws_check_last_update():
                 self._check_for_ws_task_and_cancel_if_running()
+                async_call_later(self.hass, 5, self.call_later_update_device_registry)
 
     # Callable[[Event], Any]
     def __call__(self, evt: Event) -> bool:
@@ -440,7 +470,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             if self._RESTART_TRIGGERED:
                 _LOGGER.info(f"_async_update_data(): RESTART is TRIGGERED (waiting for random sleep delay) - skipping update")
                 return self.data
-    
+
             try:
                 new_data = await self.bridge.read_all()
                 if new_data is not None and len(new_data) > 0:
@@ -452,7 +482,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                 #     self._RESTART_TRIGGERED = True
                 #     self.hass.async_create_task(self.trigger_restart_delayed())
                 return new_data
-    
+
             except ClientConnectionError as exception:
                 self._handle_client_connection_error("_async_update_data()", exception)
                 raise UpdateFailed(f"Error while fetching data: {exception}") from exception
@@ -525,6 +555,13 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         else:
             sw_version = "UNKNOWN"
 
+        comm_mode = self._config_entry.data.get(CONF_PASSWORD, None)
+        if comm_mode is not None and len(comm_mode.strip()) > 0:
+            comm_mode = "WebSocket"
+        else:
+            comm_mode = "HTTP v2 API"
+
+        self._device_info_model_raw = f"{self._config_entry.data.get(CONF_TYPE)} {comm_mode}"
         if self.mode == LAN:
             self._device_info_dict = {
                 # be careful when adjusting the 'identifiers' -> since this will create probably new DeviceEntries
@@ -537,7 +574,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                     self._config_entry.title)},
                 "manufacturer": MANUFACTURER,
                 "name": self._config_entry.title,
-                "model": self._config_entry.data.get(CONF_TYPE),
+                "model": self._device_info_model_raw,
                 "sw_version": sw_version
                 # hw_version
             }
@@ -553,7 +590,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                     self._config_entry.title)},
                 "manufacturer": MANUFACTURER,
                 "name": self._config_entry.title,
-                "model": self._config_entry.data.get(CONF_TYPE),
+                "model": self._device_info_model_raw,
                 "sw_version": sw_version
                 # hw_version
             }
