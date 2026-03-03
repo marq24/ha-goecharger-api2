@@ -605,7 +605,6 @@ class GoeChargerApiV2Bridge:
                     self._ws_device_info.pop('type', None)
                 _LOGGER.debug(f"ws_connect(): ws_device_info: {self._ws_device_info}")
 
-
                 # Step 2: Receive AUTH REQUIRED message
                 auth_req_msg = await ws.receive()
                 auth_data = self._ws_decode_message(auth_req_msg.data)
@@ -663,10 +662,17 @@ class GoeChargerApiV2Bridge:
                 _LOGGER.debug("ws_connect(): Sent authentication response")
 
                 # Step 6: Receive AUTH result
-                auth_result = await ws.receive()
+                try:
+                    # wait a max of 10 seconds for a response
+                    auth_result = await asyncio.wait_for(ws.receive(), timeout=10.0)
+                    _LOGGER.debug("ws_connect(): Received authentication result")
+                except asyncio.TimeoutError:
+                    _LOGGER.warning(f"ws_connect(): Authentication TIMEOUT after 10 seconds - cancel login")
+                    return None
+
                 result_data = self._ws_decode_message(auth_result.data)
                 normalized_result = self._ws_normalize_dict(result_data)
-
+                _LOGGER.debug(f"ws_connect(): Authentication read normalized_result: {normalized_result}")
                 msg_type = normalized_result.get('type', '')
                 if msg_type != 'authSuccess' and not normalized_result.get('success'):
                     _LOGGER.warning(f"ws_connect(): Authentication failed: {normalized_result}")
