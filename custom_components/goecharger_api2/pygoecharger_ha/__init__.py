@@ -594,12 +594,20 @@ class GoeChargerApiV2Bridge:
                     _LOGGER.warning("ws_connect(): No serial in hello message")
                     return None
 
+                version_info = normalized_hello.get('version')
+                main_version_info = version_info.split('.')[0]
+                try:
+                    main_version_info_int = int(main_version_info)
+                except BaseException as e:
+                    main_version_info_int = -1
+                    _LOGGER.warning(f"ws_connect(): Could not parse version info: {version_info} - {type(e).__name__}: {e}")
+
                 self._ws_serial = serial
                 self._ws_secured = normalized_hello.get('secured', False)
                 self._ws_proto = normalized_hello.get('proto', -1)
                 self._ws_protocol = normalized_hello.get('protocol', -1)
 
-                _LOGGER.debug(f"ws_connect(): Extracted the device serial: {self._ws_serial} [secured: {self._ws_secured}, proto: {self._ws_proto}, protocol: {self._ws_protocol}]")
+                _LOGGER.debug(f"ws_connect(): Extracted the device serial: {self._ws_serial} [ver: {version_info}, secured: {self._ws_secured}, proto: {self._ws_proto}, protocol: {self._ws_protocol}]")
                 self._ws_device_info = {k: v for k, v in normalized_hello.items()}
                 if 'type' in self._ws_device_info:
                     self._ws_device_info.pop('type', None)
@@ -652,14 +660,22 @@ class GoeChargerApiV2Bridge:
                     "token3": token3,
                     "hash": auth_hash
                 }
-                if self.token is not None:
-                    # the cloud API can receive real JSON data...
-                    await ws.send_json(auth_response)
-                else:
-                    auth_packed = b'\x00' + msgpack.packb(auth_response)
-                    await ws.send_bytes(auth_packed)
 
-                _LOGGER.debug("ws_connect(): Sent authentication response")
+                # # 57.1 require JSON
+                # # 59.x require JSON
+                # send_as_json_cause_of_version = main_version_info_int <= 59
+                # if self.token is not None or send_as_json_cause_of_version:
+                #     # the cloud API can receive real JSON data...
+                #     await ws.send_json(auth_response)
+                #     _LOGGER.debug("ws_connect(): Sent authentication JSON response")
+                # else:
+                #     auth_packed = b'\x00' + msgpack.packb(auth_response)
+                #     await ws.send_bytes(auth_packed)
+                #     _LOGGER.debug("ws_connect(): Sent authentication BYTE response")
+
+                # looks like, that all VERSIONS work with SEND JSON DATA...
+                await ws.send_json(auth_response)
+                _LOGGER.debug("ws_connect(): Sent authentication JSON response")
 
                 # Step 6: Receive AUTH result
                 try:
