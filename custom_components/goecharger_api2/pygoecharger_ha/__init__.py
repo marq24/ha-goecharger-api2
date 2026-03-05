@@ -553,10 +553,12 @@ class GoeChargerApiV2Bridge:
             }
 
             # Pack as msgpack with 0x00 prefix
-            msg_packed = b'\x00' + msgpack.packb(secure_message)
+            # _LOGGER.debug(f"_ws_send_command(): Sending {key}={value} as SECURED BYTES")
+            # msg_packed = b'\x00' + msgpack.packb(secure_message)
+            # await self._ws_connection.send_bytes(msg_packed)
 
-            _LOGGER.debug(f"_ws_send_command(): Sending {key}={value} as BYTES")
-            await self._ws_connection.send_bytes(msg_packed)
+            _LOGGER.debug(f"_ws_send_command(): Sending {key}={value} as SECURED JSON")
+            await self._ws_connection.send_json(secure_message)
         else:
             # the cloud API can receive real JSON data...
             _LOGGER.debug(f"_ws_send_command(): Sending {key}={value} as JSON")
@@ -591,7 +593,7 @@ class GoeChargerApiV2Bridge:
 
                 serial = normalized_hello.get('serial')
                 if not serial:
-                    _LOGGER.warning("ws_connect(): No serial in hello message")
+                    _LOGGER.warning(f"ws_connect(): No serial in hello message - {normalized_hello}")
                     return None
 
                 version_info = normalized_hello.get('version')
