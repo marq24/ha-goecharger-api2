@@ -7,10 +7,6 @@ from time import time
 from typing import Any, Final
 
 from aiohttp import ClientConnectionError
-from packaging.version import Version
-
-from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bridge, TRANSLATIONS, INTG_TYPE
-from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from homeassistant.components.number import NumberDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -37,6 +33,10 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.loader import async_get_integration
+from packaging.version import Version
+
+from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bridge, TRANSLATIONS, INTG_TYPE
+from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from .const import (
     LAN,
     WAN,
@@ -51,6 +51,7 @@ from .const import (
     CONF_INTEGRATION_TYPE,
     CONFIG_VERSION, CONFIG_MINOR_VERSION
 )
+from .entity import CustomFriendlyNameEntity
 from .service import GoeChargerApiV2Service
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -641,7 +642,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         await check_device_registry(hass=hass)
 
 
-class GoeChargerBaseEntity(Entity):
+class GoeChargerBaseEntity(CustomFriendlyNameEntity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
