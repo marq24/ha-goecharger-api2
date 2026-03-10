@@ -363,18 +363,25 @@ class GoeChargerApiV2Bridge:
                 await asyncio.sleep(0.75)
             return None
         else:
+            params = {}
+            for a_key, a_value in args.items():
+                if isinstance(a_value, (bool, int, float)):
+                    params[a_key] = str(a_value).lower()
+                elif isinstance(a_value, str):
+                    params[a_key] = '"'+str(a_value)+'"'
+                elif isinstance(a_value, dict):
+                    params[a_key] = json.dumps(a_value).replace(' ','')
+            return await self._write_values_int(a_params = params, a_result_key = key, a_result_value = value)
 
-            return await self._write_values_int(args, a_result_key = key, a_result_value = value)
-
-    async def _write_values_int(self, args, a_result_key, a_result_value) -> dict:
-        _LOGGER.info(f"_write_values_int(): going to write {args} to {self._logkey}@{self.host_url}")
+    async def _write_values_int(self, a_params, a_result_key, a_result_value) -> dict:
+        _LOGGER.info(f"_write_values_int(): going to write {a_params} to {self._logkey}@{self.host_url}")
 
         if self.token:
             headers = {"Authorization": self.token}
         else:
             headers = None
 
-        async with self.web_session.get(f"{self.host_url}/api/set", headers=headers, params=args) as res:
+        async with self.web_session.get(f"{self.host_url}/api/set", headers=headers, params=a_params) as res:
             try:
                 if res.status == 200:
                     try:
