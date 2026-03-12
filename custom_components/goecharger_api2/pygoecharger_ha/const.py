@@ -66,20 +66,44 @@ class CAR_VALUES(Enum):
 # compatibility car list... will set 'ct' value and 'su' true/false (true when ct != default)
 
 class CT_VALUES(Enum):
-    DEFAULT         = "default"
-    KIASOUL         = "kiasoul"
-    RENAULTZOE      = "renaultzoe"
-    MITSUBISHIIMIEV = "mitsubishiimiev"
-    CITROENCZERO    = "citroenczero"
-    PEUGEOTION      = "peugeotion"
+    DEFAULT                 = "default"
+    KIASOUL                 = "kiasoul"
+    RENAULTZOE              = "renaultzoe"
+    MITSUBISHIIMIEV         = "mitsubishiimiev"
+    CITROENCZERO            = "citroenczero"
+    PEUGEOTION              = "peugeotion"
+    ECORSA                  = "ecorsa"
+    VWID3_2                 = "vwid3_2"
+    VWID3_4                 = "vwid3_4"
+    VWID5                   = "vwid5"
+    CUPRABORNSTANDARD       = "cuprabornstandard"
+    CUPRABORNALTERNATIVE    = "cuprabornalternative"
+    FORDEXPLORER            = "fordexplorer"
+    PORSCHETAYCAN           = "porschetaycan"
+    SKODAENYAQ              = "skodaenyaq"
+    DACIASPRING             = "daciaspring"
+    MERCEDES                = "mercedes"
+    SSANGYONG               = "ssangyong"
 
 CT_VALUES_MAP: Final = {
-    CT_VALUES.DEFAULT.value:          "default",
-    CT_VALUES.KIASOUL.value:          "kiaSoul",
-    CT_VALUES.RENAULTZOE.value:       "renaultZoe",
-    CT_VALUES.MITSUBISHIIMIEV.value:  "MitsubishiImiev",
-    CT_VALUES.CITROENCZERO.value:     "citroenCZero",
-    CT_VALUES.PEUGEOTION.value:       "peugeotIon",
+    CT_VALUES.DEFAULT.value:                "default",
+    CT_VALUES.KIASOUL.value:                "kiaSoul",
+    CT_VALUES.RENAULTZOE.value:             "renaultZoe",
+    CT_VALUES.MITSUBISHIIMIEV.value:        "MitsubishiImiev",
+    CT_VALUES.CITROENCZERO.value:           "citroenCZero",
+    CT_VALUES.PEUGEOTION.value:             "peugeotIon",
+    CT_VALUES.ECORSA.value:                 "ecorsa",
+    CT_VALUES.VWID3_2.value:                "vwID3_2",
+    CT_VALUES.VWID3_4.value:                "vwID3_4",
+    CT_VALUES.VWID5.value:                  "vwID5",
+    CT_VALUES.CUPRABORNSTANDARD.value:      "cupraBornStandard",
+    CT_VALUES.CUPRABORNALTERNATIVE.value:   "cupraBornAlternative",
+    CT_VALUES.FORDEXPLORER.value:           "fordExplorer",
+    CT_VALUES.PORSCHETAYCAN.value:          "porscheTaycan",
+    CT_VALUES.SKODAENYAQ.value:             "SkodaEnyaq",
+    CT_VALUES.DACIASPRING.value:            "daciaSpring",
+    CT_VALUES.MERCEDES.value:               "mercedes",
+    CT_VALUES.SSANGYONG.value:              "ssangyong"
 }
 
 TRANSLATIONS: Final = {

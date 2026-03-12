@@ -151,7 +151,19 @@
           "renaultzoe": "Renault Zoe",
           "mitsubishiimiev": "Mitsubishi iMiev",
           "citroenczero": "Citroën C-Zero",
-          "peugeotion": "Peugeot iOn"
+          "peugeotion": "Peugeot iOn",
+          "ecorsa": "Opel Corsa-e",
+          "vwid3_2": "VW ID (SW < 3.2)",
+          "vwid3_4": "VW ID (SW 3.2-4.1)",
+          "vwid5": "WV ID mit SW 5.x",
+          "cuprabornstandard": "Cupra Born Standard",
+          "cuprabornalternative": "Cupra Born Alternative",
+          "fordexplorer": "Ford Explorer",
+          "porschetaycan": "Porsche Taycan",
+          "skodaenyaq": "Skoda Enyaq",
+          "daciaspring": "Dacia Spring",
+          "mercedes": "Mercedes",
+          "ssangyong": "Ssangyong"
         }
       },
       "bac": {

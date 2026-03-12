@@ -124,11 +124,32 @@ class GoeChargerSelect(GoeChargerBaseEntity, SelectEntity):
                         # quite a quick hack - since normally we write multiple values via a service...
                         args = {Tag.CT.key: str(CT_VALUES_MAP[option])}
 
-                        # simulateUnpluggingShort (su) false, when Default, true otherwise
-                        if option == CT_VALUES.DEFAULT.value:
-                            args[Tag.SU.key] = False
-                        else:
-                            args[Tag.SU.key] = True
+                        # go-e App set
+                        # ct, mca, mci, acp, su, mcpd, fmt, psm, fst, spl3, mpwst, mptwt
+
+                        # NOT CHANGING:
+                        # mci: 0, fmt: 300000, fst: 1400, spl3: 4200, mpwst: 120000, mptwt: 600000
+
+                        # ALL: mca: 6 (except renaultZoe=10), psm: 0 (except daciaSpring=1)
+                        #default,               acp: true,  su: false,  mcpd: 0,
+                        #kiaSoul,               acp: true,  su: true,   mcpd: 0,
+                        #renaultZoe,    mca:10, acp: true,  su: true,   mcpd: 0,
+                        #MitsubishiImiev,       acp: true,  su: true,   mcpd: 0,
+                        #citroenCZero,          acp: true,  su: true,   mcpd: 0,
+                        #peugeotIon.            acp: true,  su: true,   mcpd: 0,
+
+                        #ecorsa,                acp: true,  su: true,   mcpd: 0,
+                        #vwID3_2,               acp: false, su: false,  mcpd: 0,
+                        #vwID3_4,               acp: true,  su: true,   mcpd: 0,
+                        #vwID5,                 acp: true,  su: true,   mcpd: 0,
+                        #cupraBornStandard,     acp: true,  su: true,   mcpd: 0, ...
+                        #cupraBornAlternative,  acp: true,  su: true,   mcpd: 120000, ...
+                        #fordExplorer,          acp: true,  su: true,   mcpd: 120000, ...
+                        #porscheTaycan,         acp: true,  su: true,   mcpd: 120000, ...
+                        #SkodaEnyaq,            acp: true,  su: true,   mcpd: 120000, ...
+                        #daciaSpring,           acp: true,  su: false,  mcpd: 0, ... psm:1
+                        #mercedes,              acp: true,  su: true,   mcpd: 0,
+                        #ssangyong,             acp: true,  su: false,  mcpd: 0,
 
                         # setting the Minimum charging current (mca)
                         if option == CT_VALUES.RENAULTZOE.value:
@@ -136,6 +157,30 @@ class GoeChargerSelect(GoeChargerBaseEntity, SelectEntity):
                             args[Tag.MCA.key] = 10
                         else:
                             args[Tag.MCA.key] = 6
+
+                        # allowChargePause (acp) false when vwID3_2, true otherwise
+                        if option == CT_VALUES.VWID3_2.value:
+                            args[Tag.ACP.key] = False
+                        else:
+                            args[Tag.ACP.key] = True
+
+                        # simulateUnpluggingShort (su) false, when Default, vwID3_2, daciaSpring, true otherwise
+                        if option in [CT_VALUES.DEFAULT.value, CT_VALUES.VWID3_2.value, CT_VALUES.DACIASPRING.value, CT_VALUES.SSANGYONG.value]:
+                            args[Tag.SU.key] = False
+                        else:
+                            args[Tag.SU.key] = True
+
+                        # phaseSwitchMode (psm) 1, when daciaSpring, 0 otherwise
+                        if option == CT_VALUES.DACIASPRING.value:
+                            args[Tag.PSM.key] = 1
+                        else:
+                            args[Tag.PSM.key] = 0
+
+                        # minChargePauseDuration (mcpd)
+                        if option in [CT_VALUES.CUPRABORNALTERNATIVE.value, CT_VALUES.FORDEXPLORER.value, CT_VALUES.PORSCHETAYCAN.value, CT_VALUES.SKODAENYAQ.value]:
+                            args[Tag.MCPD.key] = 120000
+                        else:
+                            args[Tag.MCPD.key] = 0
 
                         # finally wringing the key...
                         await self.coordinator.async_write_multiple_keys(attr=args, key=self.data_key, value=option, entity=self)
