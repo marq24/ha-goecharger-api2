@@ -295,6 +295,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
 
         # config_entry only need for providing the '_device_info_dict'...
         self._config_entry = config_entry
+        self._is_core_wallbox = None
         self._device_info_dict = {}
         self._device_info_model_raw = None
         a_comm_mode = self._config_entry.data.get(CONF_PASSWORD, None)
@@ -556,7 +557,9 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         else:
             comm_mode = "HTTP v2 API"
 
-        self._device_info_model_raw = f"{self._config_entry.data.get(CONF_TYPE)} {comm_mode}"
+        model_info = self._config_entry.data.get(CONF_TYPE, "UNKNOWN")
+        self._is_core_wallbox = "phoenix" in model_info.lower() or "core" in model_info.lower()
+        self._device_info_model_raw = f"{model_info} {comm_mode}"
         if self.mode == LAN:
             self._device_info_dict = {
                 # be careful when adjusting the 'identifiers' -> since this will create probably new DeviceEntries
@@ -641,6 +644,22 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         _LOGGER.debug(f"check device registry for orphan {DOMAIN} entries NOW!")
         await check_device_registry(hass=hass)
 
+    def is_valid_charger_entity(self, description: EntityDescription) -> bool:
+        if description.key == Tag.TMA.key and hasattr(description, "idx"):
+            # CORE/ CORE PRO wallbox have temperatures at index 2,3,4,5
+            if self._is_core_wallbox and description.idx in [0, 1]:
+                return False
+            # old wallbox types have tma values 0, 1
+            elif not self._is_core_wallbox and description.idx > 1:
+                return False
+
+        # other sensor values not supported by CORE/ CORE PRO
+        elif self._is_core_wallbox and description.key in [Tag.CUS.key, Tag.FFB.key, Tag.LCK.key,   # SENSORS
+                                                           Tag.UPO.key,                             # SWITCHES
+                                                           Tag.SDP.key, Tag.BAC.key, Tag.CBL.key, Tag.UST.key]: # SELECTS
+            return False
+
+        return True
 
 class GoeChargerBaseEntity(CustomFriendlyNameEntity):
     _attr_should_poll = False

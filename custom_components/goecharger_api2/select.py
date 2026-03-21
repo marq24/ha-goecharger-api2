@@ -23,8 +23,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
 
     if coordinator.intg_type == INTG_TYPE.CHARGER.value:
         for description in SELECT_SENSORS:
-            entity = GoeChargerSelect(coordinator, description)
-            entities.append(entity)
+            if coordinator.is_valid_charger_entity(description):
+                entity = GoeChargerSelect(coordinator, description)
+                entities.append(entity)
     else:
         for description in CONTROLLER_SELECT_SENSORS:
             entity = GoeChargerSelect(coordinator, description)
@@ -74,6 +75,8 @@ class GoeChargerSelect(GoeChargerBaseEntity, SelectEntity):
                 # where None means, that Auth is required
                 if self.data_key == Tag.TRX.key:
                     value = "null"
+                elif self.data_key == Tag.CT.key:
+                    value = CT_VALUES.DEFAULT.value
                 else:
                     value = 'unknown'
             if isinstance(value, int):

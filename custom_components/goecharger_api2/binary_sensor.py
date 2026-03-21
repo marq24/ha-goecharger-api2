@@ -1,12 +1,13 @@
 import logging
 
-from custom_components.goecharger_api2.pygoecharger_ha import INTG_TYPE
-from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from custom_components.goecharger_api2.pygoecharger_ha import INTG_TYPE
+from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity
 from .const import DOMAIN, BINARY_SENSORS, CONTROLLER_BINARY_SENSORS, \
     ExtBinarySensorEntityDescription
@@ -21,8 +22,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
 
     if coordinator.intg_type == INTG_TYPE.CHARGER.value:
         for description in BINARY_SENSORS:
-            entity = GoeChargerApiV2BinarySensor(coordinator, description)
-            entities.append(entity)
+            if coordinator.is_valid_charger_entity(description):
+                entity = GoeChargerApiV2BinarySensor(coordinator, description)
+                entities.append(entity)
     else:
         for description in CONTROLLER_BINARY_SENSORS:
             entity = GoeChargerApiV2BinarySensor(coordinator, description)

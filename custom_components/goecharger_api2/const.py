@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from typing import Final
 
-from custom_components.goecharger_api2.pygoecharger_ha.const import CT_VALUES
-from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag, IS_TRIGGER
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription, BinarySensorDeviceClass
 from homeassistant.components.button import ButtonEntityDescription
 from homeassistant.components.number import NumberEntityDescription, NumberDeviceClass, NumberMode
@@ -14,6 +12,9 @@ from homeassistant.const import (
     UnitOfFrequency, UnitOfElectricPotential, PERCENTAGE, SIGNAL_STRENGTH_DECIBELS,
     Platform
 )
+
+from custom_components.goecharger_api2.pygoecharger_ha.const import CT_VALUES
+from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag, IS_TRIGGER
 
 # Base component constants
 MANUFACTURER: Final = "go-e GmbH [Austria]"
@@ -985,6 +986,46 @@ SENSOR_SENSORS = [
     ExtSensorEntityDescription(
         key=Tag.TMA.key,
         idx=1,
+        suggested_display_precision=1,
+        #entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.TMA.key,
+        idx=2,
+        suggested_display_precision=1,
+        #entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.TMA.key,
+        idx=3,
+        suggested_display_precision=1,
+        #entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.TMA.key,
+        idx=4,
+        suggested_display_precision=1,
+        #entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.TMA.key,
+        idx=5,
         suggested_display_precision=1,
         #entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,

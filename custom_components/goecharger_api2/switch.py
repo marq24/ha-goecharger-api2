@@ -1,12 +1,13 @@
 import logging
 from typing import Literal
 
-from custom_components.goecharger_api2.pygoecharger_ha import INTG_TYPE
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, STATE_OFF, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from custom_components.goecharger_api2.pygoecharger_ha import INTG_TYPE
 from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity
 from .const import DOMAIN, SWITCH_SENSORS, CONTROLLER_SWITCH_SENSORS, ExtSwitchEntityDescription
 
@@ -20,8 +21,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
 
     if coordinator.intg_type == INTG_TYPE.CHARGER.value:
         for description in SWITCH_SENSORS:
-            entity = GoeChargerSwitch(coordinator, description)
-            entities.append(entity)
+            if coordinator.is_valid_charger_entity(description):
+                entity = GoeChargerSwitch(coordinator, description)
+                entities.append(entity)
     else:
         for description in CONTROLLER_SWITCH_SENSORS:
             entity = GoeChargerSwitch(coordinator, description)
