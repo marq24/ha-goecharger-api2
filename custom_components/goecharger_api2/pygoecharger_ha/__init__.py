@@ -538,8 +538,11 @@ class GoeChargerApiV2Bridge:
         _LOGGER.debug(f"_ws_send_command(): Sending {key}:{value} via WebSocket...")
         self._ws_request_id_counter += 1
 
-        if value is None:
-            value = "null"
+        # looks like that we must really provide 'None' as the json value - so no
+        # special handling is required when we want to set the value to 'null'...
+        # see https://github.com/marq24/ha-goecharger-api2/issues/124
+        #if value is None:
+        #    value = "null"
 
         original_message = {
             "type": "setValue",
