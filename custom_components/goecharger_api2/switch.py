@@ -100,7 +100,7 @@ class GoeChargerSwitch(GoeChargerBaseEntity, SwitchEntity):
                         value = self.coordinator.data[self.data_key]
                 else:
                     if len(self.coordinator.data) > 0:
-                        _LOGGER.info(f"is_on: for {self.data_key} not found in data: {len(self.coordinator.data)}")
+                        _LOGGER.info(f"is_on: for `{self.data_key}` not found in data: {len(self.coordinator.data)}")
                 if value is None or value == "":
                     value = None
 

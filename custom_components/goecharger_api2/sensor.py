@@ -62,47 +62,49 @@ class GoeChargerSensor(GoeChargerBaseEntity, SensorEntity, RestoreEntity):
     @property
     def native_value(self):
         try:
-            if self.entity_description.tuple_idx is not None and len(self.entity_description.tuple_idx) > 1:
-                subKey1 = self.entity_description.tuple_idx[0]
-                subKey2 = self.entity_description.tuple_idx[1]
+            value = None
+            if self.coordinator.data is not None:
+                if self.entity_description.tuple_idx is not None and len(self.entity_description.tuple_idx) > 1:
+                    subKey1 = self.entity_description.tuple_idx[0]
+                    subKey2 = self.entity_description.tuple_idx[1]
 
-                # very special handling for 'energy by card' sensor - since in firmware 60.0
-                # the go-e will deliver the values now directly in the 'root' object and does
-                # not provide a card object any longer...
-                # 2026/02/15 - When we make use of the websocket, then the card info is
-                if self.data_key == Tag.CARDS.key and self.coordinator.cards_as_single_entries():
-                    the_patched_key = None
-                    # to my best knowledge, only 'energy' is currently in use - but let's
-                    # prepare the code for all passible cases
-                    if subKey2.lower() == "energy":
-                        the_patched_key = f"c{subKey1}e"
-                    elif subKey2.lower() == "name":
-                        the_patched_key = f"c{subKey1}n"
-                    elif subKey2.lower() == "cardid":
-                        the_patched_key = f"c{subKey1}i"
+                    # very special handling for 'energy by card' sensor - since in firmware 60.0
+                    # the go-e will deliver the values now directly in the 'root' object and does
+                    # not provide a card object any longer...
+                    # 2026/02/15 - When we make use of the websocket, then the card info is
+                    if self.data_key == Tag.CARDS.key and self.coordinator.cards_as_single_entries():
+                        the_patched_key = None
+                        # to my best knowledge, only 'energy' is currently in use - but let's
+                        # prepare the code for all passible cases
+                        if subKey2.lower() == "energy":
+                            the_patched_key = f"c{subKey1}e"
+                        elif subKey2.lower() == "name":
+                            the_patched_key = f"c{subKey1}n"
+                        elif subKey2.lower() == "cardid":
+                            the_patched_key = f"c{subKey1}i"
 
-                    if the_patched_key is not None:
-                        value = self.coordinator.data[the_patched_key]
+                        if the_patched_key is not None:
+                            value = self.coordinator.data[the_patched_key]
+                        else:
+                            value = None
                     else:
-                        value = None
+                        value = self.coordinator.data[self.data_key][subKey1][subKey2]
+                elif self.entity_description.idx is not None:
+                    value = self.coordinator.data[self.data_key][self.entity_description.idx]
+                elif self.data_key == Tag.CLL.key:
+                    # very special handling for the cll attribute - which is actually a json object that might should
+                    # be parsed to separate sensors - but for now we just create a string list
+                    value = ""
+                    for a_key in self.coordinator.data[self.data_key]:
+                        a_map_key = f"{self.data_key.lower()}_{a_key.lower()}"
+                        if  a_map_key in self.coordinator.lang_map:
+                            value = f"{value}, {self.coordinator.lang_map[a_map_key]}: {self.coordinator.data[self.data_key][a_key]}"
+                        else:
+                            value = f"{value}, {self._camel_to_snake(a_key)}: {self.coordinator.data[self.data_key][a_key]}"
+
+                    value = value[2:]
                 else:
-                    value = self.coordinator.data[self.data_key][subKey1][subKey2]
-            elif self.entity_description.idx is not None:
-                value = self.coordinator.data[self.data_key][self.entity_description.idx]
-            elif self.data_key == Tag.CLL.key:
-                # very special handling for the cll attribute - which is actually a json object that might should
-                # be parsed to separate sensors - but for now we just create a string list
-                value = ""
-                for a_key in self.coordinator.data[self.data_key]:
-                    a_map_key = f"{self.data_key.lower()}_{a_key.lower()}"
-                    if  a_map_key in self.coordinator.lang_map:
-                        value = f"{value}, {self.coordinator.lang_map[a_map_key]}: {self.coordinator.data[self.data_key][a_key]}"
-                    else:
-                        value = f"{value}, {self._camel_to_snake(a_key)}: {self.coordinator.data[self.data_key][a_key]}"
-
-                value = value[2:]
-            else:
-                value = self.coordinator.data[self.data_key]
+                    value = self.coordinator.data[self.data_key]
 
             if value is None or len(str(value)) == 0:
                 value = None

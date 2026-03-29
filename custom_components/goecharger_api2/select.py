@@ -61,24 +61,31 @@ class GoeChargerSelect(GoeChargerBaseEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         try:
-            if self.entity_description.idx is not None:
-                if self.data_key in self.coordinator.data:
-                    value = self.coordinator.data[self.data_key][self.entity_description.idx]
+            value = None
+            if self.coordinator.data is not None:
+                if self.entity_description.idx is not None:
+                    if self.data_key in self.coordinator.data:
+                        value = self.coordinator.data[self.data_key][self.entity_description.idx]
+                    else:
+                        _LOGGER.info(f"current_option: for `{self.data_key}` with index `{self.entity_description.idx}` not found in data: {len(self.coordinator.data)}")
+                        return "unavailable"
                 else:
-                    _LOGGER.warning(f"current_option: for {self.data_key} with index not found in data: {len(self.coordinator.data)}")
-                    return "unavailable"
-            else:
-                value = self.coordinator.data[self.data_key]
+                    if self.data_key in self.coordinator.data:
+                        value = self.coordinator.data[self.data_key]
+                    else:
+                        _LOGGER.info(f"current_option: for `{self.data_key}` not found in data: {len(self.coordinator.data)}")
+
 
             if value is None or value == "":
                 # special handling for tra 'transaction' API key...
-                # where None means, that Auth is required
+                # where None means that Auth is required
                 if self.data_key == Tag.TRX.key:
                     value = "null"
                 elif self.data_key == Tag.CT.key:
                     value = CT_VALUES.DEFAULT.value
                 else:
                     value = 'unknown'
+
             if isinstance(value, int):
                 value = str(value)
 

@@ -1,11 +1,12 @@
 import logging
 
-from custom_components.goecharger_api2.pygoecharger_ha import INTG_TYPE
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from custom_components.goecharger_api2.pygoecharger_ha import INTG_TYPE
 from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity
 from .const import DOMAIN, NUMBER_SENSORS, CONTROLLER_NUMBER_SENSORS, ExtNumberEntityDescription
 
@@ -68,10 +69,12 @@ class GoeChargerNumber(GoeChargerBaseEntity, NumberEntity):
     @property
     def native_value(self):
         try:
-            if self.entity_description.idx is not None:
-                value = self.coordinator.data[self.data_key][self.entity_description.idx]
-            else:
-                value = self.coordinator.data[self.data_key]
+            value = None
+            if self.coordinator.data is not None:
+                if self.entity_description.idx is not None:
+                    value = self.coordinator.data[self.data_key][self.entity_description.idx]
+                else:
+                    value = self.coordinator.data[self.data_key]
 
             if value is None or value == "":
                 return "unknown"
