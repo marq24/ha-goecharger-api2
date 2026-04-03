@@ -8,6 +8,7 @@ import random
 import secrets
 from collections import ChainMap
 from time import time
+from typing import Any, Dict, Optional
 
 import aiohttp
 import bcrypt
@@ -41,6 +42,44 @@ from custom_components.goecharger_api2.pygoecharger_ha.const import (
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag, IS_TRIGGER
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
+
+
+class ExpiringStore:
+    """A store that holds JSON objects for a maximum of one minute."""
+
+    def __init__(self, ttl: int = 60):
+        self._store: Dict[str, Dict[str, Any]] = {}
+        self._ttl = ttl
+
+    def set(self, ref_id: str, json_obj: Any) -> None:
+        """Store a JSON object under a reference ID with the current timestamp."""
+        self._store[ref_id] = {
+            "data": json_obj,
+            "expires_at": time() + self._ttl
+        }
+        self._cleanup()
+
+    def get(self, ref_id: str) -> Optional[Any]:
+        """Retrieve a JSON object if it hasn't expired yet."""
+        self._cleanup()
+        if ref_id in self._store:
+            entry = self._store[ref_id]
+            if entry["expires_at"] > time():
+                return entry["data"]
+            else:
+                del self._store[ref_id]
+        return None
+
+    def _cleanup(self) -> None:
+        """Remove all expired entries from the store."""
+        now = time()
+        expired_keys = [k for k, v in self._store.items() if v["expires_at"] <= now]
+        for k in expired_keys:
+            del self._store[k]
+
+    def __len__(self) -> int:
+        self._cleanup()
+        return len(self._store)
 
 
 class GoeChargerApiV2Bridge:
@@ -113,6 +152,7 @@ class GoeChargerApiV2Bridge:
         self._ws_connection = None
         self._ws_hashed_password = None
         self._ws_request_id_counter = 0
+        self._ws_request_storage = ExpiringStore()
         self._ws_debounced_update_task = None
         self._ws_LAST_UPDATE = 0
         self._ws_device_info = {}
@@ -537,6 +577,7 @@ class GoeChargerApiV2Bridge:
         """Send a setValue command via WebSocket"""
         _LOGGER.debug(f"_ws_send_command(): Sending {key}:{value} via WebSocket...")
         self._ws_request_id_counter += 1
+        the_request_id_to_use = int(self._ws_request_id_counter)
 
         # looks like that we must really provide 'None' as the json value - so no
         # special handling is required when we want to set the value to 'null'...
@@ -546,10 +587,13 @@ class GoeChargerApiV2Bridge:
 
         original_message = {
             "type": "setValue",
-            "requestId": self._ws_request_id_counter,
+            "requestId": the_request_id_to_use,
             "key": key,
             "value": value
         }
+
+        # for debugging purpose we want to keep the original message
+        self._ws_request_storage.set(str(the_request_id_to_use), original_message)
 
         if self._ws_secured:
             # the local websocket needs special handling...
@@ -800,14 +844,25 @@ class GoeChargerApiV2Bridge:
                     _LOGGER.debug(f"extract_ws_message_data(): Received 'deltaStatus' with {len(filtered_data)} keys")
 
         elif msg_type == 'response':
+            the_request_payload = None
+            if 'requestId' in data:
+                the_request_id = data.get('requestId', 'INVALID')
+                the_request_payload = self._ws_request_storage.get(the_request_id)
+
             if data.get('success'):
                 status_data = data.get('status', {})
                 if status_data and len(status_data) > 0:
                     self._ws_states.update(status_data)
                     new_data_arrived = True
-                    _LOGGER.debug(f"extract_ws_message_data(): Received 'response' with {len(status_data)} keys")
+                    if the_request_payload is not None:
+                        _LOGGER.debug(f"extract_ws_message_data(): Received 'response' with {len(status_data)} keys - request was: {the_request_payload}")
+                    else:
+                        _LOGGER.debug(f"extract_ws_message_data(): Received 'response' with {len(status_data)} keys")
             else:
-                _LOGGER.warning(f"extract_ws_message_data(): Command failed: {data}")
+                if the_request_payload is not None:
+                    _LOGGER.warning(f"extract_ws_message_data(): Command failed: {data} - request was: {the_request_payload}")
+                else:
+                    _LOGGER.warning(f"extract_ws_message_data(): Command failed: {data}")
 
         else:
             _LOGGER.debug(f"extract_ws_message_data(): Received {msg_type} message")
