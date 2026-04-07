@@ -138,7 +138,7 @@
       "rdre": {"name":  "Zufällige max. Verzögerung: Nach Stromausfall"},
       "rdpl": {"name":  "Zufällige max. Verzögerung: Unbekannt"},
       "sh": {"name": "Nachwirkung Stopp"},
-      "spl3": {"name": "Wechsel zu 3-phasigem Laden bei"},
+      "spl3": {"name": "Wechsel zu 3-phasigem Laden über"},
       "sumd": {"name": "Simuliertes-Ausstecken 'Dauer'"},
       "zfo": {"name": "Zero Feed-in Offset"}
     },
@@ -241,7 +241,7 @@
         }
       },
       "ust": {
-        "name": "Kable Entriegelung",
+        "name": "Kabel Entriegelung",
         "state": {
           "0": "Standardmodus",
           "1": "Automatisch entriegeln",
@@ -332,6 +332,13 @@
           "3": "Laden (mit PV-Überschuss aktiv)",
           "4": "Blockieren (Laden mit PV-Überschuss aktiv)"
         }
+      },
+      "frm": {"name": "Rundungs-Modus",
+        "state": {
+          "0": "Netzbezug bevorzugen",
+          "1": "Default",
+          "2": "Netzeinspeisung bevorzugen"
+        }
       }
     },
     "sensor": {
@@ -346,7 +353,7 @@
       "nrg_8": {"name": "Leistung L2"},
       "nrg_9": {"name": "Leistung L3"},
       "nrg_10": {"name": "Leistung N"},
-      "nrg_11": {"name": "Totale-Leistung"},
+      "nrg_11": {"name": "Aktuelle Leistung (total)"},
       "nrg_12": {"name": "Leistungsfaktor L1"},
       "nrg_13": {"name": "Leistungsfaktor L2"},
       "nrg_14": {"name": "Leistungsfaktor L3"},

@@ -816,6 +816,14 @@ SELECT_SENSORS = [
         icon="mdi:lock-open-outline",
         entity_registry_enabled_default=True
     ),
+    ExtSelectEntityDescription(
+        key=Tag.FRM.key,
+        options=["0", "1", "2"],
+        #entity_category=EntityCategory.CONFIG,
+        device_class=None,
+        icon="mdi:transmission-tower-export",
+        entity_registry_enabled_default=True
+    ),
 ]
 SENSOR_SENSORS = [
     # INDEXED Values...
@@ -1049,7 +1057,7 @@ SENSOR_SENSORS = [
         key=Tag.CDI.key,
         idx="value",
         factor=60000,
-        #entity_category=EntityCategory.DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=None,
@@ -1224,6 +1232,7 @@ SENSOR_SENSORS = [
         icon="mdi:lock-open-check-outline",
         entity_registry_enabled_default=True
     ),
+    # can be removed (later) to avoid 'Breaking Change'
     ExtSensorEntityDescription(
         key=Tag.FRM.key,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -1233,6 +1242,7 @@ SENSOR_SENSORS = [
         icon="mdi:transmission-tower-export",
         entity_registry_enabled_default=False
     ),
+    # can be removed (later) to avoid 'Breaking Change'
     ExtSensorEntityDescription(
         key=Tag.FRM.key,
         lookup=True,
@@ -1241,7 +1251,7 @@ SENSOR_SENSORS = [
         state_class=None,
         device_class=None,
         icon="mdi:transmission-tower-export",
-        entity_registry_enabled_default=True
+        entity_registry_enabled_default=False
     ),
     ExtSensorEntityDescription(
         key=Tag.LCK.key,
@@ -2016,7 +2026,7 @@ SWITCH_SENSORS = [
     ),
     ExtSwitchEntityDescription(
         key=Tag.SU.key,
-        #entity_category=EntityCategory.CONFIG,
+        entity_category=EntityCategory.CONFIG,
         device_class=None,
         icon="mdi:ab-testing",
         entity_registry_enabled_default=True

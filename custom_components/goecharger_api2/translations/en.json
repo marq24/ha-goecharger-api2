@@ -332,6 +332,13 @@
           "3": "Loading (Surplus active)",
           "4": "Blocked (Surplus active)"
         }
+      },
+      "frm": {"name": "Rounding mode",
+        "state": {
+          "0": "Prefer power import from grid",
+          "1": "Default",
+          "2": "Prefer power export to grid"
+        }
       }
     },
     "sensor": {

@@ -138,7 +138,7 @@ class Tag(ApiKey, Enum):
     # forceState (Neutral=0, Off=1, On=2)
     FRC = ApiKey(key="frc", cat=CAT.CONFIG, writeable=True)
     # roundingMode PreferPowerFromGrid=0, Default=1, PreferPowerToGrid=2
-    FRM = ApiKey(key="frm", cat=CAT.CONFIG)
+    FRM = ApiKey(key="frm", cat=CAT.CONFIG, writeable=True)
     # force_single_phase, this is only the result of the charging logic, if it wishes single force or not at the moment
     FSP = ApiKey(key="fsp", cat=CAT.STATUS)
     # force single phase toggle wished since
