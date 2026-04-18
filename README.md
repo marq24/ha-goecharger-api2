@@ -24,7 +24,14 @@ List of confirmed working go-eCharger Firmware versions with this integration:
 - 57.0 & 57.1
 - 56.2 - 56.11
 - 055.0, 055.5, 055.7, 055.8
- 
+
+#### Firmware update note (April 2026)
+Since you must use the go-eApp to update the go-eCharger firmware, it can happen that the mobile App and the Integration start some sort of race condition concerning the use of the websocket connection.
+
+**To avoid any issues, when you want to update the go-eCharger firmware, it's recommended to pause the HA integration while you’re going to upgrade the firmware via the go-eApp.**
+
+At least that was the case for me when updating from 60.3 to 60.4. I did not notice any similar issues with any firmware updates before.
+
 ### go-eController Firmware Versions
 
 List of confirmed working go-eController Firmware versions with this integration:
