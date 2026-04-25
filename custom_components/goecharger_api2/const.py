@@ -354,7 +354,7 @@ NUMBER_SENSORS = [
     ExtNumberEntityDescription(
         key=Tag.FST.key,
         native_max_value=32000,
-        native_min_value=10000,
+        native_min_value=-10000,
         native_step=10,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfPower.WATT,
