@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_TOKEN,
     CONF_PASSWORD,
+    CONF_DELAY,
     EVENT_HOMEASSISTANT_STARTED
 )
 from homeassistant.core import HomeAssistant, Event, SupportsResponse, CoreState
@@ -116,6 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         start_ws_watch_dog = True
     else:
         start_ws_watch_dog = False
+
     if start_ws_watch_dog:
         # ws watchdog...
         if hass.state is CoreState.running:
@@ -310,6 +312,11 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         self._CLIENT_COMMUNICATION_ERROR_COUNT = 0
         self._RESTART_TRIGGERED = False
         self._debounced_update_task = None
+        if config_entry.data.get(CONF_DELAY, False):
+            self._ws_data_update_notify_interval_in_seconds = SCAN_INTERVAL.seconds
+        else:
+            self._ws_data_update_notify_interval_in_seconds = None
+
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
     async def call_later_update_device_registry(self, now:Any):
