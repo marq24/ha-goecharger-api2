@@ -3,15 +3,24 @@ from typing import Final, Any
 
 import voluptuous as vol
 from aiohttp import ClientConnectionError
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.config_entries import ConfigFlowResult, SOURCE_RECONFIGURE
+from homeassistant.const import (
+    CONF_ID,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_MODEL,
+    CONF_TYPE,
+    CONF_SCAN_INTERVAL,
+    CONF_DELAY,
+    CONF_TOKEN,
+    CONF_MODE
+)
+from homeassistant.helpers import selector
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bridge, INTG_TYPE
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.config_entries import ConfigFlowResult, SOURCE_RECONFIGURE
-from homeassistant.const import CONF_ID, CONF_HOST, CONF_PASSWORD, CONF_MODEL, CONF_TYPE, CONF_SCAN_INTERVAL, \
-    CONF_TOKEN, CONF_MODE
-from homeassistant.helpers import selector
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from .const import DOMAIN, CONF_11KWLIMIT, CONF_INTEGRATION_TYPE, LAN, WAN, CONFIG_VERSION, CONFIG_MINOR_VERSION
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -33,6 +42,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._selected_system = LAN
         self._default_scan_interval = 30 # Default scan interval for LAN - for WAN it will be set to 120 seconds
+        self._default_delay = False
 
         self._default_host = "YOUR-IP-OR-HOSTNAME-HERE"
         self._default_integration_type = INTG_TYPE.CHARGER.value
@@ -52,6 +62,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if self._selected_system == WAN:
             self._default_scan_interval = entry_data.get(CONF_SCAN_INTERVAL, 120)
+            self._default_delay = entry_data.get(CONF_DELAY, False)
             self._default_id = entry_data.get(CONF_ID, "YOUR-SERIAL-HERE")
             self._default_password = entry_data.get(CONF_PASSWORD, "")
             self._default_integration_type = entry_data.get(CONF_INTEGRATION_TYPE, INTG_TYPE.CHARGER.value)
@@ -60,6 +71,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             self._selected_system = LAN
             self._default_scan_interval = entry_data.get(CONF_SCAN_INTERVAL, 30)
+            self._default_delay = entry_data.get(CONF_DELAY, False)
             self._default_host = entry_data.get(CONF_HOST, "YOUR-IP-OR-HOSTNAME-HERE")
             self._default_password = entry_data.get(CONF_PASSWORD, "")
             self._default_integration_type = entry_data.get(CONF_INTEGRATION_TYPE, INTG_TYPE.CHARGER.value)
@@ -138,6 +150,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_HOST:              self._default_host,
                 CONF_PASSWORD:          self._default_password,
                 CONF_SCAN_INTERVAL:     self._default_scan_interval,
+                CONF_DELAY:             self._default_delay,
                 CONF_11KWLIMIT:         self._default_11kWLimit
             }
 
@@ -157,6 +170,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
                 ),
                 vol.Required(CONF_SCAN_INTERVAL, default=user_input[CONF_SCAN_INTERVAL]): int,
+                vol.Optional(CONF_DELAY, default=user_input[CONF_DELAY]): bool,
                 vol.Required(CONF_11KWLIMIT, default=user_input[CONF_11KWLIMIT]): bool,
             }),
             description_placeholders={"repo": "https://github.com/marq24/ha-goecharger-api2"},
@@ -206,7 +220,8 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_ID:                self._default_id,
                 CONF_PASSWORD:          self._default_password,
                 CONF_TOKEN:             self._default_token,
-                CONF_SCAN_INTERVAL:     self._default_scan_interval if self.source == SOURCE_RECONFIGURE else 120
+                CONF_SCAN_INTERVAL:     self._default_scan_interval if self.source == SOURCE_RECONFIGURE else 120,
+                CONF_DELAY:             self._default_delay
             }
 
         return self.async_show_form(
@@ -228,6 +243,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
                 ),
                 vol.Required(CONF_SCAN_INTERVAL, default=user_input[CONF_SCAN_INTERVAL]): int,
+                vol.Optional(CONF_DELAY, default=user_input[CONF_DELAY]): bool,
             }),
             description_placeholders={"repo": "https://github.com/marq24/ha-goecharger-api2"},
             last_step=True,

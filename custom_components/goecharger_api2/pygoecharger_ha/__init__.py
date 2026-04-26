@@ -155,6 +155,7 @@ class GoeChargerApiV2Bridge:
         self._ws_request_storage = ExpiringStore()
         self._ws_debounced_update_task = None
         self._ws_LAST_UPDATE = 0
+        self._ws_LAST_NEW_DATA_NOTIFY = 0
         self._ws_device_info = {}
         self._ws_states = {}
         self._ws_serial = None
@@ -173,6 +174,7 @@ class GoeChargerApiV2Bridge:
         self._states = {}
         self._config = {}
         self._ws_LAST_UPDATE = 0
+        self._ws_LAST_NEW_DATA_NOTIFY = 0
         self._ws_device_info = {}
         self._ws_states = {}
         self._ws_serial = None
@@ -184,6 +186,7 @@ class GoeChargerApiV2Bridge:
         self._LAST_CONFIG_UPDATE_TS = 0
         self._LAST_FULL_STATE_UPDATE_TS = 0
         self._ws_LAST_UPDATE = 0
+        self._ws_LAST_NEW_DATA_NOTIFY = 0
 
     async def read_system(self) -> dict:
         # TODO: WEBSOCKET
@@ -370,6 +373,7 @@ class GoeChargerApiV2Bridge:
 
         if not is_button_press and self.ws_connected and self._ws_connection is not None:
             await self._ws_send_command(key, value)
+            self._ws_LAST_NEW_DATA_NOTIFY = 0
             return None
         else:
             if value is None:
@@ -379,15 +383,16 @@ class GoeChargerApiV2Bridge:
             elif isinstance(value, dict):
                 args = {key: json.dumps(value).replace(' ','')}
             elif isinstance(value, str) and value == IS_TRIGGER:
-                # ok, these are special trigger actions that we want to call from the FE...
+                # BUTTON's have only effect for POLLING (will not do anything when connected via WebSockets)
+
+                # these are special trigger actions that we want to call from the FE...
                 match key:
                     case Tag.INTERNAL_FORCE_CONFIG_READ.key:
                         await self.force_config_update()
                     case Tag.INTERNAL_FORCE_REFRESH_ALL.key:
                         self.reset_stored_update_ts()
                         # we do the actual request for the new data in the
-                        # DataUpdateCoordinator... (with a short delwy of some
-                        # seconds...)
+                        # DataUpdateCoordinator... (with a short delay of some seconds...)
                         # await self.read_all()
 
                 return {key: value}
@@ -401,6 +406,8 @@ class GoeChargerApiV2Bridge:
             for a_key, a_value in args.items():
                 await self._ws_send_command(a_key, a_value)
                 await asyncio.sleep(0.75)
+
+            self._ws_LAST_NEW_DATA_NOTIFY = 0
             return None
         else:
             params = {}
@@ -502,12 +509,20 @@ class GoeChargerApiV2Bridge:
     def _ws_notify_for_new_data(self):
         if self._ws_debounced_update_task is not None and not self._ws_debounced_update_task.done():
             self._ws_debounced_update_task.cancel()
-        self._ws_debounced_update_task = asyncio.create_task(self._ws_debounce_coordinator_update())
 
-    async def _ws_debounce_coordinator_update(self):
-        await asyncio.sleep(0.3)
-        if hasattr(self, "coordinator") and self.coordinator is not None:
-            self.coordinator.async_set_updated_data(ChainMap(self._ws_states, self._config, self._states, self._versions))
+        async def _ws_debounce_coordinator_update():
+            await asyncio.sleep(0.2)
+            if hasattr(self, "coordinator") and self.coordinator is not None:
+                current_time = time()
+                if current_time - self._ws_LAST_NEW_DATA_NOTIFY >= self.coordinator._ws_data_update_notify_interval_in_seconds:
+                    self._ws_LAST_NEW_DATA_NOTIFY = current_time
+                    self.coordinator.async_set_updated_data(ChainMap(self._ws_states, self._config, self._states, self._versions))
+                else:
+                    #_LOGGER.debug(f"_ws_debounce_coordinator_update(): skip 'self.coordinator.async_set_updated_data'")
+                    pass
+
+        self._ws_debounced_update_task = asyncio.create_task(_ws_debounce_coordinator_update())
+
 
     def _ws_compute_hashed_password(self, hash_type: str, password: str, serial: str) -> bytes:
         if hash_type == "pbkdf2":
@@ -619,7 +634,6 @@ class GoeChargerApiV2Bridge:
             await self._ws_connection.send_json(original_message)
 
         return True
-
 
     async def ws_connect(self):
         """Connect to WebSocket with full authentication and message handling"""
@@ -809,6 +823,7 @@ class GoeChargerApiV2Bridge:
         self._ws_connection = None
         self._ws_states = {}
         self._ws_LAST_UPDATE = 0
+        self._ws_LAST_NEW_DATA_NOTIFY = 0
         return None
 
     def extract_ws_message_data(self, data:dict):
@@ -841,7 +856,7 @@ class GoeChargerApiV2Bridge:
                 if filtered_data:
                     self._ws_states.update(filtered_data)
                     new_data_arrived = True
-                    _LOGGER.debug(f"extract_ws_message_data(): Received 'deltaStatus' with {len(filtered_data)} keys")
+                    #_LOGGER.debug(f"extract_ws_message_data(): Received 'deltaStatus' with {len(filtered_data)} keys")
 
         elif msg_type == 'response':
             the_request_payload = None

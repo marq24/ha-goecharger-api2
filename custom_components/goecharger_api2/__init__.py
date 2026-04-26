@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_TOKEN,
     CONF_PASSWORD,
+    CONF_DELAY,
     EVENT_HOMEASSISTANT_STARTED
 )
 from homeassistant.core import HomeAssistant, Event, SupportsResponse, CoreState
@@ -116,6 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         start_ws_watch_dog = True
     else:
         start_ws_watch_dog = False
+
     if start_ws_watch_dog:
         # ws watchdog...
         if hass.state is CoreState.running:
@@ -310,6 +312,13 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         self._CLIENT_COMMUNICATION_ERROR_COUNT = 0
         self._RESTART_TRIGGERED = False
         self._debounced_update_task = None
+        if config_entry.data.get(CONF_DELAY, False):
+            self._ws_data_update_notify_interval_in_seconds = SCAN_INTERVAL.seconds
+        else:
+            # minimum update interval - no matter how fast the websocket will push the
+            # data, we only update HA only every second...
+            self._ws_data_update_notify_interval_in_seconds = 1
+
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
     async def call_later_update_device_registry(self, now:Any):
@@ -662,10 +671,11 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         return True
 
 class GoeChargerBaseEntity(CustomFriendlyNameEntity):
-    _attr_should_poll = False
     _attr_has_entity_name = True
 
     def __init__(self, entity_type:str, coordinator: GoeChargerDataUpdateCoordinator, description: EntityDescription) -> None:
+        super().__init__(coordinator, description)
+
         # make sure that we keep the CASE of the key!
         self.data_key = description.key
 
@@ -720,14 +730,7 @@ class GoeChargerBaseEntity(CustomFriendlyNameEntity):
     async def async_added_to_hass(self):
         """Connect to dispatcher listening for entity data notifications."""
         self.async_on_remove(self.coordinator.async_add_listener(self.async_write_ha_state))
-
-    async def async_update(self):
-        """Update entity."""
-        await self.coordinator.async_request_refresh()
-
-    @property
-    def should_poll(self) -> bool:
-        return False
+        await super().async_added_to_hass()
 
     def _friendly_name_internal(self) -> str | None:
         """Return the friendly name.
