@@ -289,6 +289,22 @@ class GoeChargerApiV2Bridge:
             self._config = await self._read_filtered_data(filters=self._FILTER_ALL_CONFIG, log_info="read_all_config")
             if len(self._config) > 0:
                 self._LAST_CONFIG_UPDATE_TS = time()
+                if len(self._ws_states) > 0:
+                    # if we just have request all configuration settings from the wallbox, then we should replace
+                    # the current values in our _ws_states object [so we can make sure that if the ZORCE CONFIG UPDATE
+                    # button was pressed, that really the latest data is present in the integration] - especially we
+                    # assume that 'frc'
+                    for a_key, a_value in self._config.items():
+                        if a_key in self._ws_states:
+                            ws_value = self._ws_states[a_key]
+                            if ws_value != a_value:
+                                self._ws_states.pop(a_key)
+                                _LOGGER.debug(f"read_all_config(): replacing ws_state value for '{a_key}' from '{ws_value}' to '{a_value}'")
+                            #else:
+                            #    _LOGGER.info(f"read_all_config(): ws_state value for '{a_key}' IS IDENTICAL '{ws_value}' to '{a_value}'")
+                        #else:
+                        #    _LOGGER.info(f"read_all_config(): ws_state value for '{a_key}' does not exist -> {a_value}'")
+
             else:
                 # If config read fails, wait 5 minutes before retrying to prevent hammering
                 _LOGGER.info(f"read_all_config(): failed - backing off for 5 minutes")
@@ -511,14 +527,15 @@ class GoeChargerApiV2Bridge:
             self._ws_debounced_update_task.cancel()
 
         async def _ws_debounce_coordinator_update():
-            await asyncio.sleep(0.3)
+            await asyncio.sleep(0.2)
             if hasattr(self, "coordinator") and self.coordinator is not None:
-                delay_ts:int = self.coordinator._ws_data_update_notify_interval_in_seconds
-                if delay_ts is None or ((self._ws_LAST_NEW_DATA_NOTIFY + delay_ts) < time()):
+                current_time = time()
+                if current_time - self._ws_LAST_NEW_DATA_NOTIFY >= self.coordinator._ws_data_update_notify_interval_in_seconds:
+                    self._ws_LAST_NEW_DATA_NOTIFY = current_time
                     self.coordinator.async_set_updated_data(ChainMap(self._ws_states, self._config, self._states, self._versions))
-                    self._ws_LAST_NEW_DATA_NOTIFY = time()
                 else:
-                    _LOGGER.debug(f"_ws_debounce_coordinator_update(): skip 'self.coordinator.async_set_updated_data'")
+                    #_LOGGER.debug(f"_ws_debounce_coordinator_update(): skip 'self.coordinator.async_set_updated_data'")
+                    pass
 
         self._ws_debounced_update_task = asyncio.create_task(_ws_debounce_coordinator_update())
 
