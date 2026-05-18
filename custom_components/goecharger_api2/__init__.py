@@ -466,7 +466,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         _LOGGER.debug(f"_async_update_data(): CALLED")
         if self.bridge.ws_connected and self._force_classic_requests is False:
             _LOGGER.debug(f"_async_update_data called (but websocket is active - no data will be requested!)")
-            return None
+            return self.data
         else:
             if self._CLIENT_COMMUNICATION_ERROR_TS + 3600 > time():
                 time_info = 3600 - (time() - self._CLIENT_COMMUNICATION_ERROR_TS)
