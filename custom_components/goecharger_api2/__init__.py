@@ -107,7 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         hass.services.async_register(DOMAIN, SERVICE_STOP_CHARGING, service.stop_charging,
                                      supports_response=SupportsResponse.OPTIONAL)
 
-    if coordinator.check_for_max_of_16a:
+    if coordinator.run_check_for_max_of_16a:
         asyncio.create_task(coordinator.check_for_16a_limit(hass, config_entry.entry_id))
 
     asyncio.create_task(coordinator.cleanup_device_registry(hass))
@@ -560,6 +560,44 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         else:
             sw_version = "UNKNOWN"
 
+        self.available_cards_idx = []
+        # additional charger stuff...
+        if self.intg_type == INTG_TYPE.CHARGER.value:
+            # fetching the available cards that are enabled
+            idx = 1
+            if self._is_charger_fw_version_60_0_or_higher and self._no_cards_list_is_present:
+                # since FWV 60.0 there is no cards object any longer...
+                for a_card_number in range(0, 10):
+                    a_key_id = f"c{a_card_number}i"
+                    if self.bridge._versions.get(a_key_id, False):
+                        self.available_cards_idx.append(str(idx))
+                    idx = idx + 1
+
+            elif Tag.CARDS.key in self.bridge._versions:
+                for a_card in self.bridge._versions[Tag.CARDS.key]:
+                    if a_card["cardId"]:
+                        self.available_cards_idx.append(str(idx))
+                    idx = idx + 1
+            else:
+                _LOGGER.info(f"NO CARDS Object found!")
+
+            _LOGGER.info(f"active cards {self.available_cards_idx}")
+
+            # check for the 16A limiter...
+            self.run_check_for_max_of_16a = self._config_entry.data.get(CONF_11KWLIMIT, False)
+
+            self.limit_to16a = (self.run_check_for_max_of_16a
+                                or self.bridge._versions.get(Tag.VAR.key, -1) == 11
+                                or self.data.get(Tag.ADI.key, False))
+
+            if (self.limit_to16a):
+                _LOGGER.info(f"LIMIT to 16A is active")
+        else:
+            # no additional controller stuff... but we need to init some variables
+            self.run_check_for_max_of_16a = False
+            self.limit_to16a = False
+
+
         comm_mode = self._config_entry.data.get(CONF_PASSWORD, None)
         if comm_mode is not None and len(comm_mode.strip()) > 0:
             comm_mode = "WebSocket"
@@ -568,7 +606,11 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
 
         model_info = self._config_entry.data.get(CONF_TYPE, "UNKNOWN")
         self._is_core_wallbox = "phoenix" in model_info.lower() or "core" in model_info.lower()
-        self._device_info_model_raw = f"{model_info} {comm_mode}"
+        if self.limit_to16a:
+            self._device_info_model_raw = f"{model_info} [16A limited] {comm_mode}"
+        else:
+            self._device_info_model_raw = f"{model_info} {comm_mode}"
+
         if self.mode == LAN:
             self._device_info_dict = {
                 # be careful when adjusting the 'identifiers' -> since this will create probably new DeviceEntries
@@ -601,43 +643,6 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                 "sw_version": sw_version
                 # hw_version
             }
-
-        self.available_cards_idx = []
-        # additional charger stuff...
-        if self.intg_type == INTG_TYPE.CHARGER.value:
-            # fetching the available cards that are enabled
-            idx = 1
-            if self._is_charger_fw_version_60_0_or_higher and self._no_cards_list_is_present:
-                # since FWV 60.0 there is no cards object any longer...
-                for a_card_number in range(0, 10):
-                    a_key_id = f"c{a_card_number}i"
-                    if self.bridge._versions.get(a_key_id, False):
-                        self.available_cards_idx.append(str(idx))
-                    idx = idx + 1
-
-            elif Tag.CARDS.key in self.bridge._versions:
-                for a_card in self.bridge._versions[Tag.CARDS.key]:
-                    if a_card["cardId"]:
-                        self.available_cards_idx.append(str(idx))
-                    idx = idx + 1
-            else:
-                _LOGGER.info(f"NO CARDS Object found!")
-
-            _LOGGER.info(f"active cards {self.available_cards_idx}")
-
-            # check for the 16A limiter...
-            self.check_for_max_of_16a = self._config_entry.data.get(CONF_11KWLIMIT, False)
-
-            self.limit_to16a = (self.check_for_max_of_16a
-                                or self.bridge._versions.get(Tag.VAR.key, -1) == 11
-                                or self.data.get(Tag.ADI.key, False))
-
-            if (self.limit_to16a):
-                _LOGGER.info(f"LIMIT to 16A is active")
-        else:
-            # no additional controller stuff... but we need to init some variables
-            self.check_for_max_of_16a = False
-            self.limit_to16a = False
 
         return True
 
