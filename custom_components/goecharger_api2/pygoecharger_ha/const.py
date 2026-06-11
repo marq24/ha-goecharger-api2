@@ -19,7 +19,7 @@ FILTER_CARDS_ENGY_FWV60: Final= "c0e,c1e,c2e,c3e,c4e,c5e,c6e,c7e,c8e,c9e"
 FILTER_CARDS_ALL_FWV60: Final = f"{FILTER_CARDS_ID_FWV60},{FILTER_CARDS_NAME_FWV60},{FILTER_CARDS_ENGY_FWV60}"
 
 FILTER_SYSTEMS: Final = "oem,sse,typ,var"
-FILTER_VERSIONS: Final = f"ccrv,fwc,fwv,var,{FILTER_CARDS_ID_CLASSIC},{FILTER_CARDS_ID_FWV60}"
+FILTER_VERSIONS: Final = f"ccrv,fwc,fwv,var,cll,adi,{FILTER_CARDS_ID_CLASSIC},{FILTER_CARDS_ID_FWV60}"
 FILTER_MIN_STATES: Final = "car,modelStatus,err,nrg,tma,trx"
 FILTER_IDS_ADDON: Final = ",pakku,ppv,pgrid"
 
