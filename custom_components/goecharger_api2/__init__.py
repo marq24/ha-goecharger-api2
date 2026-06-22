@@ -632,8 +632,8 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                     self._config_entry.title)},
                 "manufacturer": MANUFACTURER,
                 "name": self._config_entry.title,
-                "model": self._device_info_model_raw,
-                "sw_version": sw_version
+                "model": f"{self._device_info_model_raw}",
+                "sw_version": f"{sw_version}"
                 # hw_version
             }
         else:
@@ -648,8 +648,8 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                     self._config_entry.title)},
                 "manufacturer": MANUFACTURER,
                 "name": self._config_entry.title,
-                "model": self._device_info_model_raw,
-                "sw_version": sw_version
+                "model": f"{self._device_info_model_raw}",
+                "sw_version": f"{sw_version}"
                 # hw_version
             }
 
