@@ -2044,6 +2044,13 @@ SWITCH_SENSORS = [
         device_class=None,
         icon="mdi:lock-open-outline",
         entity_registry_enabled_default=False
+    ),
+    ExtSwitchEntityDescription(
+        key=Tag.OCPPE.key,
+        #entity_category=EntityCategory.CONFIG,
+        device_class=None,
+        icon="mdi:nut",
+        entity_registry_enabled_default=True
     )
 ]
 

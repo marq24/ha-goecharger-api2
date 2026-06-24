@@ -191,7 +191,7 @@ Once the __car__ status will switch from `idle` (=1) to something different the 
 
 <a id="notimplementedkeys"></a>
 
-### List of (currently) not handled API keys (21/172)
+### List of (currently) not handled API keys
 
 Just as reference, here is the list of API keys that the current implementation of the integration will __not__ handle:
 

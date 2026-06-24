@@ -564,7 +564,8 @@
       "iim_2": {"name": "Invertieren Internal 3"},
       "iim_3": {"name": "Invertieren Internal 4"},
       "iim_4": {"name": "Invertieren Internal 5"},
-      "iim_5": {"name": "Invertieren Internal 6"}
+      "iim_5": {"name": "Invertieren Internal 6"},
+      "ocppe": {"name": "OCPP aktiviert"}
     }
   }
 }
