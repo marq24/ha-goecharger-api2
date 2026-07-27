@@ -1,0 +1,571 @@
+{
+  "selector": {
+    "stype": {
+      "options": {
+        "lan": "LAN: Accès API v2 local par réseau local [http]",
+        "wan": "WAN: Accès API v2 Cloud par internet [https]"
+      }
+    },
+    "integration_type": {
+      "options": {
+        "charger": "go-eCharger (défaut)",
+        "controller": "go-eController"
+      }
+    }
+  },
+  "config": {
+    "abort": {
+      "auth_lan": "Hôte/IP incorrect - système injoignable",
+      "auth_wan": "N° de série/Clé API incorrect - système injoignable",
+      "already_configured": "L'intégration est déjà configurée",
+      "reconfigure_successful": "Re-configuration effectuée avec succès"
+    },
+    "step": {
+      "user": {
+        "description": "Veuillez choisir votre canal de communication [ne sélectionnez WAN(Cloud) que si votre borne de charge/contrôleur ne fait pas parti de votre réseau local",
+        "data": {
+          "stype": "Choisissez LAN (Réseau Local) ou WAN (Cloud/Internet)"
+        }
+      },
+      "user_lan": {
+        "description": "Si vous souhaitez de l'aide pour le mise en fonction, vous la trouverez ici: {repo}.\n\nInformation importante: Local APIv2 doit être activée au préalable dans les réglages de l'application go-e",
+        "data": {
+          "integration_type": "Type d'intégration: Chargeur ou Contrôleur?",
+          "host": "Nom d'hôte ou IP de votre go-eCharger",
+          "password": "Mot de passe Local Websocket de la borne de charge (Optionnel)",
+          "scan_interval": "Interval de refraîchissement en secondes [min: 5sec]",
+          "delay": "Appliquer 'Interval de refraîchissement' également aux mises à jours par WebSocket",
+          "limit_to_11kw": "Appliquer la limite de 11kW (pour variantes 22kW uniquement) - restreindra tous les réglages à maximum 16A (au lieu de 32A)"
+        },
+        "data_description": {
+          "password": "Le mot de passe est optionnel. Si vous en spécifiez un, l'intégration utilisera la communication par websockets. Ceci rend l'interval de refraîchissement obsolète et vous obtiendrez les dernières données dans HA dès que quelque chose change. Ceci inclus également tout changement dans la configuration de la borne.",
+          "delay": "Si vous avez spécifié un mot de passe, les capteurs dans Home Assistant seront mis à jours immédiatement lorsque de nouvelles données arrivent par la connection Websocket. Ceci peut mener à des mises à jours très fréquentes de certains capteurs et à une surcharge potentielle de votre base de données HA. Si vous activez cette option, les capteurs ne seront mis à jours qu'à l'intervalle configurée."
+        }
+      },
+      "user_wan": {
+        "description": "Si vous souhaitez de l'aide pour le mise en fonction, vous la trouverez ici: {repo}.\n\nInformation importante: l'accès Cloud APIv2 doit être activé au préalable dans les réglages de l'application go-e",
+        "data": {
+          "integration_type": "Type d'intégration: Chargeur ou Contrôleur?",
+          "serial": "N° de série de votre borne go-eCharger",
+          "token": "Clé API Cloud de votre borne go-eCharger",
+          "password": "Mot de passe Cloud WebSocket de la borne de charge (Optional)",
+          "scan_interval": "Interval de refraîchissement en secondes [min: 30sec]",
+          "delay": "Appliquer 'Interval de refraîchissement' également aux mises à jours par WebSocket",
+          "limit_to_11kw": "Appliquer la limite de 11kW (pour variantes 22kW uniquement) - restreindra tous les réglages à maximum 16A (au lieu de 32A)"
+        },
+        "data_description": {
+          "token": "Vous trouverez la clé API Cloud dans l'application go-e, onglet Pramètres -> Connexion -> Paramètres de l'API -> Clé API Cloud",
+          "password": "Le mot de passe est optionnel. Si vous en spécifiez un, l'intégration utilisera la communication par websockets. Ceci rend l'interval de refraîchissement obsolète et vous obtiendrez les dernières données dans HA dès que quelque chose change. Ceci inclus également tout changement dans la configuration de la borne.",
+          "delay": "Si vous avez spécifié un mot de passe, les capteurs dans Home Assistant seront mis à jours immédiatement lorsque de nouvelles données arrivent par la connection Websocket. Ceci peut mener à des mises à jours très fréquentes de certains capteurs et à une surcharge potentielle de votre base de données HA. Si vous activez cette option, les capteurs ne seront mis à jours qu'à l'intervalle configurée."
+        }
+      }
+    },
+    "error": {
+      "auth_lan": "Hôte/IP incorrect - système injoignable",
+      "auth_wan": "N° de série/Clé API incorrect - système injoignable"
+    }
+  },
+  "services": {
+    "set_pv_data": {
+      "name": "Envoyer les données PV à la borne de charge (pour bénéficier du surplus PV)",
+      "description": "Ceci est un simple service proxy afin de pouvoir configurer l'automatisation plus facilement",
+      "fields": {
+        "configid": {"name":  "Specifier le go-eCharger", "description": "La ConfigEntryID de cette intégration - N'activez ce champs uniquement si vous avez plus d'un go-eCharger configuré dans votre environnement home assistant."},
+        "pgrid":  {"name": "Puissance soutirée/injectée au réseau (en Watt)", "description": "Les valeurs négatives signifient un export vers le réseau, les valeurs positives signifient un soutirage depuis le réseau."},
+        "ppv":    {"name": "Puissance PV (en Watt)", "description": "La production actuelle PV"},
+        "pakku":  {"name": "Puissance soutirée/injectée aux batteries (in Watt)", "description": "Les valeurs négatives signifient la charge des batteries, les valeurs positives signifient une consommation depuis les batteries."}
+      }
+    },
+    "stop_charging": {
+      "name": "Forcer l'arrêt (pour 5 minutes)",
+      "description": "Va s'assurer que le go-eCharger arrête la charge. Après 5 minutes, le chargeur reviendra au mode par défaut.",
+      "fields": {
+        "configid": {"name":  "Specifier le go-eCharger", "description": "La ConfigEntryID de cette intégration - N'activez ce champs uniquement si vous avez plus d'un go-eCharger configuré dans votre environnement home assistant."}
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "car_0":{"name":  "Véhicule branché"},
+      "pha_0": {"name": "Phase L1 après les contacts principaux"},
+      "pha_1": {"name": "Phase L2 après les contacts principaux"},
+      "pha_2": {"name": "Phase L3 après les contacts principaux"},
+      "pha_3": {"name": "Phase L1 avant les contacts principaux"},
+      "pha_4": {"name": "Phase L2 avant les contacts principaux"},
+      "pha_5": {"name": "Phase L3 avant les contacts principaux"},
+      "adi": {"name": "Adaptateur 16A utilisé"},
+      "alw": {"name": "Chargement autorisé"},
+      "esk": {"name": "énergie définie en kwh (uniquement stockée pour l'application)"},
+      "fsp": {"name": "Forcer l'utilisation d'une seule phase"},
+      "tlf": {"name": "Charge de test terminée"},
+      "tls": {"name": "Charge de test commencée"},
+      "ctrls_0_paired": {"name": "go-eController appairé"},
+      "ctrls_0_connected": {"name": "go-eController connecté"},
+      "di1": {"name": "DigitalInput 1"}
+    },
+    "button": {
+      "rst": {"name":  "Redémarrer l'appareil go-e"},
+      "zfocore": {"name":  "Lire la configuration"},
+      "zforeal": {"name":  "Synchronisation des données"}
+    },
+    "number": {
+      "ama": {"name": "Courant maximal"},
+      "amp": {"name": "Courant demandé"},
+      "ate": {"name": "Cible énergétique Next Trip"},
+      "att": {"name": "Heure de fin de charge Daily Trip"},
+      "awp": {"name": "Seuil de prix maximum aWATTar"},
+      "cco": {"name": "Consommation par 100 km"},
+      "dwo": {"name": "Limite d'énergie par charge"},
+      "fmt": {"name": "Temps de charge minimum"},
+      "fst": {"name": "Niveau de puissance de départ"},
+      "lbr": {"name": "Luminosité LED"},
+      "lof": {"name": "Gestion des charges: Courrant maximum en cas de fallback"},
+      "lop": {"name": "Gestion des charges: Priorité"},
+      "lot_amp": {"name": "Gestion des charges: Courant total"},
+      "lot_dyn": {"name": "Gestion des charges: Courant dynamic"},
+      "lot_sta": {"name": "Gestion des charges: Courant static"},
+      "lot_ts": {"name": "Gestion des charges: 'ts?'"},
+      "mca": {"name": "Courant de charge minimum"},
+      "mci": {"name": "Temps de charge minimum"},
+      "mcpd": {"name": "Pause de charge minimum"},
+      "mcpea": {"name": "Pause de charge se termine après"},
+      "mptwt": {"name": "Durée du changement de phase"},
+      "mpwst": {"name": "Délai de commutation de phase"},
+      "pgt": {"name": "Objectif du réseau"},
+      "po": {"name": "Préférence électrique"},
+      "psh": {"name": "Commutation de phase"},
+      "psmd": {"name": "Forcer durée monophasé"},
+      "rdbs": {"name":  "Délai max. aléatoire: Ordonnanceur commence"},
+      "rdes": {"name":  "Délai max. aléatoire: Ordonnanceur arrête"},
+      "rdbf": {"name":  "Délai max. aléatoire: Tarif flexible commence"},
+      "rdef": {"name":  "Délai max. aléatoire: Tarif flexible arrête"},
+      "rdre": {"name":  "Délai max. aléatoire: après coupure de courant"},
+      "rdpl": {"name":  "Délai max. aléatoire: Inconnu"},
+      "sh": {"name": "Hysteresis à l'arrêt"},
+      "spl3": {"name": "Puissance de commutation triphasé"},
+      "sumd": {"name": "Durée de la simulation de débranchement"},
+      "zfo": {"name": "Offset d'injection zéro"}
+    },
+    "select": {
+      "ct": {
+        "name": "Mode de compatibilité véhicule",
+        "state": {
+          "default": "Standard",
+          "kiasoul": "Kia Soul",
+          "renaultzoe": "Renault Zoe",
+          "mitsubishiimiev": "Mitsubishi iMiev",
+          "citroenczero": "Citroën C-Zero",
+          "peugeotion": "Peugeot iOn",
+          "ecorsa": "Opel Corsa-e",
+          "vwid3_2": "VW ID (SW < 3.2)",
+          "vwid3_4": "VW ID (SW 3.2-4.1)",
+          "vwid5": "WV ID avec SW 5.x",
+          "cuprabornstandard": "Cupra Born Standard",
+          "cuprabornalternative": "Cupra Born Alternative",
+          "fordexplorer": "Ford Explorer",
+          "porschetaycan": "Porsche Taycan",
+          "skodaenyaq": "Skoda Enyaq",
+          "daciaspring": "Dacia Spring",
+          "mercedes": "Mercedes",
+          "ssangyong": "Ssangyong"
+        }
+      },
+      "bac": {
+        "name": "Bouton: Autoriser changement de courant",
+        "state": {
+          "0": "Toujours verrouillé",
+          "1": "Verrouillé quand la voiture est branchée",
+          "2": "Verrouillé quand la voiture charge",
+          "3": "Jamais verrouillé"
+        }
+      },
+      "sdp": {
+        "name": "Button: Autoriser début de chargement (double pression)",
+        "state": {
+          "0": "Toujours verrouillé",
+          "1": "Verrouillé quand la voiture est branchée",
+          "2": "Verrouillé quand la voiture charge",
+          "3": "Jamais verrouillé"
+        }
+      },
+      "frc": {
+        "name": "Forcer l'état",
+        "state": {
+          "0": "Neutre",
+          "1": "Ne charge pas",
+          "2": "Charge"
+        }
+      },
+      "lmo": {
+        "name": "Mode logique",
+        "state": {
+          "3": "Défaut",
+          "4": "Awattar [Eco]",
+          "5": "Arrêt automatique"
+        }
+      },
+      "loty": {
+        "name": "Mode de gestion de charge",
+        "state": {
+          "0": "Statique",
+          "1": "Dynamique"
+        }
+      },
+      "psm": {
+        "name": "Mode de commutation de phase",
+        "state": {
+          "0": "Automatique",
+          "1": "Forcer monophasé",
+          "2": "Force triphasé"
+        }
+      },
+      "tds": {
+        "name": "Mode décalage fuseau horaire",
+        "state": {
+          "0": "Aucun",
+          "1": "Heure d'été europe centrale",
+          "2": "Heure d'été US"
+        }
+      },
+      "trx": {
+        "name": "Autoriser le chargement",
+        "state": {
+          "null": "Authorisation requise",
+          "0": "Déverrouillé",
+          "1": "Déverrouillé avec carte ID1",
+          "2": "Déverrouillé avec carte ID2",
+          "3": "Déverrouillé avec carte ID3",
+          "4": "Déverrouillé avec carte ID4",
+          "5": "Déverrouillé avec carte ID5",
+          "6": "Déverrouillé avec carte ID6",
+          "7": "Déverrouillé avec carte ID7",
+          "8": "Déverrouillé avec carte ID8",
+          "9": "Déverrouillé avec carte ID9",
+          "10": "Déverrouillé avec carte ID10"
+        }
+      } ,
+      "ust": {
+        "name": "Mode de déverrouillage du câble",
+        "state": {
+          "0": "Mode standard",
+          "1": "Déverrouillage auto",
+          "2": "Toujours déverrouillé",
+          "3": "Forcer déverrouillage"
+        }
+      },
+      "ips_0": {
+        "name": "Assigner phase interne 1",
+        "state": {
+          "0": "L1",
+          "1": "L2",
+          "2": "L3",
+          "3": "N"
+        }
+      },
+      "ips_1": {
+        "name": "Assigner phase interne 2",
+        "state": {
+          "0": "L1",
+          "1": "L2",
+          "2": "L3",
+          "3": "N"
+        }
+      },
+      "ips_2": {
+        "name": "Assigner phase interne 3",
+        "state": {
+          "0": "L1",
+          "1": "L2",
+          "2": "L3",
+          "3": "N"
+        }
+      },
+      "ips_3": {
+        "name": "Assigner phase interne 4",
+        "state": {
+          "0": "L1",
+          "1": "L2",
+          "2": "L3",
+          "3": "N"
+        }
+      },
+      "ips_4": {
+        "name": "Assigner phase interne 5",
+        "state": {
+          "0": "L1",
+          "1": "L2",
+          "2": "L3",
+          "3": "N"
+        }
+      },
+      "ips_5": {
+        "name": "Assigner phase interne 6",
+        "state": {
+          "0": "L1",
+          "1": "L2",
+          "2": "L3",
+          "3": "N"
+        }
+      },
+      "sch_week_control": {
+        "name": "Planificateur en semaine",
+        "state": {
+          "0": "Désactivé",
+          "1": "Charger",
+          "2": "Bloquer",
+          "3": "Charger (Autoriser avec surplus)",
+          "4": "Bloquer (Autoriser avec surplus)"
+        }
+      },
+      "sch_satur_control": {
+        "name": "Planificateur le samedi",
+        "state": {
+          "0": "Désactivé",
+          "1": "Charger",
+          "2": "Bloquer",
+          "3": "Charger (Autoriser avec surplus)",
+          "4": "Bloquer (Autoriser avec surplus)"
+        }
+      },
+      "sch_sund_control": {
+        "name": "Planificateur le dimanche",
+        "state": {
+          "0": "Désactivé",
+          "1": "Charger",
+          "2": "Bloquer",
+          "3": "Charger (Autoriser avec surplus)",
+          "4": "Bloquer (Autoriser avec surplus)"
+        }
+      },
+      "frm": {"name": "Mode de rotation",
+        "state": {
+          "0": "Préférer le soutirage depuis le réseau",
+          "1": "Défaut",
+          "2": "Préférer l'export vers le réseau"
+        }
+      }
+    },
+    "sensor": {
+      "nrg_0": {"name": "Tension L1"},
+      "nrg_1": {"name": "Tension L2"},
+      "nrg_2": {"name": "Tension L3"},
+      "nrg_3": {"name": "Tension N"},
+      "nrg_4": {"name": "Courant L1"},
+      "nrg_5": {"name": "Courant L2"},
+      "nrg_6": {"name": "Courant L3"},
+      "nrg_7": {"name": "Puissance L1"},
+      "nrg_8": {"name": "Puissance L2"},
+      "nrg_9": {"name": "Puissance L3"},
+      "nrg_10": {"name": "Puissance N"},
+      "nrg_11": {"name": "Puissance totale maintenant"},
+      "nrg_12": {"name": "Facteur de puissance L1"},
+      "nrg_13": {"name": "Facteur de puissance L2"},
+      "nrg_14": {"name": "Facteur de puissance L3"},
+      "nrg_15": {"name": "Facteur de puissance N"},
+      "tma_0": {"name": "Température capteur I"},
+      "tma_1": {"name": "Température capteur II"},
+      "tma_2": {"name": "Température capteur III"},
+      "tma_3": {"name": "Température capteur IV"},
+      "tma_4": {"name": "Température capteur V"},
+      "tma_5": {"name": "Température capteur VI"},
+      "cdi_type": {"name": "Compteur de durée de charge"},
+      "cdi_value": {"name": "Durée de charge"},
+      "atp_x": {"name": "Donnée de planification Daily Trip"},
+      "awcp_marketprice": {"name":  "Prix actuel aWATTar"},
+      "ccu_x": {"name":  "Progression de la mise à jour du contrôleur de charge"},
+      "ccw_ssid": {"name":  "WiFi connecté"},
+
+      "car": {"name": "Etat du véhicule [CODE]"},
+      "car_value": {"name": "Etat du véhicule"},
+      "cus": {"name": "Status du déverrouillage du câble [CODE]"},
+      "cus_value": {"name": "Status du déverrouillage du câble"},
+      "err": {"name": "Erreur [CODE]"},
+      "err_value": {"name": "Erreur"},
+      "modelstatus": {"name": "Status [CODE]"},
+      "modelstatus_value": {"name": "Status"},
+      "ffb": {"name": "feedback verrou [CODE]"},
+      "ffb_value": {"name": "feedback verrou"},
+      "frm": {"name": "Mode de rotation [CODE]"},
+      "frm_value": {"name": "Mode de rotation"},
+      "lck": {"name": "Réglage verrou effectif, tel qu'envoyé au contrôle de charge [CODE]"},
+      "lck_value": {"name": "Réglage verrou effectif, tel qu'envoyé au contrôle de charge"},
+      "pwm": {"name": "Préférence de phase [CODE]"},
+      "pwm_value": {"name": "Préférence de phase"},
+      "wsms": {"name": "Etat automate WiFi [CODE]"},
+      "wsms_value": {"name": "Etat automate WiFi"},
+      "wst": {"name": "Status WiFi [CODE]"},
+      "wst_value": {"name": "Status WiFi"},
+
+      "rbt": {"name": "Durée depuis démarrage"},
+
+      "fsptws": {"name": "bascule forcée en monophasé souhaité depuis [RAW]"},
+      "inva": {"name": "age des données de l'onduleur [RAW]"},
+      "lbp": {"name": "dernier appui sur bouton [RAW]"},
+      "lccfc": {"name": "dernier changement de l'état du véhicule depuis 'En charge' [RAW]"},
+      "lccfi": {"name": "dernier changement de l'état du véhicule depuis 'En attente' [RAW]"},
+      "lcctc": {"name": "dernier changement de l'état du véhicule vers 'En charge' [RAW]"},
+      "lfspt": {"name": "dernière bascule forcée en monophasé [RAW]"},
+      "lpsc": {"name": "dernier calcul du surplus PV [RAW]"},
+      "lmsc": {"name": "dernier changement de status [RAW]"},
+      "lcs": {"name": "dernier scan du contrôleur [RAW]"},
+
+      "fsptws_delta": {"name": "bascule forcée en monophasé souhaité depuis"},
+      "inva_delta": {"name": "age des données de l'onduleur"},
+      "lbp_delta": {"name": "dernier appui sur le bouton"},
+      "lccfc_delta": {"name": "dernier changement de l'état du véhicule depuis 'En charge'"},
+      "lccfi_delta": {"name": "dernier changement de l'état du véhicule depuis 'En attente'"},
+      "lcctc_delta": {"name": "dernier changement de l'état du véhicule vers 'En charge'"},
+      "lfspt_delta": {"name": "dernière bascule forcée en monophasé"},
+      "lpsc_delta": {"name": "dernier calcul du surplus PV"},
+      "lmsc_delta": {"name": "dernier changement de status"},
+      "lcs_delta": {"name": "dernier scan du contrôleur"},
+
+      "acu": {"name": "Courant maximum autorisé"},
+      "amt": {"name": "Limite actuelle de température"},
+      "cbl": {"name": "Courant maximum du câble"},
+      "deltaa": {"name": "Courant delta"},
+      "deltap": {"name": "Puissance delta"},
+      "eto": {"name": "Energie totale"},
+      "ferm": {"name": "Mode de rotation effectif"},
+      "fhz": {"name": "Fréquence du réseau (~50Hz) ou 0 si inconnu"},
+      "loa": {"name": "Courant disponible pour la gestion de charge"},
+      "map": {"name":  "Charge mapping"},
+      "mmp": {"name": "Puissance de charge maximum mesurée (debug)"},
+      "nif": {"name": "Chemin par défaut"},
+      "pakku": {"name": "Puissance depuis les batteries"},
+      "pgrid": {"name": "Puissance depuis le réseau"},
+      "pnp": {"name": "Nombre de phases"},
+      "ppv": {"name": "Puissance PV"},
+      "pvopt_averagepakku": {"name": "Puissance moyenne depuis les batteries"},
+      "pvopt_averagepgrid": {"name": "Puissance moyenne depuis le réseau"},
+      "pvopt_averageppv": {"name": "Puissance moyenne PV"},
+      "rbc": {"name": "Compteur de redémarrage"},
+      "rfb": {"name": "Feedback relai"},
+      "rssi": {"name": "Puissance du signal WiFi (RSSI)"},
+      "tpa": {"name": "Moyenne de puissance totale sur 30 secondes"},
+      "wh": {"name": "Energie depuis branchement du véhicule"},
+      "wsc": {"name": "Compteur d'erreur client WiFi"},
+      "wsm": {"name": "Message d'erreur client WiFi"},
+
+      "cll": {"name": "Limites actuelles"},
+
+      "usv_0_u1": {"name": "Tension L1"},
+      "usv_0_u2": {"name": "Tension L2"},
+      "usv_0_u3": {"name": "Tension L3"},
+      "usv_0_un": {"name": "Tension N"},
+
+      "isv_0_i": {"name": "Courant Internal 1"},
+      "isv_0_p": {"name": "Puissance Internal 1"},
+      "isv_0_f": {"name": "Facteur de puissance Internal 1"},
+      "isv_1_i": {"name": "Courant Internal 2"},
+      "isv_1_p": {"name": "Puissance Internal 2"},
+      "isv_1_f": {"name": "Facteur de puissance Internal 2"},
+      "isv_2_i": {"name": "Courant Internal 3"},
+      "isv_2_p": {"name": "Puissance Internal 3"},
+      "isv_2_f": {"name": "Facteur de puissance Internal 3"},
+      "isv_3_i": {"name": "Courant Internal 4"},
+      "isv_3_p": {"name": "Puissance Internal 4"},
+      "isv_3_f": {"name": "Facteur de puissance Internal 4"},
+      "isv_4_i": {"name": "Courant Internal 5"},
+      "isv_4_p": {"name": "Puissance Internal 5"},
+      "isv_4_f": {"name": "Facteur de puissance Internal 5"},
+      "isv_5_i": {"name": "Courant Internal 6"},
+      "isv_5_p": {"name": "Puissance Internal 6"},
+      "isv_5_f": {"name": "Facteur de puissance Internal 6"},
+
+      "cec_0_0": {"name": "Catégorie 1 Consommé"},
+      "cec_0_1": {"name": "Catégorie 1 Retourné"},
+      "cec_1_0": {"name": "Catégorie 2 Consommé"},
+      "cec_1_1": {"name": "Catégorie 2 Retourné"},
+      "cec_2_0": {"name": "Catégorie 3 Consommé"},
+      "cec_2_1": {"name": "Catégorie 3 Retourné"},
+      "cec_3_0": {"name": "Catégorie 4 Consommé"},
+      "cec_3_1": {"name": "Catégorie 4 Retourné"},
+      "cec_4_0": {"name": "Catégorie 5 Consommé"},
+      "cec_4_1": {"name": "Catégorie 5 Retourné"},
+      "cec_5_0": {"name": "Catégorie 6 Consommé"},
+      "cec_5_1": {"name": "Catégorie 6 Retourné"},
+      "cec_6_0": {"name": "Catégorie 7 Consommé"},
+      "cec_6_1": {"name": "Catégorie 7 Retourné"},
+      "cec_7_0": {"name": "Catégorie 8 Consommé"},
+      "cec_7_1": {"name": "Catégorie 8 Retourné"},
+      "cec_8_0": {"name": "Catégorie 9 Consommé"},
+      "cec_8_1": {"name": "Catégorie 9 Retourné"},
+      "cec_9_0": {"name": "Catégorie 10 Consommé"},
+      "cec_9_1": {"name": "Catégorie 10 Retourné"},
+      "cec_10_0": {"name": "Catégorie 11 Consommé"},
+      "cec_10_1": {"name": "Catégorie 11 Retourné"},
+      "cec_11_0": {"name": "Catégorie 12 Consommé"},
+      "cec_11_1": {"name": "Catégorie 12 Retourné"},
+      "cec_12_0": {"name": "Catégorie 13 Consommé"},
+      "cec_12_1": {"name": "Catégorie 13 Retourné"},
+      "cec_13_0": {"name": "Catégorie 14 Consommé"},
+      "cec_13_1": {"name": "Catégorie 14 Retourné"},
+      "cec_14_0": {"name": "Catégorie 15 Consommé"},
+      "cec_14_1": {"name": "Catégorie 15 Retourné"},
+      "cec_15_0": {"name": "Catégorie 16 Consommé"},
+      "cec_15_1": {"name": "Catégorie 16 Retourné"},
+
+      "ccp_0": {"name": "Catégorie 1 Puissance"},
+      "ccp_1": {"name": "Catégorie 2 Puissance"},
+      "ccp_2": {"name": "Catégorie 3 Puissance"},
+      "ccp_3": {"name": "Catégorie 4 Puissance"},
+      "ccp_4": {"name": "Catégorie 5 Puissance"},
+      "ccp_5": {"name": "Catégorie 6 Puissance"},
+      "ccp_6": {"name": "Catégorie 7 Puissance"},
+      "ccp_7": {"name": "Catégorie 8 Puissance"},
+      "ccp_8": {"name": "Catégorie 9 Puissance"},
+      "ccp_9": {"name": "Catégorie 10 Puissance"},
+      "ccp_10": {"name": "Catégorie 11 Puissance"},
+      "ccp_11": {"name": "Catégorie 12 Puissance"},
+      "ccp_12": {"name": "Catégorie 13 Puissance"},
+      "ccp_13": {"name": "Catégorie 14 Puissance"},
+      "ccp_14": {"name": "Catégorie 15 Puissance"},
+      "ccp_15": {"name": "Catégorie 16 Puissance"},
+
+      "mecu": {"name": "Url compteur MEC"},
+      "mmh": {"name": "Hôte maître Modbus"},
+
+      "cards_0_energy": {"name": "Carte énergie"},
+      "cards_1_energy": {"name": "Carte énergie 1"},
+      "cards_2_energy": {"name": "Carte énergie 2"},
+      "cards_3_energy": {"name": "Carte énergie 3"},
+      "cards_4_energy": {"name": "Carte énergie 4"},
+      "cards_5_energy": {"name": "Carte énergie 5"},
+      "cards_6_energy": {"name": "Carte énergie 6"},
+      "cards_7_energy": {"name": "Carte énergie 7"},
+      "cards_8_energy": {"name": "Carte énergie 8"},
+      "cards_9_energy": {"name": "Carte énergie 9"},
+      "cards_10_energy": {"name": "Carte énergie 10"}
+    },
+    "switch": {
+      "acp": {"name": "Autoriser pause de charge (compatibilité véhicule)"},
+      "acs": {"name": "Autorisation par carte requise"},
+      "ara": {"name": "Arrêt automique pour rester en aWATTar"},
+      "awe": {"name": "Utiliser aWATTar (charger quand le prix est bas)"},
+      "cmse": {"name": "Scan du contrôleur toujours actif"},
+      "cwe": {"name": "Cloud WebSocket activé"},
+      "esk": {"name": "Energie définie en kwh (uniquement stockée pour l'application)"},
+      "fup": {"name": "Utiliser suplus PV"},
+      "fzf": {"name": "Zéro soutirage"},
+      "hsa": {"name": "Authentification HTTP STA"},
+      "loe": {"name": "Gestion de charge activée"},
+      "lse": {"name": "LED arrêté en standby"},
+      "nmo": {"name": "Vérification de terre désactivée / Mode norvégien"},
+      "su":  {"name": "Simuler débranchement (court)"},
+      "sua": {"name": "Simuler débranchement permanent"},
+      "upo": {"name": "Déverrouiller en cas de coupure de courant"},
+      "mece": {"name": "Compteur MEC"},
+      "hai": {"name": "Local HTTP-API v2"},
+      "wda": {"name": "Désactiver le point d'accès quand le Cloud est connecté"},
+      "mme": {"name": "Maître Modbus"},
+      "iim_0": {"name": "Inverser Internal 1"},
+      "iim_1": {"name": "Inverser Internal 2"},
+      "iim_2": {"name": "Inverser Internal 3"},
+      "iim_3": {"name": "Inverser Internal 4"},
+      "iim_4": {"name": "Inverser Internal 5"},
+      "iim_5": {"name": "Inverser Internal 6"},
+      "ocppe": {"name": "OCPP activé"}
+    }
+  }
+}
