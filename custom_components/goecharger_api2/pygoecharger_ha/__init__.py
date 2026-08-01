@@ -7,7 +7,7 @@ import logging
 import random
 import secrets
 from collections import ChainMap
-from time import time
+import time
 from typing import Any, Dict, Optional
 
 import aiohttp
@@ -43,7 +43,6 @@ from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag, IS_TRIGG
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
-
 class ExpiringStore:
     """A store that holds JSON objects for a maximum of one minute."""
 
@@ -55,7 +54,7 @@ class ExpiringStore:
         """Store a JSON object under a reference ID with the current timestamp."""
         self._store[ref_id] = {
             "data": json_obj,
-            "expires_at": time() + self._ttl
+            "expires_at": time.time() + self._ttl
         }
         self._cleanup()
 
@@ -64,7 +63,7 @@ class ExpiringStore:
         self._cleanup()
         if ref_id in self._store:
             entry = self._store[ref_id]
-            if entry["expires_at"] > time():
+            if entry["expires_at"] > time.time():
                 return entry["data"]
             else:
                 del self._store[ref_id]
@@ -72,7 +71,7 @@ class ExpiringStore:
 
     def _cleanup(self) -> None:
         """Remove all expired entries from the store."""
-        now = time()
+        now = time.time()
         expired_keys = [k for k, v in self._store.items() if v["expires_at"] <= now]
         for k in expired_keys:
             del self._store[k]
@@ -162,6 +161,7 @@ class GoeChargerApiV2Bridge:
         self._ws_secured = False
         self._ws_proto = -1
         self._ws_protocol = -1
+        self._timeout = aiohttp.ClientTimeout(total=30, connect=None, sock_connect=None, sock_read=None, ceil_threshold=5)
 
     def available_fields(self) -> int:
         return len(self._versions) + len(self._states) + len(self._config) + len(self._ws_states)
@@ -234,7 +234,7 @@ class GoeChargerApiV2Bridge:
         await self.read_all_states()
         # 1 day = 24h * 60min * 60sec = 86400 sec
         # 1 hour = 60min * 60sec = 3600 sec
-        if self._LAST_CONFIG_UPDATE_TS + 3600 < time():
+        if self._LAST_CONFIG_UPDATE_TS + 3600 < time.time():
             await self.read_all_config()
 
         return ChainMap(self._ws_states, self._config, self._states, self._versions)
@@ -244,10 +244,10 @@ class GoeChargerApiV2Bridge:
         if self.isCharger:
             # ok we are in idle state - so we do not need all states... [but 5 minutes (=300sec) do a full update]
             if Tag.CAR.key in self._states and self._states[Tag.CAR.key] == CAR_VALUES.IDLE.value:
-                if self._LAST_FULL_STATE_UPDATE_TS + 300 > time():
+                if self._LAST_FULL_STATE_UPDATE_TS + 300 > time.time():
                     do_minimal_status_update = True
         elif self.isController:
-            if self._LAST_FULL_STATE_UPDATE_TS + 300 > time():
+            if self._LAST_FULL_STATE_UPDATE_TS + 300 > time.time():
                 do_minimal_status_update = True
 
         if do_minimal_status_update:
@@ -277,7 +277,7 @@ class GoeChargerApiV2Bridge:
         else:
             self._states = await self._read_filtered_data(filters=self._FILTER_ALL_STATES, log_info="read_all_states")
             if len(self._states) > 0:
-                self._LAST_FULL_STATE_UPDATE_TS = time()
+                self._LAST_FULL_STATE_UPDATE_TS = time.time()
 
     async def force_config_update(self):
         self._LAST_CONFIG_UPDATE_TS = 0
@@ -288,7 +288,7 @@ class GoeChargerApiV2Bridge:
         if len(self._FILTER_ALL_CONFIG) > 0:
             self._config = await self._read_filtered_data(filters=self._FILTER_ALL_CONFIG, log_info="read_all_config")
             if len(self._config) > 0:
-                self._LAST_CONFIG_UPDATE_TS = time()
+                self._LAST_CONFIG_UPDATE_TS = time.time()
                 if len(self._ws_states) > 0:
                     # if we just have request all configuration settings from the wallbox, then we should replace
                     # the current values in our _ws_states object [so we can make sure that if the ZORCE CONFIG UPDATE
@@ -308,7 +308,7 @@ class GoeChargerApiV2Bridge:
             else:
                 # If config read fails, wait 5 minutes before retrying to prevent hammering
                 _LOGGER.info(f"read_all_config(): failed - backing off for 5 minutes")
-                self._LAST_CONFIG_UPDATE_TS = time() - 3600 + 300 # Reset timer to 5 mins from now (300s left to 3600)
+                self._LAST_CONFIG_UPDATE_TS = time.time() - 3600 + 300 # Reset timer to 5 mins from now (300s left to 3600)
         else:
             # no configuration filter yet...
             pass
@@ -321,7 +321,7 @@ class GoeChargerApiV2Bridge:
             headers = {"Authorization": self.token}
         else:
             headers = None
-        async with (self.web_session.get(f"{self.host_url}/api/status", headers=headers, params=args) as res):
+        async with (self.web_session.get(f"{self.host_url}/api/status", timeout=self._timeout, headers=headers, params=args) as res):
             try:
                 if res.status in [200, 400]:
                     try:
@@ -361,7 +361,7 @@ class GoeChargerApiV2Bridge:
             headers = {"Authorization": self.token}
         else:
             headers = None
-        async with self.web_session.get(f"{self.host_url}/api/status", headers=headers) as res:
+        async with self.web_session.get(f"{self.host_url}/api/status", timeout=self._timeout, headers=headers) as res:
             try:
                 if res.status in [200, 400]:
                     try:
@@ -444,7 +444,7 @@ class GoeChargerApiV2Bridge:
         else:
             headers = None
 
-        async with self.web_session.get(f"{self.host_url}/api/set", headers=headers, params=a_params) as res:
+        async with self.web_session.get(f"{self.host_url}/api/set", timeout=self._timeout, headers=headers, params=a_params) as res:
             try:
                 if res.status == 200:
                     try:
@@ -496,8 +496,8 @@ class GoeChargerApiV2Bridge:
         self._ws_debounced_update_task = None
 
     def ws_check_last_update(self) -> bool:
-        if self._ws_LAST_UPDATE + 50 > time():
-            _LOGGER.debug(f"ws_check_last_update(): all good! [last update: {int(time()-self._ws_LAST_UPDATE)} sec ago]")
+        if self._ws_LAST_UPDATE + 50 > time.time():
+            _LOGGER.debug(f"ws_check_last_update(): all good! [last update: {int(time.time()-self._ws_LAST_UPDATE)} sec ago]")
             return True
         else:
             _LOGGER.info(f"ws_check_last_update(): force reconnect...")
@@ -527,15 +527,16 @@ class GoeChargerApiV2Bridge:
             self._ws_debounced_update_task.cancel()
 
         async def _ws_debounce_coordinator_update():
-            await asyncio.sleep(0.2)
             if hasattr(self, "coordinator") and self.coordinator is not None:
-                current_time = time()
-                if current_time - self._ws_LAST_NEW_DATA_NOTIFY >= self.coordinator._ws_data_update_notify_interval_in_seconds:
-                    self._ws_LAST_NEW_DATA_NOTIFY = current_time
+                elapsed = time.time() - self._ws_LAST_NEW_DATA_NOTIFY
+                if elapsed < self.coordinator._ws_data_update_notify_interval_in_seconds:
+                    time_to_sleep = self.coordinator._ws_data_update_notify_interval_in_seconds - elapsed
+                    await asyncio.sleep(time_to_sleep)
+
+                # we must check, that after the sleep, the coordinator is still not None...
+                if self.coordinator is not None:
                     self.coordinator.async_set_updated_data(ChainMap(self._ws_states, self._config, self._states, self._versions))
-                else:
-                    #_LOGGER.debug(f"_ws_debounce_coordinator_update(): skip 'self.coordinator.async_set_updated_data'")
-                    pass
+                    self._ws_LAST_NEW_DATA_NOTIFY = time.time()
 
         self._ws_debounced_update_task = asyncio.create_task(_ws_debounce_coordinator_update())
 
@@ -814,7 +815,7 @@ class GoeChargerApiV2Bridge:
                     # Notify coordinator if new data arrived
                     if new_data_arrived:
                         # Store the last time we heard from the websocket
-                        self._ws_LAST_UPDATE = time()
+                        self._ws_LAST_UPDATE = time.time()
                         self._ws_notify_for_new_data()
 
         except aiohttp.ClientConnectionError as err:

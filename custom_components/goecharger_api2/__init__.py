@@ -59,6 +59,7 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
 CONFIG_SCHEMA = config_val.removed(DOMAIN, raise_if_present=False)
+CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS: Final = 120 # 2min
 WEBSOCKET_WATCHDOG_INTERVAL: Final = timedelta(minutes=5, seconds=1)
 COMMUNICATION_MODE_WEBSOCKET: Final = "WEBSOCKET"
 COMMUNICATION_MODE_HTTPGET: Final = "HTTPGET"
@@ -399,8 +400,8 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         self._debounced_update_task = None
 
     async def trigger_restart_delayed(self) -> None:
-        # Generate a random sleep time between 5 and 10 minutes (300 and 600 seconds)
-        random_seconds = random.uniform(300, 600)
+        # Generate a random sleep time between 1 and 5 minutes (60 and 300 seconds)
+        random_seconds = random.uniform(60, 300)
         # random_seconds = random.uniform(60, 120)
         _LOGGER.info(f"trigger_restart_delayed(): Sleeping for {random_seconds:.2f} seconds...")
         await asyncio.sleep(random_seconds)
@@ -448,18 +449,18 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
 
     def _handle_client_connection_error(self, msg: str, exception: Exception):
         # ok, we have issues communicating with the Wallbox...
-        # let's delay the next request at least by 5 minutes
-        #  to allow the wallbox to become alive again?!
+        # let's delay the next request at least by 2 minutes
+        # to allow the wallbox to become alive again?!
         self._CLIENT_COMMUNICATION_ERROR_TS = time()
         self._CLIENT_COMMUNICATION_ERROR_COUNT += 1
-        if self._CLIENT_COMMUNICATION_ERROR_COUNT > 8:
-            _LOGGER.warning(f"{msg}: Too many ClientConnectionError #{self._CLIENT_COMMUNICATION_ERROR_COUNT} while fetching data: {exception} - will try to restart integration.")
+        if self._CLIENT_COMMUNICATION_ERROR_COUNT > 5:
+            _LOGGER.warning(f"{msg}: Too many ClientConnectionError #{self._CLIENT_COMMUNICATION_ERROR_COUNT} while fetching data:{type(exception).__name__} - {exception} - will try to restart integration.", stack_info=True)
             if not self._RESTART_TRIGGERED:
                 _LOGGER.info(f"{msg}: TRIGGER RESTART...")
                 self._RESTART_TRIGGERED = True
                 self.hass.async_create_task(self.trigger_restart_delayed())
         else:
-            _LOGGER.info(f"{msg}: ClientConnectionError #{self._CLIENT_COMMUNICATION_ERROR_COUNT} while fetching data: {exception}")
+            _LOGGER.info(f"{msg}: ClientConnectionError #{self._CLIENT_COMMUNICATION_ERROR_COUNT} while fetching data: {type(exception).__name__} - {exception}", stack_info=True)
 
     async def _async_update_data(self) -> dict:
         """Update data via library."""
@@ -468,8 +469,8 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.debug(f"_async_update_data called (but websocket is active - no data will be requested!)")
             return self.data
         else:
-            if self._CLIENT_COMMUNICATION_ERROR_TS + 3600 > time():
-                time_info = 3600 - (time() - self._CLIENT_COMMUNICATION_ERROR_TS)
+            if self._CLIENT_COMMUNICATION_ERROR_TS + CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS > time():
+                time_info = CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS - (time() - self._CLIENT_COMMUNICATION_ERROR_TS)
                 _LOGGER.info(f"_async_update_data(): skipping update due to client communication error for the next {time_info} seconds")
                 return self.data
             if self._RESTART_TRIGGERED:
@@ -490,16 +491,16 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
 
             except ClientConnectionError as exception:
                 self._handle_client_connection_error("_async_update_data()", exception)
-                raise UpdateFailed(f"Error while fetching data: {exception}") from exception
+                raise UpdateFailed(f"Error while fetching data: {type({exception}.__name__)} - {exception}") from exception
             except UpdateFailed as exception:
                 raise UpdateFailed() from exception
             except Exception as other:
-                _LOGGER.error(f"_async_update_data(): unexpected: {other}")
+                _LOGGER.error(f"_async_update_data(): unexpected: {type(other).__name__} - {other}")
                 raise UpdateFailed() from other
 
     async def async_write_key(self, key: str, value, entity: Entity = None) -> dict:
-        if self._CLIENT_COMMUNICATION_ERROR_TS + 3600 > time():
-            time_info = 3600 - (time() - self._CLIENT_COMMUNICATION_ERROR_TS)
+        if self._CLIENT_COMMUNICATION_ERROR_TS + CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS > time():
+            time_info = CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS - (time() - self._CLIENT_COMMUNICATION_ERROR_TS)
             _LOGGER.info(f"async_write_key(): skipping due to client communication error for the next {time_info} seconds")
             raise ValueError(f"async_write_key(): skipping due to client communication error for the next {time_info} seconds")
         if self._RESTART_TRIGGERED:
@@ -513,14 +514,14 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
 
         except ClientConnectionError as exception:
             self._handle_client_connection_error("async_write_key()", exception)
-            raise ValueError(f"ClientConnectionError while writing {key} to wallbox: {exception}") from exception
+            raise ValueError(f"ClientConnectionError while writing {key} to wallbox: {type({exception}.__name__)} - {exception}") from exception
         except Exception as e:
             _LOGGER.error(f"Error while writing single {key} to wallbox: {e}")
             raise ValueError(f"Exception while writing {key} to wallbox: {e}") from e
 
     async def async_write_multiple_keys(self, attr:dict, key: str, value, entity: Entity = None) -> dict:
-        if self._CLIENT_COMMUNICATION_ERROR_TS + 3600 > time():
-            time_info = 3600 - (time() - self._CLIENT_COMMUNICATION_ERROR_TS)
+        if self._CLIENT_COMMUNICATION_ERROR_TS + CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS > time():
+            time_info = CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS - (time() - self._CLIENT_COMMUNICATION_ERROR_TS)
             _LOGGER.info(f"async_write_multiple_keys(): skipping due to client communication error for the next {time_info} seconds")
             raise ValueError(f"async_write_multiple_keys(): skipping due to client communication error for the next {time_info} seconds")
         if self._RESTART_TRIGGERED:
@@ -533,11 +534,11 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             return result
 
         except ClientConnectionError as exception:
-            self._handle_client_connection_error("async_write_multiple_keys()", exception)
-            raise ValueError(f"ClientConnectionError while writing multiple {key} to wallbox: {exception}") from exception
+            self._handle_client_connection_error("async_write_multiple_keys()", {type({exception}.__name__)} - exception)
+            raise ValueError(f"ClientConnectionError while writing multiple {key} to wallbox: {type({exception}.__name__)} - {exception}") from exception
         except Exception as e:
-            _LOGGER.error(f"Error while writing multiple {key} to wallbox: {e}")
-            raise ValueError(f"Exception while writing multiple {key} to wallbox: {e}") from e
+            _LOGGER.error(f"Error while writing multiple {key} to wallbox: {type(e).__name__} - {e}")
+            raise ValueError(f"Exception while writing multiple {key} to wallbox: {type(e).__name__} - {e}") from e
 
     async def read_versions(self):
         if not await self.bridge.read_versions():
