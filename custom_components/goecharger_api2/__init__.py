@@ -489,11 +489,11 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                 #     self.hass.async_create_task(self.trigger_restart_delayed())
                 return new_data
 
-            except ClientConnectionError as exception:
-                self._handle_client_connection_error("_async_update_data()", exception)
-                raise UpdateFailed(f"Error while fetching data: {type({exception}.__name__)} - {exception}") from exception
-            except UpdateFailed as exception:
-                raise UpdateFailed() from exception
+            except ClientConnectionError as ccerr:
+                self._handle_client_connection_error("_async_update_data()", ccerr)
+                raise UpdateFailed(f"Error while fetching data: {type({ccerr}.__name__)} - {ccerr}") from ccerr
+            except UpdateFailed as ufail:
+                raise UpdateFailed() from ufail
             except Exception as other:
                 _LOGGER.error(f"_async_update_data(): unexpected: {type(other).__name__} - {other}")
                 raise UpdateFailed() from other
@@ -534,8 +534,8 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             return result
 
         except ClientConnectionError as exception:
-            self._handle_client_connection_error("async_write_multiple_keys()", {type({exception}.__name__)} - exception)
-            raise ValueError(f"ClientConnectionError while writing multiple {key} to wallbox: {type({exception}.__name__)} - {exception}") from exception
+            self._handle_client_connection_error(f"async_write_multiple_keys(): {type(exception).__name__} - {exception}")
+            raise ValueError(f"ClientConnectionError while writing multiple {key} to wallbox: {type(exception).__name__} - {exception}") from exception
         except Exception as e:
             _LOGGER.error(f"Error while writing multiple {key} to wallbox: {type(e).__name__} - {e}")
             raise ValueError(f"Exception while writing multiple {key} to wallbox: {type(e).__name__} - {e}") from e
@@ -595,7 +595,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                 try:
                     wb_has_16a_cable_limit = int(cable_limit) <= 16
                 except BaseException as ex:
-                    _LOGGER.debug(f"read_versions(): try to handle CLL:cableCurrentLimit caused: {type(ex).__name__} {ex}")
+                    _LOGGER.debug(f"read_versions(): try to handle CLL:cableCurrentLimit caused: {type(ex).__name__} - {ex}")
                     wb_has_16a_cable_limit = True
             else:
                 wb_has_16a_cable_limit = self.bridge._versions.get(Tag.ADI.key, False)
