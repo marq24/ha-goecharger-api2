@@ -561,8 +561,20 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         else:
             sw_version = "UNKNOWN"
 
+        # model info as it was stored durin the initial setup phase...
         model_info = self._config_entry.data.get(CONF_TYPE, "UNKNOWN")
-        self._is_core_wallbox = "phoenix" in model_info.lower() or "core" in model_info.lower()
+
+        # trying to find updated model information from the _versions dict...
+        lc_model_type = None
+        if Tag.TYP.key in self.bridge._versions:
+            lc_model_type = self.bridge._versions.get(Tag.TYP.key, None)
+            if lc_model_type is not None:
+                lc_model_type = lc_model_type.lower()
+        if lc_model_type is None and model_info is not None:
+            lc_model_type = model_info.lower()
+
+        # finally setting the _is_core_wallbox flag...
+        self._is_core_wallbox = any(keyword in lc_model_type for keyword in ("phoenix", "core"))
 
         self.available_cards_idx = []
         # additional charger stuff...
