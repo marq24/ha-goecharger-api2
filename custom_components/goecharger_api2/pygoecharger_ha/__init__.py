@@ -714,8 +714,8 @@ class GoeChargerApiV2Bridge:
                     hash_type = "pbkdf2"
 
                     # 'devicetype': 'go-eCharger_Phoenix', 'devicesubtype': 'core_cable',
-                    if ("_phoenix" in self._ws_device_info.get("devicetype", "").lower() or
-                        "core" in self._ws_device_info.get("devicesubtype", "").lower()):
+                    a_device_type = self._ws_device_info.get("devicetype", "").lower().replace("_", " ")
+                    if any(keyword in a_device_type for keyword in ("phoenix", "core", " pro")):
                         hash_type = "bcrypt"
 
                 if hash_type not in ["pbkdf2", "bcrypt"]:
