@@ -165,7 +165,7 @@ async def entry_update_listener(hass: HomeAssistant, config_entry: ConfigEntry) 
 
 
 @staticmethod
-async def check_and_write_to_16a(hass: HomeAssistant, config_entry_id: str, bridge: GoeChargerApiV2Bridge):
+async def check_and_write_to_16a(hass: HomeAssistant, config_entry_id: str, bridge: GoeChargerApiV2Bridge, is_lbgroup_id_set: bool):
     _LOGGER.info(f"checking entities")
     tags = []
     if hass is not None:
@@ -175,12 +175,22 @@ async def check_and_write_to_16a(hass: HomeAssistant, config_entry_id: str, brid
             # we query from the HA entity registry all entities that are created by this
             # 'config_entry' -> we use here just default api calls [no more hacks!]
             key_list = []
-            for entity in entity_reg.async_entries_for_config_entry(registry=a_entity_reg,
-                                                                    config_entry_id=config_entry_id):
+            for entity in entity_reg.async_entries_for_config_entry(registry=a_entity_reg, config_entry_id=config_entry_id):
                 if entity.original_device_class == NumberDeviceClass.CURRENT:
                     if "max" in entity.capabilities:
                         if entity.capabilities["max"] == MAX_A:
-                            key_list.append(entity.translation_key)
+                            # we must check if the entity is disabled, or if it is orphaned...
+                            if entity.disabled is None or entity.disabled is False:
+                                if hasattr(entity, "orphaned_timestamp") is False or entity.orphaned_timestamp is None:
+                                    if entity.translation_key not in key_list:
+                                        key_list.append(entity.translation_key)
+                                        _LOGGER.info(f"16A checker: adding entity {entity.translation_key} to list")
+                                    else:
+                                        _LOGGER.debug(f"16A checker: entity {entity.translation_key} already in list")
+                                else:
+                                    _LOGGER.debug(f"16A checker: ignoring entity {entity.translation_key} because it is orphaned")
+                            else:
+                                _LOGGER.debug(f"16A checker: ignoring entity {entity.translation_key} because it is disabled")
 
             if len(key_list) > 0:
                 _LOGGER.info(f"16A checker: found {len(key_list)} entities with max current of {MAX_A}A - {key_list}")
@@ -203,6 +213,12 @@ async def check_and_write_to_16a(hass: HomeAssistant, config_entry_id: str, brid
                     for a_res_key in res.keys():
                         res_obj = res[a_res_key]
                         if isinstance(res_obj, int):
+                            # WE MUST/SHOULD check, if this is really a value, that MUST be adjusted to 16A limit
+                            # since we have some ExtNumberEntityDescription where the 'check_16a_limit is FALSE'
+                            #
+                            # mhhhh - thinking - but then in the EntityDescription.check_16a_limit = False, then
+                            # the entity.capabilities["max"] will not be set to 16A ?! - so this might already
+                            # solve my problem...
                             if res_obj > MAX_A:
                                 res[a_res_key] = MAX_A
                                 if a_res_key not in keys_to_patch:
@@ -211,17 +227,21 @@ async def check_and_write_to_16a(hass: HomeAssistant, config_entry_id: str, brid
                             #_LOGGER.warning(f"found dict in 16A check: {res_obj}")
                             vals_to_check = final_dics.get(a_res_key)
                             for val in vals_to_check:
+                                # WE MUST/SHOULD check, if this... see comment #216+
                                 if res_obj[val] > MAX_A:
                                     res[a_res_key][val] = MAX_A
                                     if a_res_key not in keys_to_patch:
                                         keys_to_patch.append(a_res_key)
 
-                    _LOGGER.info(f"reduce the following keys: {keys_to_patch}")
+                    _LOGGER.info(f"16A checker: reduce the following keys: {keys_to_patch}")
                     for a_key in keys_to_patch:
+                        if is_lbgroup_id_set and a_key in [Tag.LOT.key]:
+                            _LOGGER.debug(f"16A checker: skipping key {a_key}, since loadbalancer group id is set")
+                            continue
                         _LOGGER.info(f"reduce {a_key} to 16A -> writing {res[a_key]}")
                         await bridge.write_value_to_key(a_key, res[a_key])
                 except Exception as e:
-                    _LOGGER.error(f"Error while forcing 16A settings:", e)
+                    _LOGGER.error(f"16A checker: Error while forcing 16A settings:", e)
 
 @staticmethod
 async def check_device_registry(hass: HomeAssistant):
@@ -301,6 +321,8 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         self._is_core_wallbox = None
         self._device_info_dict = {}
         self._device_info_model_raw = None
+        self.is_loadbalancer_group_id_set = False
+        self.limit_to16a = False
         a_comm_mode = self._config_entry.data.get(CONF_PASSWORD, None)
         if a_comm_mode is not None and len(a_comm_mode.strip()) > 0:
             self._comm_mode = COMMUNICATION_MODE_WEBSOCKET
@@ -561,6 +583,16 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         else:
             sw_version = "UNKNOWN"
 
+
+        # check if LoadbanalncerGroupdID is set...
+        # then we must ignore the 16A-limit for LOT!
+        if Tag.LOG.key in self.bridge._versions:
+            lb_group = self.bridge._versions.get(Tag.LOG.key, None)
+            if lb_group is not None and len(lb_group.strip()) > 0:
+                _LOGGER.debug(f"read_versions(): A LoadBalancerGroupID is set - '{lb_group}'")
+                self.is_loadbalancer_group_id_set = True
+
+
         # model info as it was stored durin the initial setup phase...
         model_info = self._config_entry.data.get(CONF_TYPE, "UNKNOWN")
 
@@ -575,6 +607,11 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
 
         # finally setting the _is_core_wallbox flag...
         self._is_core_wallbox = any(keyword in lc_model_type for keyword in ("phoenix", "core", " pro"))
+        if (self._is_core_wallbox):
+            _LOGGER.debug(f"read_versions(): Charger is a Core Wallbox! '{lc_model_type}'")
+        else:
+            _LOGGER.debug(f"read_versions(): Charger/Controller type: '{lc_model_type}'")
+
 
         self.available_cards_idx = []
         # additional charger stuff...
@@ -622,6 +659,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             # no additional controller stuff... but we need to init some variables
             self.limit_to16a = False
 
+
         comm_mode = self._config_entry.data.get(CONF_PASSWORD, None)
         if comm_mode is not None and len(comm_mode.strip()) > 0:
             comm_mode = "WebSocket"
@@ -632,6 +670,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             self._device_info_model_raw = f"{model_info} [16A limited] {comm_mode}"
         else:
             self._device_info_model_raw = f"{model_info} {comm_mode}"
+
 
         if self.mode == LAN:
             self._device_info_dict = {
@@ -672,7 +711,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         _LOGGER.debug(f"check relevant entities for 16A limit... in 15sec")
         await asyncio.sleep(15)
         _LOGGER.debug(f"check relevant entities for 16A limit NOW!")
-        await check_and_write_to_16a(hass=hass, config_entry_id=entry_id, bridge=self.bridge)
+        await check_and_write_to_16a(hass=hass, config_entry_id=entry_id, bridge=self.bridge, is_lbgroup_id_set=self.is_loadbalancer_group_id_set)
 
     async def cleanup_device_registry(self, hass: HomeAssistant):
         _LOGGER.debug(f"check device registry for orphan {DOMAIN} entries... in 20sec")

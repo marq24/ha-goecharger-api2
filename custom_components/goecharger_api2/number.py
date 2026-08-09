@@ -1,4 +1,5 @@
 import logging
+from dataclasses import replace
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
@@ -7,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from custom_components.goecharger_api2.pygoecharger_ha import INTG_TYPE
-from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity
+from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity, Tag
 from .const import DOMAIN, NUMBER_SENSORS, CONTROLLER_NUMBER_SENSORS, ExtNumberEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,6 +20,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
 
     if coordinator.intg_type == INTG_TYPE.CHARGER.value:
         for description in NUMBER_SENSORS:
+            if description.check_16a_limit and coordinator.limit_to16a:
+                # when there is a loadbalancer group id set and the key is LOT, we do not overwrite the
+                # native_max_value... [since the overall max value in the group can be larger than 16A!]
+                if not (coordinator.is_loadbalancer_group_id_set and description.key in [Tag.LOT.key]):
+                    description = replace(description, native_max_value = 16)
+                else:
+                    _LOGGER.debug(f"NUMBER async_setup_entry: not overwriting native_max_value for key {description.key} - {description.idx}")
+
             entity = GoeChargerNumber(coordinator, description)
             entities.append(entity)
     else:
@@ -31,39 +40,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
 
 class GoeChargerNumber(GoeChargerBaseEntity, NumberEntity):
     def __init__(self, coordinator: GoeChargerDataUpdateCoordinator, description: ExtNumberEntityDescription):
-        if description.check_16a_limit and coordinator.limit_to16a:
-            # ok we need to create a new entity description with the new options...
-            # [since ExtNumberEntityDescription is frozen]
-            description = ExtNumberEntityDescription (
-                key = description.key,
-                device_class = description.device_class,
-                entity_category = description.entity_category,
-                entity_registry_enabled_default = description.entity_registry_enabled_default,
-                entity_registry_visible_default = description.entity_registry_visible_default,
-                force_update = description.force_update,
-                icon = description.icon,
-                has_entity_name = description.has_entity_name,
-                name = description.name,
-                translation_key = description.translation_key,
-                translation_placeholders = description.translation_placeholders,
-                unit_of_measurement = description.unit_of_measurement,
-
-                max_value = description.max_value,
-                min_value = description.min_value,
-                mode = description.mode,
-                # here is the value, that we overwrite...
-                native_max_value = 16,
-                native_min_value = description.native_min_value,
-                native_step = description.native_step,
-                native_unit_of_measurement = description.native_unit_of_measurement,
-                step = description.step,
-
-                write_zero_as_null = description.write_zero_as_null,
-                handle_as_float = description.handle_as_float,
-                factor = description.factor,
-                idx = description.idx,
-                check_16a_limit = description.check_16a_limit
-            )
         super().__init__(entity_type=Platform.NUMBER, coordinator=coordinator, description=description)
 
     @property
