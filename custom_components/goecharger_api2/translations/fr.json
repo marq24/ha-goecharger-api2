@@ -249,7 +249,7 @@
         "state": {
           "0": "Mode standard",
           "1": "Déverrouillage auto",
-          "2": "Toujours déverrouillé",
+          "2": "Toujours verrouillé",
           "3": "Forcer déverrouillage"
         }
       },
