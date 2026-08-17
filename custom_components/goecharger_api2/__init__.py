@@ -740,7 +740,7 @@ class GoeChargerBaseEntity(CustomFriendlyNameEntity):
     _attr_has_entity_name = True
 
     def __init__(self, entity_type:str, coordinator: GoeChargerDataUpdateCoordinator, description: EntityDescription) -> None:
-        super().__init__(coordinator, description)
+        super().__init__(coordinator)
 
         # make sure that we keep the CASE of the key!
         self.data_key = description.key
@@ -792,11 +792,6 @@ class GoeChargerBaseEntity(CustomFriendlyNameEntity):
     def unique_id(self):
         """Return a unique ID to use for this entity."""
         return f"{DOMAIN}.{self.entity_id.split('.')[1]}".lower()
-
-    async def async_added_to_hass(self):
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(self.coordinator.async_add_listener(self.async_write_ha_state))
-        await super().async_added_to_hass()
 
     def _friendly_name_internal(self) -> str | None:
         """Return the friendly name.
