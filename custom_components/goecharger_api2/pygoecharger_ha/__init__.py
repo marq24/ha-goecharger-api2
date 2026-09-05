@@ -189,18 +189,36 @@ class GoeChargerApiV2Bridge:
         self._ws_LAST_NEW_DATA_NOTIFY = 0
 
     async def read_system(self) -> dict:
-        # TODO: WEBSOCKET
-        return await self._read_filtered_data(filters=self._FILTER_SYSTEMS, log_info="read_system")
+        ret = await self._read_filtered_data(filters=self._FILTER_SYSTEMS, log_info="read_system")
+        if (ret is None or len(ret) == 0) and self.ws_url is not None:
+            # devices like the Fronius Wattpilot do not offer the local HTTP APIv2 - they only
+            # support the WebSocket connection... [when there is a password, we can try WS instead]
+            if await self.ws_read_initial_data():
+                ret = self._ws_filtered(self._FILTER_SYSTEMS)
+                # some devices (e.g. the Fronius Wattpilot) might not include all system keys in
+                # their status data - so we fill the gaps from the WebSocket hello device-info...
+                for api_key, info_key in ((Tag.OEM.key, "manufacturer"), (Tag.TYP.key, "devicetype"), (Tag.SSE.key, "serial")):
+                    if api_key not in ret and info_key in self._ws_device_info:
+                        ret[api_key] = self._ws_device_info[info_key]
+                _LOGGER.info(f"read_system(): no data via HTTP APIv2 - used WebSocket fallback instead [{len(ret)} keys]")
+        return ret
 
     async def read_versions(self):
-        # TODO: WEBSOCKET
-        for attempt in range(5):
+        # when a WebSocket url is available, we don't need to hammer the HTTP API with retries
+        # (WebSocket-only devices like the Fronius Wattpilot will never answer via HTTP)
+        max_attempts = 1 if self.ws_url is not None else 5
+        for attempt in range(max_attempts):
             self._versions = await self._read_filtered_data(filters=self._FILTER_VERSIONS, log_info=f"read_versions (attempt {attempt+1})")
             if self._versions is not None and len(self._versions) > 0:
                 break
-            if attempt < 4:
+            if attempt < max_attempts - 1:
                 # sleep random between 2 and 10 seconds...
                 await asyncio.sleep(random.uniform(2, 10))
+
+        if (self._versions is None or len(self._versions) == 0) and self.ws_url is not None:
+            if await self.ws_read_initial_data():
+                self._versions = self._ws_filtered(self._FILTER_VERSIONS)
+                _LOGGER.info(f"read_versions(): no data via HTTP APIv2 - used WebSocket fallback instead [{len(self._versions)} keys]")
 
         if self._versions is None or len(self._versions) == 0:
             _LOGGER.warning(f"read_versions(): no versions data available - enable debug log for details!")
@@ -651,6 +669,65 @@ class GoeChargerApiV2Bridge:
             await self._ws_connection.send_json(original_message)
 
         return True
+
+    def _ws_filtered(self, filters: str) -> dict:
+        """Return the requested (comma separated) keys from the captured WebSocket states."""
+        requested_keys = filters.split(',')
+        return {a_key: self._ws_states[a_key] for a_key in requested_keys if a_key in self._ws_states}
+
+    async def ws_read_initial_data(self, wait_seconds: float = 15.0) -> bool:
+        """Capture device data via a short-lived WebSocket session.
+
+        WebSocket-only devices (e.g. the Fronius Wattpilot) can't be validated or read via
+        the local HTTP APIv2. This method starts a temporary ws_connect(), waits till the
+        initial 'fullStatus' data has arrived in self._ws_states and terminates the session
+        again - so read_system() & read_versions() can be served from the ws data."""
+        if self.ws_url is None:
+            return False
+
+        if self.ws_connected:
+            return len(self._ws_states) > 0
+
+        # the initial 'fullStatus' data can arrive in multiple partial packages - so we wait
+        # till all the keys that read_system() & read_versions() require are present...
+        required_keys = set(self._FILTER_SYSTEMS.split(','))
+        required_keys.add(Tag.FWV.key)
+
+        # when we already have captured ws data (e.g. from a previous call) there is no
+        # need to open another session...
+        if required_keys.issubset(self._ws_states.keys()):
+            return True
+
+        captured_states = None
+        ws_task = asyncio.create_task(self.ws_connect())
+        try:
+            end_ts = time.time() + wait_seconds
+            while time.time() < end_ts:
+                if required_keys.issubset(self._ws_states.keys()):
+                    break
+                if ws_task.done():
+                    # connection, hello or authentication have failed...
+                    break
+                await asyncio.sleep(0.2)
+            missing_keys = required_keys - set(self._ws_states.keys())
+            if missing_keys:
+                _LOGGER.debug(f"ws_read_initial_data(): captured {len(self._ws_states)} keys - still missing: {missing_keys}")
+            captured_states = dict(self._ws_states)
+        finally:
+            if not ws_task.done():
+                ws_task.cancel()
+                try:
+                    await ws_task
+                except asyncio.CancelledError:
+                    pass
+                except BaseException as exc:
+                    _LOGGER.debug(f"ws_read_initial_data(): while closing the temporary session: {type(exc).__name__} - {exc}")
+            # ws_connect() resets self._ws_states when it terminates - so we must restore
+            # the captured data, since read_system() & read_versions() will be served from it...
+            if captured_states is not None and len(captured_states) > 0 and len(self._ws_states) == 0:
+                self._ws_states.update(captured_states)
+
+        return captured_states is not None and len(captured_states) > 0 and Tag.FWV.key in captured_states
 
     async def ws_connect(self):
         """Connect to WebSocket with full authentication and message handling"""
