@@ -592,7 +592,6 @@ class Tag(ApiKey, Enum):
     # dsrc | R | TYPE | Status | inverter data source
     # gmtr | R/W | TYPE | Config | gridMonitoringTimeReconnection in seconds
     # gsa | R/W | TYPE | Status | gridMonitoring last failure
-    # hai | R/W | TYPE | Config | httpApiEnabled (allows /api/status and /api/set requests)
     # hla | R/W | TYPE | Config | httpLegacyApiEnabled (allows /status and /mqtt requests)
     # la1 | R/W | TYPE | Config | limit adapter 1-phase (in A)
     # la3 | R/W | TYPE | Config | limit adapter 3-phase (in A)
@@ -658,8 +657,13 @@ class Tag(ApiKey, Enum):
     # OCT = ApiKey(key="oct", cat=CAT.CONFIG, writeable=True)
     # ccn | R/W | TYPE | Config | controller category names
     CCN = ApiKey(key="ccn", cat=CAT.CONFIG, writeable=True)
-    # hai | R/W | TYPE | Config | httpApiEnabled (allows /api/status and /api/set requests)
+
+    # HAI & CAE USDED ONY INTERNAL...
+    # hai | R/W | TYPE | Config | LOCAL httpApiEnabled (allows /api/status and /api/set requests)
     HAI = ApiKey(key="hai", cat=CAT.CONFIG, writeable=True)
+    # cae | R/W | TYPE | Config | CLOUD httpApiEnabled (allows /api/status and /api/set requests)
+    CAE = ApiKey(key="cae", cat=CAT.CONFIG, writeable=True)
+
     # wda | R/W | TYPE | Config | disable AccessPoint when cloud is connected
     WDA = ApiKey(key="wda", cat=CAT.CONFIG, writeable=True)
     # tse | R/W | TYPE | Config | time server enabled

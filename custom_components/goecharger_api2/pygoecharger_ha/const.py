@@ -18,8 +18,10 @@ FILTER_CARDS_NAME_FWV60: Final= "c0n,c1n,c2n,c3n,c4n,c5n,c6n,c7n,c8n,c9n"
 FILTER_CARDS_ENGY_FWV60: Final= "c0e,c1e,c2e,c3e,c4e,c5e,c6e,c7e,c8e,c9e"
 FILTER_CARDS_ALL_FWV60: Final = f"{FILTER_CARDS_ID_FWV60},{FILTER_CARDS_NAME_FWV60},{FILTER_CARDS_ENGY_FWV60}"
 
-FILTER_SYSTEMS: Final = "oem,sse,typ,var"
-FILTER_VERSIONS: Final = f"ccrv,typ,log,fwc,fwv,var,cll,adi,{FILTER_CARDS_ID_CLASSIC},{FILTER_CARDS_ID_FWV60}"
+
+FILTER_SYSTEMS: Final = "oem,sse,typ,var,hai,cae"
+FILTER_VERSIONS_NOCARDS: Final = f"ccrv,typ,log,fwc,fwv,var,cll,adi"
+FILTER_VERSIONS: Final = f"{FILTER_VERSIONS_NOCARDS},{FILTER_CARDS_ID_CLASSIC},{FILTER_CARDS_ID_FWV60}"
 FILTER_MIN_STATES: Final = "car,modelStatus,err,nrg,tma,trx"
 FILTER_IDS_ADDON: Final = ",pakku,ppv,pgrid"
 
@@ -27,12 +29,12 @@ FILTER_IDS_ADDON: Final = ",pakku,ppv,pgrid"
 FILTER_TIMES_ADDON: Final = ",rbt,fsptws,inva,lbp,lccfc,lccfi,lcctc,lfspt,lmsc,lpsc,lcs"
 
 FILTER_ALL_STATES: Final = "alw,acu,adi,amt,atp,awcp,car,{CARDS_ENERGY_FILTER},cbl,ccu,ccw,cdi,cll,cus,ctrls,deltaa,deltap,di1,err,eto,ffb,fhz,fsp,fsptws,inva,lbp,lccfc,lccfi,lcctc,lck,lfspt,lmsc,loa,lpsc,mcpea,mmp,modelStatus,nif,nrg,pakku,pgrid,pha,pnp,ppv,pvopt_averagePAkku,pvopt_averagePGrid,pvopt_averagePPv,pwm,rbc,rbt,rfb,rssi,rst,tlf,tls,tma,tpa,trx,wh,wsms,wst"
-FILTER_ALL_CONFIG: Final = "acp,acs,ama,amp,ara,ate,att,awc,awe,awp,bac,{CARDS_ID_FILTER},cch,cco,cfi,cid,clp,cmse,ct,cwc,cwe,dwo,esk,fmt,fna,frc,frm,fst,fup,fzf,hsa,lbr,lmo,loe,lof,log,lop,lot,loty,lse,map,mca,mci,mcpd,mptwt,mpwst,nmo,ocppe,pgt,po,psh,psm,psmd,rdbf,rdbs,rdef,rdes,rdre,rdpl,sch_satur,sch_sund,sch_week,sdp,sh,spl3,su,sua,sumd,tds,tof,upo,ust,zfo"
+FILTER_ALL_CONFIG: Final = "acp,acs,ama,amp,ara,ate,att,awc,awe,awp,bac,{CARDS_ID_FILTER},cch,cco,cfi,cid,clp,cmse,ct,cwc,cwe,dwo,esk,fmt,fna,frc,frm,fst,fup,fzf,hai,hsa,lbr,lmo,loe,lof,log,lop,lot,loty,lse,map,mca,mci,mcpd,mptwt,mpwst,nmo,ocppe,pgt,po,psh,psm,psmd,rdbf,rdbs,rdef,rdes,rdre,rdpl,sch_satur,sch_sund,sch_week,sdp,sh,spl3,su,sua,sumd,tds,tof,upo,ust,zfo"
 
 FILTER_NOT_USED: Final = "mcc,mcca,mce,mcr,mcs,mcu,men,mlr,mlra,mqcn,mqg,mqss,msb,msp,msr,mtp,ocppai,ocppi,rdbfe,rdbse,rdefe,rdese,rdree,rdple"
 
 # found api-keys that are not documented (yet) ?!
-FILTER_UNKNOWN_COMON: Final = "aus,ccd,cle,clea,cmmr,cmp,cms,csa,data,die,dii,dll,hai,hla,isgo,la1,la3,lbl,lopr,lrc,lri,lrr,lwf,ocppao,ocppcm,ocppcs,ocppf,ocppla,ocpplo,ocppti,pdi,pgr,rde,smd,tcl,tsi,tzt,ufa,ufe,ufm,ufs,wbw,wda,wsl"
+FILTER_UNKNOWN_COMON: Final = "aus,ccd,cle,clea,cmmr,cmp,cms,csa,data,die,dii,dll,hla,isgo,la1,la3,lbl,lopr,lrc,lri,lrr,lwf,ocppao,ocppcm,ocppcs,ocppf,ocppla,ocpplo,ocppti,pdi,pgr,rde,smd,tcl,tsi,tzt,ufa,ufe,ufm,ufs,wbw,wda,wsl"
 
 FILTER_UNKNOWN_FW59_X_BETA: Final = "bar,dsrc,evt,gmtr,gsa,lto,mhe,mht,ocppdp,ocppmp,ocpptp,orsch,pco,rdbfe,rdbse,rdefe,rdese,rdple,rdree,rmaf,rmav,rmif,rmiv,rsa,rsre,rsrr,tab"
 FILTER_UNKNOWN_FW56_2_BETA: Final = "bar,gmtr,gsa,mhe,mht,pco,rmaf,rmav,rmif,rmiv,rsa,rsre,rsrr"
@@ -41,7 +43,7 @@ FILTER_UNKNOWN_FW56_1: Final = "avgfhz,simo"
 ##############
 # CONTROLLER #
 ##############
-FILTER_CONTROLER_SYSTEMS: Final = "oem,sse,typ,fna"
+FILTER_CONTROLER_SYSTEMS: Final = "oem,sse,typ,fna,hai,cae"
 FILTER_CONTROLER_VERSIONS: Final = "fwv"
 FILTER_CONTROLER_MIN_STATES: Final = "usv,isv,cec,ccp"
 
@@ -108,6 +110,10 @@ CT_VALUES_MAP: Final = {
 
 TRANSLATIONS: Final = {
     "de": {
+        "coord_null_data": "Es konnten keine Daten abgerufen werden. Bitte prüfe Dein Home Assistant System Protokoll auf mögliche Fehlermeldungen der Integration.",
+        "coord_no_device_data": "Es konnten keine Daten zu Deinem konfigurierten Gerät abgerufen werden. Bitte prüfe Dein Home Assistant System Protokoll auf mögliche Fehlermeldungen der Integration.",
+        "websocket_start_failed": "Der Websocket konnte innerhalb von einer Minute nicht gestartet werden. Bitte prüfe Dein Home Assistant System Protokoll auf mögliche Fehlermeldungen der Integration.",
+
         "car": {
             0: "Unbekannt/Fehler",
             1: "Inaktiv/Frei",
@@ -277,6 +283,10 @@ TRANSLATIONS: Final = {
         "cll_unsymetrycurrentlimit": "Stromlimit Asymmetrie"
     },
     "en": {
+        "coord_null_data": "Coordinator could not provided any data. Please check your Home Assistant system log for possible error messages.",
+        "coord_no_device_data": "Coordinator could not fetch essential information from your configured device. Please check your Home Assistant system log for possible error messages.",
+        "websocket_start_failed": "The Websocket could not be started within one minute. Please check your Home Assistant system log for possible error messages.",
+
         "car": {
             0: "Unknown/Error",
             1: "Idle",

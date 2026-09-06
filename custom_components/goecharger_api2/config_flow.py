@@ -1,4 +1,6 @@
+import asyncio
 import logging
+from asyncio import sleep
 from typing import Final, Any
 
 import voluptuous as vol
@@ -19,9 +21,26 @@ from homeassistant.const import (
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bridge, INTG_TYPE
+from .const import (
+    DOMAIN,
+    CONF_11KWLIMIT,
+    CONF_INTEGRATION_TYPE,
+    LAN,
+    WAN,
+    CONFIG_VERSION,
+    CONFIG_MINOR_VERSION
+)
+from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bridge, INTG_TYPE, TargetedEvent
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
-from .const import DOMAIN, CONF_11KWLIMIT, CONF_INTEGRATION_TYPE, LAN, WAN, CONFIG_VERSION, CONFIG_MINOR_VERSION
+from custom_components.goecharger_api2.pygoecharger_ha.const import (
+    FILTER_SYSTEMS,
+    FILTER_VERSIONS,
+    FILTER_ALL_CONFIG,
+    FILTER_CONTROLER_SYSTEMS,
+    FILTER_CONTROLER_SYSTEMS,
+    FILTER_CONTROLER_VERSIONS,
+    FILTER_CONTROLER_ALL_CONFIG
+)
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -250,11 +269,102 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=self._errors
         )
 
+    async def _check_ws_connection_and_flags(self, client:GoeChargerApiV2Bridge):
+        # the HAI flag, is the flag that indicates if the HTTPv2 LOCAL API is enabled
+        # the CAE flag, is the flag that indicates if the HTTPv2 CLOUD API is enabled
+        ret_val = False
+
+        # the TargetedEvent has internally a list of API keys that are required/checked before the event will
+        # notify to be set...
+        ready_event = TargetedEvent(is_charger=client.isCharger)
+        _ws_start_task = self.hass.async_create_background_task(client.ws_connect(a_event=ready_event, keep_ws_states_after_close=True), "ws_connection_check")
+        try:
+            _LOGGER.debug("_check_ws_connection_and_flags(): Waiting for the ws connection to be established (max 30 seconds)")
+            await asyncio.wait_for(ready_event.wait(), timeout=30.0)
+            if ready_event.has_errors():
+                _LOGGER.debug(f"_check_ws_connection_and_flags(): ws connection failed! errors: {ready_event.errors}")
+                return False
+
+            if ready_event.is_set():
+                ret_val = True
+
+                # for now, we skip the HAI auto-enable... since in the case of the websocket implementation,
+                # there is no need to enable it...
+                val = client._ws_states.get(Tag.HAI.key, None)
+                _LOGGER.debug(f"_check_ws_connection_and_flags(): ws connection established! and current value of HAI flag: {val}")
+                # if val is not None:
+                #     if not bool(val):
+                #         _LOGGER.info(f"_check_ws_connection_and_flags(): setting HAI flag to TRUE -> enable the HTTP v2 API at the charger device")
+                #         await client.write_value_to_key(Tag.HAI.key, True)
+                #         await sleep(2)
+                #         ret_val = True
+                #     else:
+                #         # HAI is enabled - nothing to do...
+                #         ret_val = True
+                # else:
+                #     # There is NO 'hai' flag at all - this means that this device is not supporting a LOCAL http v2 API
+                #     # so we must run/check how we can communicate with it at all?
+                #     # OK fair enough, we have already communicated with the device via the websocket ;-)
+                #     pass
+
+        except asyncio.CancelledError as canceled:
+            _LOGGER.debug(f"_check_ws_connection_and_flags(): ws connection check cancelled - no HAI flag found after 30 seconds")
+            ret_val = False
+
+        except asyncio.TimeoutError as timeout:
+            _LOGGER.debug(f"_check_ws_connection_and_flags(): ws connection check Timeout - no HAI flag found after 30 seconds")
+            ret_val = False
+
+        finally:
+            # Ensure background task is cleaned up
+            _ws_start_task.cancel()
+
+        try:
+            await asyncio.wait_for(_ws_start_task, timeout=5.0)
+        except asyncio.TimeoutError:
+            _LOGGER.debug(f"_check_ws_connection_and_flags(): ws connection check Timeout - background task did not finish after 5 seconds")
+
+        # we need some rest befor the code will fire another ws connection...
+        try:
+            await asyncio.sleep(2.5)
+        except BaseException:
+            pass
+
+        return ret_val
+
     async def _test_host(self, intg_type:str, host:str, pwd:str, serial:str, token:str):
         try:
             session = async_create_clientsession(self.hass)
             client = GoeChargerApiV2Bridge(intg_type=intg_type, host=host, access_password=pwd, serial=serial, token=token, web_session=session,
                                            lang=self.hass.config.language.lower())
+
+            # when the user has specified a password, then we will first try to establish a local WEBSOCKET connection
+            # and try to read the 'hai' flag... if 'hai' is false, then we enable it...
+            ws_test_ok = False
+            if pwd is not None and len(str(pwd)) > 0:
+                await self._check_ws_connection_and_flags(client)
+                if client._ws_states is not None and len(client._ws_states) > 0:
+                    _LOGGER.debug(f"_test_host(): ws check for '{host}' was successful")
+                    ws_test_ok = True
+                else:
+                    _LOGGER.warning(f"_test_host(): Failed to establish ws connection and could not check flags for '{host}' - so we must fallback to the HTTP v2 API, and HAI or CAE must be enabled!")
+
+            if ws_test_ok:
+                # local v2 API
+                has_hai = Tag.HAI.key in client._ws_states
+                enabled_hai = False
+                if has_hai:
+                    enabled_hai = bool(client._ws_states[Tag.HAI.key])
+
+                # cloud v2 API
+                has_cae = Tag.CAE.key in client._ws_states
+                enabled_cae = False
+                if has_cae:
+                    enabled_cae = bool(client._ws_states[Tag.CAE.key])
+
+                # but at the end of the day, if the ws connection has returned any data,
+                # we do not care about HAI or CAE flag - since we will just use
+                # data received via ws..
 
             ret = await client.read_system()
             if ret is not None and len(ret) > 0:

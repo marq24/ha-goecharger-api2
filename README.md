@@ -2,9 +2,18 @@
 
 ![logo](https://github.com/marq24/ha-goecharger-api2/raw/main/logo.png)
 
-Support for all go-eCharger Wallboxes & go-eController's supporting the APIv2 or a WebSocket connection.
+Support for all go-eCharger Wallboxes & go-eController's supporting the APIv2 or a WebSocket connection. This also included other branded Wallboxes that are based on the go-eCharger hardware (like the Fronius Wattpilot) — as long as they support the WebSocket or HTTP APIv2 connection.
 
-__Of course__ the APIv2 has to be enabled via the go-e mobile app, __before__ you can use this integration [[see instructions](#enable-http-api-v2-in-go-echarger-app)].
+> [!WARNING]
+> ## Disclaimer
+> Please be aware that we are developing this integration to the best of our knowledge and belief, but can't give a guarantee. Therefore, use this integration **at your own risk**.
+
+### Before you can use this integration, you must have
+Specified a **password** via the go-e mobile app for your go-eCharger or go-eController to be able to use the WebSocket connection.
+<br/>--- **or** ---<br/>
+**Enabled** the **HTTP APIv2** via the go-e mobile app for your go-eCharger or go-eController (when this is available in the app)
+
+So it's either enabled HTTP v2 API or password to use the websocket [[see instructions for further details](#websocket)].
 
 
 > [!IMPORTANT]
@@ -19,7 +28,7 @@ Technically, there should be no issues using always the latest go-eCharger & go-
 ### go-eCharger Firmware Versions
 
 List of confirmed working go-eCharger Firmware versions with this integration:
-- 60.5 & 60.4, 60.3 (60.2 had general connection issues)
+- 60.6 & 60.5, 60.4, 60.3 (60.2 had general connection issues)
 - 59.4
 - 57.0 & 57.1
 - 56.2 - 56.11
@@ -43,11 +52,11 @@ If you have any issues with this integration after you updated your go-eCharger 
  
 ### go-eCharger
 
- - __All documented fields__ [in the official go-eCharger GitHub repository](https://github.com/goecharger/go-eCharger-API-v2/blob/main/API_KEYS_FIRMWARE/apikeys-en.md) are supported by this integration (with very few exceptions) [[see list of currently not handled API keys](#list-of-currently-not-handled-api-keys-27172)]
- - Support for 'PV surplus charging' (PV-Überschuss Laden) __without additional hardware__ — no need to pay for evcc. In order to use this feature, a small additional manual setup process is required [[details can be found below](#enable-pv-surplus-charging-via-ha-automation)]
+ - __All documented fields__ [in the official go-eCharger GitHub repository](https://github.com/goecharger/go-eCharger-API-v2/blob/main/API_KEYS_FIRMWARE/apikeys-en.md) are supported by this integration (with very few exceptions) [[see list of currently not handled API keys](#list-of-currently-not-handled-api-keys)]
+ - Support for 'PV surplus charging' (PV-Überschuss Laden) __without additional hardware__ — no need to pay for evcc. In order to use this feature, a small additional manual setup process is required [[details can be found below](#pv-surplus-charging-via-ha-automation)]
  - For all go-eCharger (status) fields that support a numeric status code, this code is available as a separate sensor
  - Multilanguage support: a German translation included (any feedback highly appreciated!) & looking forward to other language contributions
-- Hibernation-Mode: only request sensor data from wallbox when a system is in use [[details can be found below](#hibernation-mode--good-to-know)]
+- Hibernation-Mode: only request sensor data from wallbox when a system is in use [[details can be found below](#hibernation-mode--good-to-know-only-in-polling-mode)]
   
   Please note that the configuration data will be read only every 24 hours from the hardware (to save data) — but you can update the sensors any time with an 'update' button.
 
@@ -60,16 +69,12 @@ If you have any issues with this integration after you updated your go-eCharger 
 
    Please note that the configuration data will be read only every 24 hours from the hardware (to save data) — but you can update the sensors any time with an 'update' button.
 
-> [!WARNING]
-> ## Disclaimer
-> Please be aware that we are developing this integration to the best of our knowledge and belief, but can't give a guarantee. Therefore, use this integration **at your own risk**.
-
 ## Requirements
 
 ### go-eCharger
 - go-eCharger Wallbox running Firmware version __56.1__ (or higher)
+- Your Wallbox password to enable the WebSocket implementation [[details see below]](#websocket)<br>**OR**
 - enabled APIv2 [[see instructions](#enableapiv2)]
-- [_optional_] Your Wallbox password to enable the WebSocket implementation [(details see below)](#websocket)
 
 ### go-eController
 - enabled APIv2 Controller running Firmware version __1.1.1__ (or higher)
@@ -121,7 +126,6 @@ Use the following steps for a manual configuration by adding the custom integrat
 - Provide an area/room where the wallbox/controller is located
 
 After the integration was added, you can use the 'config' button to adjust your settings, you can additionally modify the update interval
-<a id="pvsurplus"></a>
 
 Please note that some of the available sensors are __not__ enabled by default.
 
@@ -129,7 +133,9 @@ Please note that some of the available sensors are __not__ enabled by default.
 
 ## WebSocket – use local/cloud push (instead of polling)
 
-The integration can use the (undocumented) go-eCharger WebSocket API to receive the current status of your wallbox (or sending data to the wallbox). 
+The integration can use the (undocumented) go-eCharger WebSocket API to receive the current status of your wallbox (or sending data to the wallbox).
+
+Using the WebSocket communication is the preferred way to communicate with your wallbox, since it is much more efficient than the polling method (HTTP GET). For some wallboxes (like _Fronius Wattpilot_) the WebSocket communication is even the only way to get local the data from the wallbox (since for whatever reason the firmware does not include the internal HTTP v2 API).
 
 Using the WebSocket communication makes the polling interval __obsolete__, and you will get the latest data in HA as soon as something changes at your wallbox. This includes any changes of the wallbox configuration. When using the WebSocket feature, the _refresh_/_configuration sync_ buttons are obsolete and also the [_hibernation-mode_](#hibernation) is disabled.
 

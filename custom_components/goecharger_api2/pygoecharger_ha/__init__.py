@@ -21,6 +21,7 @@ from custom_components.goecharger_api2.pygoecharger_ha.const import (
     CAR_VALUES,
     FILTER_SYSTEMS,
     FILTER_VERSIONS,
+    FILTER_VERSIONS_NOCARDS,
     FILTER_MIN_STATES,
     FILTER_IDS_ADDON,
     FILTER_TIMES_ADDON,
@@ -42,6 +43,45 @@ from custom_components.goecharger_api2.pygoecharger_ha.const import (
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag, IS_TRIGGER
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
+
+class TargetedEvent(asyncio.Event):
+    """An Event that only triggers when an incoming string contains a specific substring."""
+    def __init__(self, tag_keys: list = None, is_charger: bool = True):
+        super().__init__()
+        if tag_keys is None or len(tag_keys) == 0:
+            if is_charger:
+                required_tags_str = f"{FILTER_SYSTEMS},{FILTER_VERSIONS_NOCARDS}"#,{FILTER_ALL_CONFIG}"
+                #required_tags_str = required_tags_str.replace(",{CARDS_ID_FILTER}", "")
+            else:
+                required_tags_str = f"{FILTER_CONTROLER_SYSTEMS},{FILTER_CONTROLER_VERSIONS}"#,{FILTER_CONTROLER_ALL_CONFIG}"
+
+            # but we remove the 'hai' -> since not all chargers (Fronius) might have this flag
+            required_tags_str = required_tags_str.replace(",hai", "")
+
+            tag_keys = list(set(required_tags_str.split(",")))
+
+        self.tag_keys = tag_keys
+        self._error = None
+
+    def check_and_set(self, data_dict: dict) -> bool:
+        """Check if the tag_key is present in the data_dict; set event if true."""
+        if all(tag_key in data_dict for tag_key in self.tag_keys):
+            self.set()
+            return True
+
+        else:
+            missing_keys = [tag_key for tag_key in self.tag_keys if tag_key not in data_dict]
+            _LOGGER.debug(f"TargetedEvent: Not all required keys present in data_dict. Required: {missing_keys}")
+
+        return False
+
+    def has_errors(self):
+        return self._error is not None
+
+    def set_error(self, error: Exception):
+        self._error = error
+        self.set()
+
 
 class ExpiringStore:
     """A store that holds JSON objects for a maximum of one minute."""
@@ -147,6 +187,7 @@ class GoeChargerApiV2Bridge:
 
         # the new ws stuff...
         self.ws_connected = False
+        self.ws_connection_start = 0
         self.coordinator = None
         self._ws_connection = None
         self._ws_hashed_password = None
@@ -182,25 +223,39 @@ class GoeChargerApiV2Bridge:
         self._ws_proto = -1
         self._ws_protocol = -1
 
-    def reset_stored_update_ts(self):
+    async def reset_stored_update_ts(self):
         self._LAST_CONFIG_UPDATE_TS = 0
         self._LAST_FULL_STATE_UPDATE_TS = 0
         self._ws_LAST_UPDATE = 0
         self._ws_LAST_NEW_DATA_NOTIFY = 0
 
+        # when we are in ws mode, we must/should trigger a reconnect...
+        if self.ws_connected:
+            if self.coordinator is not None:
+                await self.coordinator.force_async_update_now()
+
+
     async def read_system(self) -> dict:
-        # TODO: WEBSOCKET
-        return await self._read_filtered_data(filters=self._FILTER_SYSTEMS, log_info="read_system")
+        if self.ws_connected:
+            # if we are connected via websocket, then we should not read the system data via HTTP-API
+            # since this is already done via the websocket connection...
+            return self._read_filtered_data_from_ws_source(filters=self._FILTER_SYSTEMS, log_info="read_system")
+        else:
+            return await self._read_filtered_data(filters=self._FILTER_SYSTEMS, log_info="read_system")
 
     async def read_versions(self):
-        # TODO: WEBSOCKET
-        for attempt in range(5):
-            self._versions = await self._read_filtered_data(filters=self._FILTER_VERSIONS, log_info=f"read_versions (attempt {attempt+1})")
-            if self._versions is not None and len(self._versions) > 0:
-                break
-            if attempt < 4:
-                # sleep random between 2 and 10 seconds...
-                await asyncio.sleep(random.uniform(2, 10))
+        if self.ws_connected:
+            # if we are connected via websocket, then we should not read the system data via HTTP-API
+            # since this is already done via the websocket connection...
+            self._versions = self._read_filtered_data_from_ws_source(filters=self._FILTER_VERSIONS, log_info="read_versions (via websocket)")
+        else:
+            for attempt in range(5):
+                self._versions = await self._read_filtered_data(filters=self._FILTER_VERSIONS, log_info=f"read_versions (attempt {attempt+1})")
+                if self._versions is not None and len(self._versions) > 0:
+                    break
+                if attempt < 4:
+                    # sleep random between 2 and 10 seconds...
+                    await asyncio.sleep(random.uniform(2, 10))
 
         if self._versions is None or len(self._versions) == 0:
             _LOGGER.warning(f"read_versions(): no versions data available - enable debug log for details!")
@@ -237,7 +292,10 @@ class GoeChargerApiV2Bridge:
         if self._LAST_CONFIG_UPDATE_TS + 3600 < time.time():
             await self.read_all_config()
 
-        return ChainMap(self._ws_states, self._config, self._states, self._versions)
+        if self.ws_connected:
+            return self._ws_states
+        else:
+            return ChainMap(self._ws_states, self._config, self._states, self._versions)
 
     async def read_all_states(self):
         do_minimal_status_update: bool = False
@@ -258,7 +316,11 @@ class GoeChargerApiV2Bridge:
             # check what additional times do frequent update?!
             filter = filter+self._FILTER_TIMES_ADDON
 
-            idle_states = await self._read_filtered_data(filters=filter, log_info="read_idle_states")
+            if self.ws_connected:
+                idle_states = self._read_filtered_data_from_ws_source(filters=filter, log_info="read_idle_states")
+            else:
+                idle_states = await self._read_filtered_data(filters=filter, log_info="read_idle_states")
+
             if len(idle_states) > 0:
                 # copy all fields from 'idle_states' to self._states
                 self._states.update(idle_states)
@@ -275,7 +337,10 @@ class GoeChargerApiV2Bridge:
                     await self.read_all_states()
 
         else:
-            self._states = await self._read_filtered_data(filters=self._FILTER_ALL_STATES, log_info="read_all_states")
+            if self.ws_connected:
+                self._states = self._read_filtered_data_from_ws_source(filters=self._FILTER_ALL_STATES, log_info="read_all_states")
+            else:
+                self._states = await self._read_filtered_data(filters=self._FILTER_ALL_STATES, log_info="read_all_states")
             if len(self._states) > 0:
                 self._LAST_FULL_STATE_UPDATE_TS = time.time()
 
@@ -283,10 +348,16 @@ class GoeChargerApiV2Bridge:
         self._LAST_CONFIG_UPDATE_TS = 0
         self._LAST_FULL_STATE_UPDATE_TS = 0
         await self.read_all_config()
+        if self.ws_connected:
+            _LOGGER.info(f"force_config_update(): forcing a full config update has NO EFFECT when WebSocket is connected")
 
     async def read_all_config(self):
         if len(self._FILTER_ALL_CONFIG) > 0:
-            self._config = await self._read_filtered_data(filters=self._FILTER_ALL_CONFIG, log_info="read_all_config")
+            if self.ws_connected:
+                self._config = self._read_filtered_data_from_ws_source(filters=self._FILTER_ALL_CONFIG, log_info="read_all_config")
+            else:
+                self._config = await self._read_filtered_data(filters=self._FILTER_ALL_CONFIG, log_info="read_all_config")
+
             if len(self._config) > 0:
                 self._LAST_CONFIG_UPDATE_TS = time.time()
                 if len(self._ws_states) > 0:
@@ -312,6 +383,17 @@ class GoeChargerApiV2Bridge:
         else:
             # no configuration filter yet...
             pass
+
+    def _read_filtered_data_from_ws_source(self, filters: str, log_info: str) -> dict:
+        target_set = set(filters.split(','))
+        dict_keys = set(self._ws_states.keys())
+
+        existing_keys = target_set & dict_keys
+        missing_keys = target_set - dict_keys
+        if len(missing_keys) > 0:
+            _LOGGER.debug(f"_read_filtered_data_from_ws_source(): {log_info} missing keys in ws_states: {missing_keys}")
+
+        return {k: self._ws_states[k] for k in existing_keys}
 
     async def _read_filtered_data(self, filters: str, log_info: str) -> dict:
         args = {"filter": filters}
@@ -406,7 +488,7 @@ class GoeChargerApiV2Bridge:
                     case Tag.INTERNAL_FORCE_CONFIG_READ.key:
                         await self.force_config_update()
                     case Tag.INTERNAL_FORCE_REFRESH_ALL.key:
-                        self.reset_stored_update_ts()
+                        await self.reset_stored_update_ts()
                         # we do the actual request for the new data in the
                         # DataUpdateCoordinator... (with a short delay of some seconds...)
                         # await self.read_all()
@@ -511,6 +593,7 @@ class GoeChargerApiV2Bridge:
             _LOGGER.debug(f"ws_close(): for '{self.ws_url}' called")
 
         self.ws_connected = False
+        self.ws_connection_start = 0
         if ws is not None:
             try:
                 await ws.close()
@@ -539,7 +622,6 @@ class GoeChargerApiV2Bridge:
                     self._ws_LAST_NEW_DATA_NOTIFY = time.time()
 
         self._ws_debounced_update_task = asyncio.create_task(_ws_debounce_coordinator_update())
-
 
     def _ws_compute_hashed_password(self, hash_type: str, password: str, serial: str) -> bytes:
         if hash_type == "pbkdf2":
@@ -652,13 +734,16 @@ class GoeChargerApiV2Bridge:
 
         return True
 
-    async def ws_connect(self):
+    async def ws_connect(self, a_event: TargetedEvent=None, keep_ws_states_after_close: bool=False):
         """Connect to WebSocket with full authentication and message handling"""
         _LOGGER.debug(f"ws_connect() STARTED...")
         self.ws_connected = False
+        self.ws_connection_start = 0
 
         if self.ws_url is None:
             _LOGGER.warning("ws_connect(): WebSocket URL not configured")
+            if a_event is not None and not a_event.is_set():
+                a_event.set_error(Exception("WebSocket URL not configured"))
             return None
 
         if self.token:
@@ -675,19 +760,24 @@ class GoeChargerApiV2Bridge:
                 hello_msg = await ws.receive()
                 hello_data = self._ws_decode_message(hello_msg.data)
                 normalized_hello = self._ws_normalize_dict(hello_data)
-
                 serial = normalized_hello.get('serial')
                 if not serial:
                     _LOGGER.warning(f"ws_connect(): No serial in hello message - {normalized_hello}")
+                    if a_event is not None and not a_event.is_set():
+                        a_event.set_error(Exception("No serial in hello message"))
                     return None
 
                 version_info = normalized_hello.get('version')
-                main_version_info = version_info.split('.')[0]
-                try:
-                    main_version_info_int = int(main_version_info)
-                except BaseException as e:
+                if version_info:
+                    main_version_info = version_info.split('.')[0]
+                    try:
+                        main_version_info_int = int(main_version_info)
+                    except BaseException as e:
+                        main_version_info_int = -1
+                        _LOGGER.info(f"ws_connect(): Could not parse version info: {version_info} - {type(e).__name__}: {e}")
+                else:
                     main_version_info_int = -1
-                    _LOGGER.warning(f"ws_connect(): Could not parse version info: {version_info} - {type(e).__name__}: {e}")
+                    _LOGGER.info(f"ws_connect(): No version info in hello message - {normalized_hello}")
 
                 self._ws_serial = serial
                 self._ws_secured = normalized_hello.get('secured', False)
@@ -705,6 +795,12 @@ class GoeChargerApiV2Bridge:
                 auth_data = self._ws_decode_message(auth_req_msg.data)
                 normalized_auth = self._ws_normalize_dict(auth_data)
 
+                if normalized_auth.get('type') == "offline":
+                    _LOGGER.error("ws_connect(): Received AUTH REQUIRED message with type 'offline'")
+                    if a_event is not None and not a_event.is_set():
+                        a_event.set_error(Exception(f"Device is offline: {normalized_auth}"))
+                    return None
+
                 hash_type = normalized_auth.get('hash', '').lower()
                 _LOGGER.debug(f"ws_connect(): Extracted the auth type: '{hash_type}' - source was: '{normalized_auth.get('hash')}'")
                 if hash_type is None or len(hash_type) == 0:
@@ -720,11 +816,15 @@ class GoeChargerApiV2Bridge:
 
                 if hash_type not in ["pbkdf2", "bcrypt"]:
                     _LOGGER.info(f"ws_connect(): Unsupported authentication hash type: {hash_type}")
+                    if a_event is not None and not a_event.is_set():
+                        a_event.set_error(Exception(f"Unsupported authentication hash type: {hash_type}"))
                     return None
 
                 # Step 3: Compute hashed password
                 if not hasattr(self, 'access_password') or not self.access_password:
                     _LOGGER.warning("ws_connect(): No access_password configured")
+                    if a_event is not None and not a_event.is_set():
+                        a_event.set_error(Exception("No access_password configured"))
                     return None
 
                 self._ws_hashed_password = self._ws_compute_hashed_password(hash_type, self.access_password, serial)
@@ -735,6 +835,8 @@ class GoeChargerApiV2Bridge:
                 token2 = normalized_auth.get('token2')
                 if not token1 or not token2:
                     _LOGGER.warning("ws_connect(): Missing authentication tokens in AUTH REQUIRED message!")
+                    if a_event is not None and not a_event.is_set():
+                        a_event.set_error(Exception("Missing authentication tokens in AUTH REQUIRED message!"))
                     return None
 
                 # Step 4: Generate token3 and compute auth hash
@@ -771,6 +873,8 @@ class GoeChargerApiV2Bridge:
                     _LOGGER.debug("ws_connect(): Received authentication result")
                 except asyncio.TimeoutError:
                     _LOGGER.warning(f"ws_connect(): Authentication TIMEOUT after 10 seconds - cancel login")
+                    if a_event is not None and not a_event.is_set():
+                        a_event.set_error(Exception("Authentication TIMEOUT after 10 seconds - cancel login"))
                     return None
 
                 result_data = self._ws_decode_message(auth_result.data)
@@ -779,10 +883,13 @@ class GoeChargerApiV2Bridge:
                 msg_type = normalized_result.get('type', '')
                 if msg_type != 'authSuccess' and not normalized_result.get('success'):
                     _LOGGER.warning(f"ws_connect(): Authentication failed: {normalized_result}")
+                    if a_event is not None and not a_event.is_set():
+                        a_event.set_error(Exception(f"Authentication failed: {normalized_result}"))
                     return None
 
                 _LOGGER.info("ws_connect(): Authentication successful!")
                 self.ws_connected = True
+                self.ws_connection_start = time.time()
 
                 # Step 7: Handle incoming messages
                 async for msg in ws:
@@ -818,14 +925,26 @@ class GoeChargerApiV2Bridge:
                         self._ws_LAST_UPDATE = time.time()
                         self._ws_notify_for_new_data()
 
+                        # notify of a possible success...
+                        if a_event is not None and not a_event.is_set():
+                            a_event.check_and_set(self._ws_states)
+
         except aiohttp.ClientConnectionError as err:
             _LOGGER.error(f"ws_connect(): Could not connect to websocket: {type(err).__name__} - {err}")
+            if a_event is not None and not a_event.is_set():
+                a_event.set_error(err)
         except asyncio.TimeoutError as time_exc:
             _LOGGER.debug(f"ws_connect(): TimeoutError: No WebSocket message received within timeout period")
+            if a_event is not None and not a_event.is_set():
+                a_event.set_error(time_exc)
         except asyncio.CancelledError as canceled:
             _LOGGER.info(f"ws_connect(): Terminated - {type(canceled).__name__}")
-        except BaseException as x:
-            _LOGGER.error(f"ws_connect(): Error: {type(x).__name__} - {x}")
+            if a_event is not None and not a_event.is_set():
+                a_event.set_error(canceled)
+        except BaseException as exc:
+            _LOGGER.error(f"ws_connect(): Error: {type(exc).__name__} - {exc}")
+            if a_event is not None and not a_event.is_set():
+                a_event.set_error(exc)
 
         _LOGGER.debug(f"ws_connect() ENDED")
 
@@ -836,9 +955,19 @@ class GoeChargerApiV2Bridge:
         except BaseException as e:
             _LOGGER.error(f"ws_connect(): Error in ws_close(): {type(e).__name__} - {e}")
 
-        self.ws_connected = False
+        # In the case of the config flow, we must keep the ws_states and the
+        # self.ws_connected status, so thet read_system() and read_version() will use
+        # the previously fetched data from the websocket
+        if not keep_ws_states_after_close:
+            self._ws_states = {}
+            self.ws_connected = False
+        else:
+            # enforce the flag - since the self.ws_close() will also set the
+            # self.ws_connected flag... -> but we must keep it ON
+            self.ws_connected = True
+
+        self.ws_connection_start = 0
         self._ws_connection = None
-        self._ws_states = {}
         self._ws_LAST_UPDATE = 0
         self._ws_LAST_NEW_DATA_NOTIFY = 0
         return None

@@ -2051,7 +2051,26 @@ SWITCH_SENSORS = [
         device_class=None,
         icon="mdi:nut",
         entity_registry_enabled_default=True
+    ),
+    # LOCAL APIv2 enabled ?!
+    ExtSwitchEntityDescription(
+        key=Tag.HAI.key,
+        entity_category=EntityCategory.CONFIG,
+        device_class=None,
+        icon="mdi:api",
+        icon_off="mdi:api-off",
+        entity_registry_enabled_default=False
+    ),
+    # CLOUD APIv2 enabled ?!
+    ExtSwitchEntityDescription(
+        key=Tag.CAE.key,
+        entity_category=EntityCategory.CONFIG,
+        device_class=None,
+        icon="mdi:cloud-check-variant",
+        icon_off="mdi:cloud-off-outline",
+        entity_registry_enabled_default=False
     )
+
 ]
 
 # NOT-IMPLEMENTED...

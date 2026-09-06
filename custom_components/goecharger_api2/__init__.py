@@ -1,9 +1,9 @@
 import asyncio
 import logging
 import random
+import time
 from collections import ChainMap
 from datetime import timedelta
-from time import time
 from typing import Any, Final
 
 from aiohttp import ClientConnectionError
@@ -37,7 +37,8 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.loader import async_get_integration
 from packaging.version import Version
 
-from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bridge, TRANSLATIONS, INTG_TYPE
+from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bridge, TRANSLATIONS, INTG_TYPE, \
+    TargetedEvent
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from .const import (
     LAN,
@@ -90,14 +91,35 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         _LOGGER.info(STARTUP_MESSAGE % intg_version)
         hass.data.setdefault(DOMAIN, {"manifest_version": intg_version})
 
-    coordinator = GoeChargerDataUpdateCoordinator(hass, config_entry)
-    await coordinator.async_refresh()
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    # ok starting the init sequence...
+    lang = hass.config.language.lower()
+    if lang in TRANSLATIONS:
+        lang_map = TRANSLATIONS[lang]
     else:
-        if not await coordinator.read_versions():
-            raise ConfigEntryNotReady("Could not read versions from charger/controller! - please enable debug logging to see more details!")
+        lang_map = TRANSLATIONS["en"]
 
+    coordinator = GoeChargerDataUpdateCoordinator(hass, config_entry)
+    a_pwd = config_entry.data.get(CONF_PASSWORD, None)
+    if a_pwd is not None and len(a_pwd.strip()) > 0:
+        use_websocket = True
+        try:
+            if not await coordinator.start_websocket_and_wait_for_first_data(is_integration_init=True):
+                _LOGGER.warning(f"The coordinator.start_websocket_and_wait_for_first_data() as returned FALSE")
+                raise ConfigEntryNotReady(lang_map["coord_no_device_data"])
+
+        except BaseException as exc:
+            _LOGGER.error(f"Error starting websocket connection: {type(exc).__name__} - {exc}")
+            raise ConfigEntryNotReady(lang_map["websocket_start_failed"])
+    else:
+        use_websocket = False
+        await coordinator.async_refresh()
+        if not coordinator.last_update_success:
+            raise ConfigEntryNotReady
+        else:
+            if not await coordinator.read_versions():
+                raise ConfigEntryNotReady("Could not read versions from charger/controller! - please enable debug logging to see more details!")
+
+    # register outr platforms (sensor, switch, number, etc.)
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -109,18 +131,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         hass.services.async_register(DOMAIN, SERVICE_STOP_CHARGING, service.stop_charging,
                                      supports_response=SupportsResponse.OPTIONAL)
 
+    # start the limit to 16a limiiter...
     if coordinator.limit_to16a:
         asyncio.create_task(coordinator.check_for_16a_limit(hass, config_entry.entry_id))
 
+    # checker that cleaing orphan/outdated device registry entries...
     asyncio.create_task(coordinator.cleanup_device_registry(hass))
 
-    a_pwd = config_entry.data.get(CONF_PASSWORD, None)
-    if a_pwd is not None and len(a_pwd.strip()) > 0:
-        start_ws_watch_dog = True
-    else:
-        start_ws_watch_dog = False
-
-    if start_ws_watch_dog:
+    # finally, register the websocket-connection watchdog...
+    if use_websocket:
         # ws watchdog...
         if hass.state is CoreState.running:
             _LOGGER.debug(f"starting watchdog INSTANTLY")
@@ -276,6 +295,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, config_entry):
         self._watchdog = None
         self._ws_start_task = None
+        self._ws_restart_lock = asyncio.Lock()
         self._force_classic_requests = False
 
         lang = hass.config.language.lower()
@@ -343,6 +363,9 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             # data, we only update HA only every second...
             self._ws_data_update_notify_interval_in_seconds = 1
 
+        # just to keep track if we allow a forced ws restart...
+        self._integration_start = time.time()
+
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
     async def call_later_update_device_registry(self, now:Any):
@@ -350,6 +373,10 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         if self._comm_mode == COMMUNICATION_MODE_WEBSOCKET:
             if self.hass is not None:
                 a_device_reg = device_reg.async_get(self.hass)
+                if self._device_info_dict is None or len(self._device_info_dict) == 0 or "identifiers" not in self._device_info_dict:
+                    _LOGGER.info(f"call_later_update_device_registry(): device registry update skipped - no identifiers available yet")
+                    return
+
                 if a_device_reg is not None:
                     if hasattr(a_device_reg, "async_get_device_by_identifier"):
                         device = a_device_reg.async_get_device_by_identifier(identifier=next(iter(self._device_info_dict["identifiers"])), config_entry_id=self.config_entry.entry_id)
@@ -369,6 +396,80 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
 
     def cards_as_single_entries(self):
         return self._is_charger_fw_version_60_0_or_higher and (self.bridge.ws_connected or self._no_cards_list_is_present)
+
+    async def force_async_update_now(self):
+        """This method should be called when the integration wants that the current data of the coordinator will be updated"""
+
+        # 1. ignoring all force update requests in the first 5 minutes after an integration restart...
+        delta_since_start = time.time() - self._integration_start
+        if delta_since_start < 300:
+            _LOGGER.info(f"force_async_update_now(): Ignoring force update request in the first 5 minutes after integration restart - wait for {int(300-delta_since_start)} seconds before retrying.")
+            return
+
+        # 2. ignoring all force update requests after a fresh initialized ws_connection!
+        delta_since_ws_connect = time.time() - self.bridge.ws_connection_start
+        if delta_since_ws_connect < 120:
+            _LOGGER.info(f"force_async_update_now(): Ignoring force update request in the first 2 minutes after a fresh ws_connection - wait for {int(120-delta_since_ws_connect)} seconds before retrying.")
+            return
+
+        # 3. ok integration restart is at least 5min ago - and the last ws_connection is also older than two minutes...
+        # now disconnect the ws()...
+        async with self._ws_restart_lock:
+            _LOGGER.debug(f"force_async_update_now(): RESTARTING websocket connection (step 1/3) - first end the current connection!")
+            self._check_for_ws_task_and_cancel_if_running()
+
+            # before we RECONNECT, we sleep for two seconds...
+            await asyncio.sleep(2)
+
+            # finally, restart with our new method!
+            _LOGGER.debug(f"force_async_update_now(): RESTARTING websocket connection (step 2/3) - now trying to reconnect")
+            if not await self.start_websocket_and_wait_for_first_data(is_integration_init=False):
+                _LOGGER.info(f"force_async_update_now(): requested restart of websocket connection FAILED! - we need to rely on the watchdog now!")
+            else:
+                _LOGGER.debug(f"force_async_update_now(): RESTARTING websocket connection (step 3/3) - new connection established - all good!")
+
+    async def start_websocket_and_wait_for_first_data(self, is_integration_init:bool=False):
+        self.bridge.ws_set_coordinator(coordinator=self)
+
+        # 1. Create an event to signal when the connection is established/ready
+        # we need for sure all SYSTEM and VERSION tags...
+        connected_event = TargetedEvent(is_charger=self.bridge.isCharger)
+
+        # 2. Pass the event into your background task
+        target = self.bridge.ws_connect(a_event=connected_event)
+        self._ws_start_task = self._config_entry.async_create_background_task(self.hass, target, "ws_connection")
+
+        if self._ws_start_task is None:
+            raise ConfigEntryNotReady("start_websocket_and_wait_for_first_data(): Could not create websocket connect task!")
+
+        # 3. Wait ONLY until the first message is processed (or time out)
+        try:
+            async with asyncio.timeout(60):  # Protect against hanging forever
+                await connected_event.wait()
+
+        except TimeoutError:
+            _LOGGER.warning("start_websocket_and_wait_for_first_data(): Connection to websocket timed out after one minute!")
+            self._ws_start_task.cancel()
+            # NOT SURE WHAT TO DO NOW ???!
+            raise ConfigEntryNotReady("start_websocket_and_wait_for_first_data(): Could not fetch essential data")
+
+        # we must check, if connected_event has errors...
+        if connected_event.has_errors():
+            _LOGGER.warning(f"start_websocket_and_wait_for_first_data(): Connection to websocket established, but errors occurred: {connected_event._error}")
+            return False
+
+        # only AFTER the required tags are available... continue...
+        _LOGGER.debug(f"start_websocket_and_wait_for_first_data(): Connection to websocket established!")
+
+        if is_integration_init:
+            if not await self.read_versions():
+                return False
+
+        _LOGGER.debug(f"start_websocket_and_wait_for_first_data(): task created {self._ws_start_task.get_coro()}")
+        async_call_later(self.hass, 10, self.call_later_update_device_registry)
+
+        _LOGGER.info(f"Essential device data is available after WebSocket connection has been established - that's just so GREAT! Available keys: {list(self.data.keys())} so let's move on...")
+        return True
 
     async def start_watchdog(self, event=None):
         """Start websocket watchdog."""
@@ -477,7 +578,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         # ok, we have issues communicating with the Wallbox...
         # let's delay the next request at least by 2 minutes
         # to allow the wallbox to become alive again?!
-        self._CLIENT_COMMUNICATION_ERROR_TS = time()
+        self._CLIENT_COMMUNICATION_ERROR_TS = time.time()
         self._CLIENT_COMMUNICATION_ERROR_COUNT += 1
         if self._CLIENT_COMMUNICATION_ERROR_COUNT > 5:
             _LOGGER.warning(f"{msg}: Too many ClientConnectionError #{self._CLIENT_COMMUNICATION_ERROR_COUNT} while fetching data:{type(exception).__name__} - {exception} - will try to restart integration.", stack_info=True)
@@ -495,8 +596,8 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.debug(f"_async_update_data called (but websocket is active - no data will be requested!)")
             return self.data
         else:
-            if self._CLIENT_COMMUNICATION_ERROR_TS + CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS > time():
-                time_info = CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS - (time() - self._CLIENT_COMMUNICATION_ERROR_TS)
+            if self._CLIENT_COMMUNICATION_ERROR_TS + CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS > time.time():
+                time_info = CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS - (time.time() - self._CLIENT_COMMUNICATION_ERROR_TS)
                 _LOGGER.info(f"_async_update_data(): skipping update due to client communication error for the next {time_info} seconds")
                 return self.data
             if self._RESTART_TRIGGERED:
@@ -525,8 +626,8 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed() from other
 
     async def async_write_key(self, key: str, value, entity: Entity = None) -> dict:
-        if self._CLIENT_COMMUNICATION_ERROR_TS + CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS > time():
-            time_info = CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS - (time() - self._CLIENT_COMMUNICATION_ERROR_TS)
+        if self._CLIENT_COMMUNICATION_ERROR_TS + CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS > time.time():
+            time_info = CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS - (time.time() - self._CLIENT_COMMUNICATION_ERROR_TS)
             _LOGGER.info(f"async_write_key(): skipping due to client communication error for the next {time_info} seconds")
             raise ValueError(f"async_write_key(): skipping due to client communication error for the next {time_info} seconds")
         if self._RESTART_TRIGGERED:
@@ -546,8 +647,8 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             raise ValueError(f"Exception while writing {key} to wallbox: {e}") from e
 
     async def async_write_multiple_keys(self, attr:dict, key: str, value, entity: Entity = None) -> dict:
-        if self._CLIENT_COMMUNICATION_ERROR_TS + CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS > time():
-            time_info = CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS - (time() - self._CLIENT_COMMUNICATION_ERROR_TS)
+        if self._CLIENT_COMMUNICATION_ERROR_TS + CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS > time.time():
+            time_info = CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS - (time.time() - self._CLIENT_COMMUNICATION_ERROR_TS)
             _LOGGER.info(f"async_write_multiple_keys(): skipping due to client communication error for the next {time_info} seconds")
             raise ValueError(f"async_write_multiple_keys(): skipping due to client communication error for the next {time_info} seconds")
         if self._RESTART_TRIGGERED:
