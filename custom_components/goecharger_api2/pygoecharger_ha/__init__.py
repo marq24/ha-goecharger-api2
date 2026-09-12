@@ -82,6 +82,10 @@ class TargetedEvent(asyncio.Event):
         self._error = error
         self.set()
 
+class NonNullDict(dict):
+    def none_null_get(self, key, default=None):
+        val = super().get(key, default)
+        return default if val is None else val
 
 class ExpiringStore:
     """A store that holds JSON objects for a maximum of one minute."""
@@ -235,7 +239,7 @@ class GoeChargerApiV2Bridge:
                 await self.coordinator.force_async_update_now()
 
 
-    async def read_system(self) -> dict:
+    async def read_system(self) -> NonNullDict:
         if self.ws_connected:
             # if we are connected via websocket, then we should not read the system data via HTTP-API
             # since this is already done via the websocket connection...
@@ -384,7 +388,7 @@ class GoeChargerApiV2Bridge:
             # no configuration filter yet...
             pass
 
-    def _read_filtered_data_from_ws_source(self, filters: str, log_info: str) -> dict:
+    def _read_filtered_data_from_ws_source(self, filters: str, log_info: str) -> NonNullDict:
         target_set = set(filters.split(','))
         dict_keys = set(self._ws_states.keys())
 
@@ -393,9 +397,9 @@ class GoeChargerApiV2Bridge:
         if len(missing_keys) > 0:
             _LOGGER.debug(f"_read_filtered_data_from_ws_source(): {log_info} missing keys in ws_states: {missing_keys}")
 
-        return {k: self._ws_states[k] for k in existing_keys}
+        return NonNullDict({k: self._ws_states[k] for k in existing_keys})
 
-    async def _read_filtered_data(self, filters: str, log_info: str) -> dict:
+    async def _read_filtered_data(self, filters: str, log_info: str) -> NonNullDict:
         args = {"filter": filters}
         req_field_count = len(args['filter'].split(','))
         _LOGGER.debug(f"_read_filtered_data(): {log_info} going to request {req_field_count} keys from {self._logkey}@{self.host_url}")
@@ -420,7 +424,7 @@ class GoeChargerApiV2Bridge:
                                         missing_fields_in_reponse.append(a_req_key)
 
                                 _LOGGER.debug(f"_read_filtered_data(): [missing fields: {len(missing_fields_in_reponse)} -> {missing_fields_in_reponse}] - not all requested fields where present in the response from from {self._logkey}@{self.host_url}")
-                            return r_json
+                            return NonNullDict(r_json)
 
                     except json.JSONDecodeError as json_exc:
                         _LOGGER.warning(f"_read_filtered_data(): {log_info} JSONDecodeError while 'await res.json(): {json_exc}")
@@ -437,7 +441,7 @@ class GoeChargerApiV2Bridge:
 
         return {}
 
-    async def _read_all_data(self) -> dict:
+    async def _read_all_data(self) -> NonNullDict:
         _LOGGER.info(f"_read_all_data(): going to request ALL keys from {self._logkey}@{self.host_url}")
         if self.token:
             headers = {"Authorization": self.token}
@@ -449,7 +453,7 @@ class GoeChargerApiV2Bridge:
                     try:
                         r_json = await res.json()
                         if r_json is not None and len(r_json) > 0:
-                            return r_json
+                            return NonNullDict(r_json)
 
                     except json.JSONDecodeError as json_exc:
                         _LOGGER.warning(f"_read_all_data(): JSONDecodeError while 'await res.json(): {json_exc}")

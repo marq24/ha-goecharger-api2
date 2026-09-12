@@ -108,7 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                 raise ConfigEntryNotReady(lang_map["coord_no_device_data"])
 
         except BaseException as exc:
-            _LOGGER.error(f"Error starting websocket connection: {type(exc).__name__} - {exc}")
+            _LOGGER.error(f"Error starting websocket connection: {type(exc).__name__} - {exc}", stack_info=True)
             raise ConfigEntryNotReady(lang_map["websocket_start_failed"])
     else:
         use_websocket = False
@@ -462,7 +462,11 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         _LOGGER.debug(f"start_websocket_and_wait_for_first_data(): Connection to websocket established!")
 
         if is_integration_init:
-            if not await self.read_versions():
+            try:
+                if not await self.read_versions():
+                    return False
+            except BaseException as exc:
+                _LOGGER.warning(f"start_websocket_and_wait_for_first_data(): Could not call 'self.read_versions()' : {type(exc).__name__} - {exc}", stack_info=True)
                 return False
 
         _LOGGER.debug(f"start_websocket_and_wait_for_first_data(): task created {self._ws_start_task.get_coro()}")
@@ -747,18 +751,19 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             wb_has_16a_cable_limit = None
             use_adi_as_fallback = not self._is_core_wallbox
             if Tag.CLL.key in self.bridge._versions:
-                ccl_cable_limit_val = self.bridge._versions.get(Tag.CLL.key, {}).get("cableCurrentLimit", "-1")
-                _LOGGER.debug(f"read_versions(): read CLL:cableCurrentLimit: '{ccl_cable_limit_val}'")
-                try:
-                    wb_has_16a_cable_limit = int(ccl_cable_limit_val) <= 16
-                    use_adi_as_fallback = False
-                except BaseException as exc:
-                    _LOGGER.debug(f"read_versions(): try to handle CLL:cableCurrentLimit caused: {type(exc).__name__} - {exc}")
-                    if self._is_core_wallbox:
-                        wb_has_16a_cable_limit = True
-                    # else:
-                    #     # we do not have to set `use_adi_as_fallback` here, since we are "not self._is_core_wallbox"
-                    #     use_adi_as_fallback = True
+                ccl_obj = self.bridge._versions.get(Tag.CLL.key, {})
+                if len(ccl_obj) > 0:
+                    ccl_cable_limit_val = ccl_obj.get("cableCurrentLimit", "-1")
+                    _LOGGER.debug(f"read_versions(): read CLL:cableCurrentLimit: '{ccl_cable_limit_val}'")
+                    try:
+                        wb_has_16a_cable_limit = int(ccl_cable_limit_val) <= 16
+                        use_adi_as_fallback = False
+                    except BaseException as exc:
+                        _LOGGER.debug(f"read_versions(): try to handle CLL:cableCurrentLimit caused: {type(exc).__name__} - {exc}")
+                        if self._is_core_wallbox:
+                            wb_has_16a_cable_limit = True
+                else:
+                    _LOGGER.debug(f"read_versions(): CLL object is empty! {ccl_obj}")
 
             if wb_has_16a_cable_limit is None and use_adi_as_fallback:
                 wb_has_16a_cable_limit = self.bridge._versions.get(Tag.ADI.key, False)
@@ -773,7 +778,9 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                                 or wb_has_16a_cable_limit)
 
             if (self.limit_to16a):
-                _LOGGER.info(f"LIMIT to 16A is active")
+                _LOGGER.info(f"read_versions(): Charger LIMIT to 16A is active")
+            else:
+                _LOGGER.info(f"read_versions(): Charger NO LIMIT detected")
         else:
             # no additional controller stuff... but we need to init some variables
             self.limit_to16a = False
