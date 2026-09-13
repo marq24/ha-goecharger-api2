@@ -30,17 +30,13 @@ from .const import (
     CONFIG_VERSION,
     CONFIG_MINOR_VERSION
 )
-from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bridge, INTG_TYPE, TargetedEvent
-from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
-from custom_components.goecharger_api2.pygoecharger_ha.const import (
-    FILTER_SYSTEMS,
-    FILTER_VERSIONS,
-    FILTER_ALL_CONFIG,
-    FILTER_CONTROLER_SYSTEMS,
-    FILTER_CONTROLER_SYSTEMS,
-    FILTER_CONTROLER_VERSIONS,
-    FILTER_CONTROLER_ALL_CONFIG
+from custom_components.goecharger_api2.pygoecharger_ha import (
+    GoeChargerApiV2Bridge,
+    INTG_TYPE,
+    TargetedEvent,
+    NonNullDict
 )
+from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -367,18 +363,18 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 # data received via ws..
 
             ret = await client.read_system()
-            if ret is not None and len(ret) > 0:
+            if ret is not None and len(ret) > 0 and isinstance(ret, NonNullDict):
                 await client.read_versions()
                 # self._oem = ret[Tag.OEM.key]
-                self._type = str(ret[Tag.TYP.key]).replace('_', ' ')
+                self._type = str(ret.none_null_get(Tag.TYP.key, "UNKNOWN-TYPE")).replace('_', ' ')
                 if intg_type == INTG_TYPE.CHARGER.value:
-                    self._model = f"{ret[Tag.VAR.key]} kW"
+                    self._model = f"{ret.none_null_get(Tag.VAR.key, -1)} kW"
                 else:
                     # there is no model info for a controller... so we hardcode it,
                     # since it will be used anyhow only for 11/22kW Version detection...
                     self._model = "eControl" #f"{ret[Tag.FNA.key]}"
 
-                self._serial = ret[Tag.SSE.key]
+                self._serial = ret.none_null_get(Tag.SSE.key, "UNKNOWN-SERIAL")
                 _LOGGER.info(f"successfully validated host for '{intg_type}' -> result: {ret}")
                 return True
         except ClientConnectionError as exc:

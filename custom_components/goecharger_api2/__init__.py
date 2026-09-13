@@ -37,8 +37,13 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.loader import async_get_integration
 from packaging.version import Version
 
-from custom_components.goecharger_api2.pygoecharger_ha import GoeChargerApiV2Bridge, TRANSLATIONS, INTG_TYPE, \
-    TargetedEvent
+from custom_components.goecharger_api2.pygoecharger_ha import (
+    GoeChargerApiV2Bridge,
+    TRANSLATIONS,
+    INTG_TYPE,
+    TargetedEvent,
+    NonNullDict
+)
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from .const import (
     LAN,
@@ -672,12 +677,12 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             raise ValueError(f"Exception while writing multiple {key} to wallbox: {type(e).__name__} - {e}") from e
 
     async def read_versions(self):
-        if not await self.bridge.read_versions():
+        if not await self.bridge.read_versions() or not isinstance(self.bridge._versions, NonNullDict):
             return False
 
         # charger and controller have both FWV tag...
         if Tag.FWV.key in self.bridge._versions:
-            sw_version = self.bridge._versions.get(Tag.FWV.key, "0.0")
+            sw_version = self.bridge._versions.none_null_get(Tag.FWV.key, "0.0")
             if '-' in sw_version:
                 _LOGGER.debug(f"read_versions(): firmware version must be patched! {sw_version}")
                 sw_version = sw_version[:sw_version.index('-')]
@@ -687,16 +692,15 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                 # key 'cards'. The cards array  has been removed in FW 60.0 - but currently in my 60.3 it's back
                 # again - so as long as this array is available, we can/should/will use it?!
                 self._is_charger_fw_version_60_0_or_higher = Version(sw_version) >= Version("60.0")
-                if len(self.bridge._versions.get(Tag.CARDS.key, [])) == 0:
+                if len(self.bridge._versions.none_null_get(Tag.CARDS.key, [])) == 0:
                     self._no_cards_list_is_present = True
         else:
             sw_version = "UNKNOWN"
 
-
         # check if LoadbanalncerGroupdID is set...
         # then we must ignore the 16A-limit for LOT!
         if Tag.LOG.key in self.bridge._versions:
-            lb_group = self.bridge._versions.get(Tag.LOG.key, None)
+            lb_group = self.bridge._versions.none_null_get(Tag.LOG.key, None)
             if lb_group is not None and len(lb_group.strip()) > 0:
                 _LOGGER.debug(f"read_versions(): A LoadBalancerGroupID is set - '{lb_group}'")
                 self.is_loadbalancer_group_id_set = True
@@ -708,7 +712,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         # trying to find updated model information from the _versions dict...
         lc_model_type = None
         if Tag.TYP.key in self.bridge._versions:
-            lc_model_type = self.bridge._versions.get(Tag.TYP.key, None)
+            lc_model_type = self.bridge._versions.none_null_get(Tag.TYP.key, None)
             if lc_model_type is not None:
                 lc_model_type = lc_model_type.lower().replace("_", " ")
         if lc_model_type is None and model_info is not None:
@@ -731,7 +735,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                 # since FWV 60.0 there is no cards object any longer...
                 for a_card_number in range(0, 10):
                     a_key_id = f"c{a_card_number}i"
-                    if self.bridge._versions.get(a_key_id, False):
+                    if self.bridge._versions.none_null_get(a_key_id, False):
                         self.available_cards_idx.append(str(idx))
                     idx = idx + 1
 
@@ -751,7 +755,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             wb_has_16a_cable_limit = None
             use_adi_as_fallback = not self._is_core_wallbox
             if Tag.CLL.key in self.bridge._versions:
-                ccl_obj = self.bridge._versions.get(Tag.CLL.key, {})
+                ccl_obj = self.bridge._versions.none_null_get(Tag.CLL.key, {})
                 if len(ccl_obj) > 0:
                     ccl_cable_limit_val = ccl_obj.get("cableCurrentLimit", "-1")
                     _LOGGER.debug(f"read_versions(): read CLL:cableCurrentLimit: '{ccl_cable_limit_val}'")
@@ -766,7 +770,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                     _LOGGER.debug(f"read_versions(): CLL object is empty! {ccl_obj}")
 
             if wb_has_16a_cable_limit is None and use_adi_as_fallback:
-                wb_has_16a_cable_limit = self.bridge._versions.get(Tag.ADI.key, False)
+                wb_has_16a_cable_limit = self.bridge._versions.none_null_get(Tag.ADI.key, False)
 
             # if we haven't sen any 'wb_has_16a_cable_limit' yet, then we enable the limit just to be sure...
             if wb_has_16a_cable_limit is None:
@@ -774,7 +778,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                 wb_has_16a_cable_limit = True
 
             self.limit_to16a = (self._config_entry.data.get(CONF_11KWLIMIT, False)
-                                or self.bridge._versions.get(Tag.VAR.key, -1) == 11
+                                or self.bridge._versions.none_null_get(Tag.VAR.key, -1) == 11
                                 or wb_has_16a_cable_limit)
 
             if (self.limit_to16a):
@@ -795,7 +799,6 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             self._device_info_model_raw = f"{model_info} [16A limited] {comm_mode}"
         else:
             self._device_info_model_raw = f"{model_info} {comm_mode}"
-
 
         if self.mode == LAN:
             self._device_info_dict = {
