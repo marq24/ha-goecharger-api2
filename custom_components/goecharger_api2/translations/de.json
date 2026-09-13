@@ -343,6 +343,13 @@
           "1": "Default",
           "2": "Netzeinspeisung bevorzugen"
         }
+      },
+      "iso2ena": {"name": "ISO15118-2",
+        "state": {
+          "0": "Aus",
+          "1": "Optional",
+          "2": "Erzwungen"
+        }
       }
     },
     "sensor": {

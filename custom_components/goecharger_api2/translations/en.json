@@ -343,6 +343,13 @@
           "1": "Default",
           "2": "Prefer power export to grid"
         }
+      },
+      "iso2ena": {"name": "ISO15118-2",
+        "state": {
+          "0": "Off",
+          "1": "Optional",
+          "2": "Forced"
+        }
       }
     },
     "sensor": {

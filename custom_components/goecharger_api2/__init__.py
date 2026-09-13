@@ -862,6 +862,10 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                                                            Tag.SDP.key, Tag.BAC.key, Tag.CBL.key, Tag.UST.key]: # SELECTS
             return False
 
+        # the core-exclusive entities [currently just the 'ISO15118-2' select entity]
+        elif not self._is_core_wallbox and description.key in [Tag.ISO2ENA.key]:
+            return False
+
         return True
 
 class GoeChargerBaseEntity(CustomFriendlyNameEntity):

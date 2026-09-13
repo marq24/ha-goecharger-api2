@@ -397,6 +397,10 @@ class Tag(ApiKey, Enum):
     # rdple | R/W | TYPE | Config | randomDelayWhenPluggingCarEndsAt (set to null to abort current randomDelayWhenPluggingCar)
     #X RDPLE = ApiKey(key="rdple", cat=CAT.CONFIG)
 
+    # Goe Core exclusive keys
+    # iso2ena R/W 0=off,1=optional,2=forced
+    ISO2ENA = ApiKey(key="iso2ena", cat=CAT.CONFIG, writeable=True)
+
 
     #########################
     # NOT USED FROM HERE ON #
@@ -630,6 +634,7 @@ class Tag(ApiKey, Enum):
     # wbw | R | TYPE | Config | WiFi Bandwidth (for both AP and STA) WIFI_BW_HT20=1, WIFI_BW_HT40=2
     # wda | R/W | TYPE | Config | disable AccessPoint when cloud is connected
     # wsl | R | TYPE | Status | WiFi STA error messages log
+
 
     ###################################
     # CONTROLLER
@@ -901,3 +906,4 @@ class Tag(ApiKey, Enum):
 
     # host | R | TYPE | Status | configured hostname
     # -> exist as KEY but does not EXIST in GOe API responses :-/
+

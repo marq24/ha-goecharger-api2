@@ -824,6 +824,15 @@ SELECT_SENSORS = [
         icon="mdi:transmission-tower-export",
         entity_registry_enabled_default=True
     ),
+
+    # CORE ONLY
+    ExtSelectEntityDescription(
+        key=Tag.ISO2ENA.key,
+        options=["0", "1", "2"],
+        device_class=None,
+        icon="mdi:car-connected",
+        entity_registry_enabled_default=True
+    )
 ]
 SENSOR_SENSORS = [
     # INDEXED Values...
