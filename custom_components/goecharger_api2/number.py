@@ -1,9 +1,14 @@
 import logging
 from dataclasses import replace
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import (
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+    ATTR_VALUE,
+   NumberEntity
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import Platform, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -30,6 +35,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
 
             entity = GoeChargerNumber(coordinator, description)
             entities.append(entity)
+
+            # currently only the 'Tag.AMP.key' entity needs to be modified
+            # based on MIN and MAX AMP settings... [have in mind that
+            # 'data_key' is not unique !!!]
+            if entity.data_key == Tag.AMP.key:
+                coordinator.entities[entity.data_key] = entity
     else:
         for description in CONTROLLER_NUMBER_SENSORS:
             entity = GoeChargerNumber(coordinator, description)
@@ -67,6 +78,9 @@ class GoeChargerNumber(GoeChargerBaseEntity, NumberEntity):
 
         except TypeError:
             return None
+
+        # we must we check min/max of AMP (based on AMA and MCA)
+        self.check_amp_min_max(value)
 
         return value
 
@@ -106,3 +120,35 @@ class GoeChargerNumber(GoeChargerBaseEntity, NumberEntity):
 
         except ValueError:
             return "unavailable"
+
+    def check_amp_min_max(self, value):
+        if self.data_key in [Tag.AMA.key, Tag.MCA.key]:
+            amp_entity = self.coordinator.entities.get(Tag.AMP.key)
+            if amp_entity:
+
+                set_new_amp_value = None
+                is_max_mode = self.data_key == Tag.AMA.key
+                attr_name = "_attr_native_max_value" if is_max_mode else "_attr_native_min_value"
+
+                current_attr_val = getattr(amp_entity, attr_name, None)
+                if current_attr_val != value:
+                    _LOGGER.debug(f"native_value(): {amp_entity} setting {("max" if is_max_mode else "min")} -> {value}")
+                    setattr(amp_entity, attr_name, value)
+
+                    amp_value_exceeds_limit = (amp_entity.native_value > value) if is_max_mode else (amp_entity.native_value < value)
+                    if amp_value_exceeds_limit:
+                        set_new_amp_value = value
+
+                if set_new_amp_value:
+                    _LOGGER.debug(f"native_value(): {amp_entity} setting value -> {set_new_amp_value}")
+                    self.hass.async_create_task(
+                        self.hass.services.async_call(
+                            domain=NUMBER_DOMAIN,
+                            service=SERVICE_SET_VALUE,
+                            service_data= {
+                                ATTR_ENTITY_ID: amp_entity.entity_id,
+                                ATTR_VALUE: set_new_amp_value,
+                            },
+                            blocking=False,
+                        )
+                    )

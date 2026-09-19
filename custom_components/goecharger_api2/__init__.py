@@ -371,6 +371,8 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         # just to keep track if we allow a forced ws restart...
         self._integration_start = time.time()
 
+        # a MAP that contains all entities that are by the integration
+        self.entities = {}
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
     async def call_later_update_device_registry(self, now:Any):
@@ -906,6 +908,11 @@ class GoeChargerBaseEntity(CustomFriendlyNameEntity):
             self.entity_id = f"{entity_type}.goe_wan_{self.coordinator._serial}_{self._attr_translation_key}".lower()
         else:
             self.entity_id = f"{entity_type}.goe_{self.coordinator._serial}_{self._attr_translation_key}".lower()
+
+        # adding the entity to the coordinator's entities map
+        # currently we only need the AMP entity (to adjust min/max & value) - so there
+        # is no need for a general entity map
+        # self.coordinator.entities[self.entity_id] = self
 
     def _name_internal(self, device_class_name: str | None,
                        platform_translations: dict[str, Any], ) -> str | UndefinedType | None:
