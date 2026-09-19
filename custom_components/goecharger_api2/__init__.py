@@ -627,11 +627,11 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                 #     self.hass.async_create_task(self.trigger_restart_delayed())
                 return new_data
 
-            except ClientConnectionError as ccerr:
-                self._handle_client_connection_error("_async_update_data()", ccerr)
-                raise UpdateFailed(f"Error while fetching data: {type({ccerr}.__name__)} - {ccerr}") from ccerr
-            except UpdateFailed as ufail:
-                raise UpdateFailed() from ufail
+            except ClientConnectionError as cc_err:
+                self._handle_client_connection_error("_async_update_data()", cc_err)
+                raise UpdateFailed(f"Error while fetching data: {type(cc_err).__name__} - {cc_err}") from cc_err
+            except UpdateFailed as upd_fail:
+                raise UpdateFailed() from upd_fail
             except Exception as other:
                 _LOGGER.error(f"_async_update_data(): unexpected: {type(other).__name__} - {other}")
                 raise UpdateFailed() from other
@@ -650,9 +650,9 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             self.handle_write_result("single", value, key, result, entity)
             return result
 
-        except ClientConnectionError as exception:
-            self._handle_client_connection_error("async_write_key()", exception)
-            raise ValueError(f"ClientConnectionError while writing {key} to wallbox: {type({exception}.__name__)} - {exception}") from exception
+        except ClientConnectionError as cc_err:
+            self._handle_client_connection_error("async_write_key()", cc_err)
+            raise ValueError(f"ClientConnectionError while writing {key} to wallbox: {type(cc_err.__name__)} - {cc_err}") from cc_err
         except Exception as e:
             _LOGGER.error(f"Error while writing single {key} to wallbox: {e}")
             raise ValueError(f"Exception while writing {key} to wallbox: {e}") from e
