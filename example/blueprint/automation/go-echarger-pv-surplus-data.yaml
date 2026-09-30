@@ -3,10 +3,22 @@ blueprint:
   description: |
     Flexible blueprint for transmitting solar system data to go-eCharger for PV surplus charging.
 
-    **Requirements:** This blueprint requires the go-eCharger API2 integration from 
+    **Requirements:** This blueprint requires the go-eCharger API2 integration from
     [marq24/ha-goecharger-api2](https://github.com/marq24/ha-goecharger-api2)
 
-    **Data Transmission:** Sends PV data every 5 seconds during daylight hours (required by go-eCharger), when a car is connected to the charger.
+    **Data Transmission:**
+    - Daylight (sunrise to sunset), car connected: real PV data every 5 seconds (required by go-eCharger).
+    - Night, car connected: zero values every 30 seconds.
+    - At sunset: one immediate zero push, even if no car is connected.
+
+    The zero values keep the go-eCharger from working with stale `pvopt_*` averages. The
+    charger calculates these averages from the last values it has received, no matter how
+    old they are. Without the zero values, a car that is (re)connected at night can start
+    charging at sunrise on the basis of yesterday's surplus.
+
+    **Units:** The go-eCharger expects watts. If your entities report kW, set the
+    *Power Unit Multiplier* to 1000. If they report W, keep the default of 1. The factor is
+    applied to the grid, PV and battery values.
 
     **Configuration Sections:** The input fields are organized into three grid power measurement methods:
     - Single Entity: Use one entity with positive/negative values
@@ -31,6 +43,20 @@ blueprint:
               entity:
                 - integration: goecharger_api2
                   domain: binary_sensor
+
+    power_multiplier:
+      name: Power Unit Multiplier
+      description: >
+        Factor applied to all power values (grid, PV and battery) before they are sent to
+        the go-eCharger, which expects watts. Use 1 if your entities report W (default),
+        1000 if they report kW.
+      default: 1
+      selector:
+        number:
+          min: 0.001
+          max: 1000000
+          step: any
+          mode: box
 
     grid_single:
       name: Grid Power - Single Entity
@@ -143,6 +169,7 @@ blueprint:
 
 variables:
   car_connected_entity: !input car_connected_entity
+  multiplier: !input power_multiplier
   grid_single_entity: !input grid_single_entity
   grid_single_invert: !input grid_single_invert
   grid_consumption: !input grid_consumption_entity
@@ -194,22 +221,62 @@ variables:
 triggers:
   - trigger: time_pattern
     seconds: /5
-
-conditions:
-  - condition: and
-    conditions:
-      - condition: template
-        value_template: '{{ states(car_connected_entity.entity_id)=="on" }}'
-      - condition: sun
-        after: sunrise
-      - condition: sun
-        before: sunset
+    id: tick
+  - trigger: sun
+    event: sunset
+    id: sunset
 
 actions:
-  - action: goecharger_api2.set_pv_data
-    data:
-      pgrid: '{{ pgrid_value | round(0) | int }}'
-      ppv: '{{ ppv_value | round(0) | int }}'
-      pakku: '{{ pakku_value | round(0) | int }}'
+  - choose:
+      # Daylight, car connected: real data every 5 seconds
+      - conditions:
+          - condition: trigger
+            id: tick
+          - condition: template
+            value_template: '{{ expand(car_connected_entity.entity_id) | selectattr("state", "eq", "on") | list | count > 0 }}'
+          - condition: sun
+            after: sunrise
+          - condition: sun
+            before: sunset
+        sequence:
+          - action: goecharger_api2.set_pv_data
+            data:
+              pgrid: '{{ ((pgrid_value | float(0)) * (multiplier | float(1))) | round(0) | int }}'
+              ppv: '{{ ((ppv_value | float(0)) * (multiplier | float(1))) | round(0) | int }}'
+              pakku: '{{ ((pakku_value | float(0)) * (multiplier | float(1))) | round(0) | int }}'
+
+      # Night, car connected: zeros every 30 seconds (flushes stale averages)
+      - conditions:
+          - condition: trigger
+            id: tick
+          - condition: template
+            value_template: '{{ expand(car_connected_entity.entity_id) | selectattr("state", "eq", "on") | list | count > 0 }}'
+          - condition: not
+            conditions:
+              - condition: and
+                conditions:
+                  - condition: sun
+                    after: sunrise
+                  - condition: sun
+                    before: sunset
+          - condition: template
+            value_template: '{{ now().second % 30 < 5 }}'
+        sequence:
+          - action: goecharger_api2.set_pv_data
+            data:
+              pgrid: 0
+              ppv: 0
+              pakku: 0
+
+      # Sunset: one immediate zero push, regardless of car connection
+      - conditions:
+          - condition: trigger
+            id: sunset
+        sequence:
+          - action: goecharger_api2.set_pv_data
+            data:
+              pgrid: 0
+              ppv: 0
+              pakku: 0
 
 mode: single
