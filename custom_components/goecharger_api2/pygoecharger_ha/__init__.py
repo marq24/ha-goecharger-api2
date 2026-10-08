@@ -58,6 +58,9 @@ class TargetedEvent(asyncio.Event):
             # but we remove the 'hai' -> since not all chargers (Fronius) might have this flag
             required_tags_str = required_tags_str.replace(",hai", "")
 
+            # AND we remove the 'cll' -> since not all charger FW Versions provide this flag [fixing #169]
+            required_tags_str = required_tags_str.replace(",cll", "")
+
             tag_keys = list(set(required_tags_str.split(",")))
 
         self.tag_keys = tag_keys

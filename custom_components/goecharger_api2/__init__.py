@@ -762,8 +762,12 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                     ccl_cable_limit_val = ccl_obj.get("cableCurrentLimit", "-1")
                     _LOGGER.debug(f"read_versions(): read CLL:cableCurrentLimit: '{ccl_cable_limit_val}'")
                     try:
-                        wb_has_16a_cable_limit = int(ccl_cable_limit_val) <= 16
-                        use_adi_as_fallback = False
+                        ccl_cable_limit_int = int(ccl_cable_limit_val)
+                        if ccl_cable_limit_int > 0:
+                            wb_has_16a_cable_limit = ccl_cable_limit_int <= 16
+                            use_adi_as_fallback = False
+                        else:
+                            _LOGGER.debug(f"read_versions(): no 'cableCurrentLimit' found in {ccl_obj}")
                     except BaseException as exc:
                         _LOGGER.debug(f"read_versions(): try to handle CLL:cableCurrentLimit caused: {type(exc).__name__} - {exc}")
                         if self._is_core_wallbox:
@@ -774,7 +778,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             if wb_has_16a_cable_limit is None and use_adi_as_fallback:
                 wb_has_16a_cable_limit = self.bridge._versions.none_null_get(Tag.ADI.key, False)
 
-            # if we haven't sen any 'wb_has_16a_cable_limit' yet, then we enable the limit just to be sure...
+            # if we haven't seen any 'wb_has_16a_cable_limit' yet, then we enable the limit just to be sure...
             if wb_has_16a_cable_limit is None:
                 _LOGGER.debug(f"read_versions(): enforcing 'wb_has_16a_cable_limit=True' cause previously the code did not set any value")
                 wb_has_16a_cable_limit = True
