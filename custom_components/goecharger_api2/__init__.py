@@ -355,8 +355,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         else:
             self._comm_mode = COMMUNICATION_MODE_HTTPGET
 
-        self._is_charger_fw_version_60_0_or_higher = False
-        self._no_cards_list_is_present = False
+        self._cards_as_object_present = False
         self._CLIENT_COMMUNICATION_ERROR_TS = 0
         self._CLIENT_COMMUNICATION_ERROR_COUNT = 0
         self._RESTART_TRIGGERED = False
@@ -401,8 +400,8 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                             model=f_model
                         )
 
-    def cards_as_single_entries(self):
-        return self._is_charger_fw_version_60_0_or_higher and (self.bridge.ws_connected or self._no_cards_list_is_present)
+    def cards_as_object_present(self):
+        return self._cards_as_object_present
 
     async def force_async_update_now(self):
         """This method should be called when the integration wants that the current data of the coordinator will be updated"""
@@ -682,22 +681,15 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         if not await self.bridge.read_versions() or not isinstance(self.bridge._versions, NonNullDict):
             return False
 
-        # charger and controller have both FWV tag...
-        if Tag.FWV.key in self.bridge._versions:
-            sw_version = self.bridge._versions.none_null_get(Tag.FWV.key, "0.0")
-            if '-' in sw_version:
-                _LOGGER.debug(f"read_versions(): firmware version must be patched! {sw_version}")
-                sw_version = sw_version[:sw_version.index('-')]
-
-            if self.intg_type == INTG_TYPE.CHARGER.value:
-                # when we request the version info for the charger, then this request will/should also contain the
-                # key 'cards'. The cards array  has been removed in FW 60.0 - but currently in my 60.3 it's back
-                # again - so as long as this array is available, we can/should/will use it?!
-                self._is_charger_fw_version_60_0_or_higher = Version(sw_version) >= Version("60.0")
-                if len(self.bridge._versions.none_null_get(Tag.CARDS.key, [])) == 0:
-                    self._no_cards_list_is_present = True
-        else:
-            sw_version = "UNKNOWN"
+        if self.intg_type == INTG_TYPE.CHARGER.value:
+            # when we request the version info for the charger, then this request will/should also contain the
+            # key 'cards'. The cards array  has been removed in FW 60.0 - but currently in my 60.3 it's back
+            # again - so as long as this array is available, we can/should/will use it?!
+            if len(self.bridge._versions.none_null_get(Tag.CARDS.key, [])) > 0:
+                self._cards_as_object_present = True
+                _LOGGER.info(f"read_versions(): cards object found in versions")
+            else:
+                _LOGGER.info(f"read_versions(): no cards-as-object found in versions - we will use the old c0i, c1i, ... c9i keys instead")
 
         # check if LoadbanalncerGroupdID is set...
         # then we must ignore the 16A-limit for LOT!
@@ -706,7 +698,6 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             if lb_group is not None and len(lb_group.strip()) > 0:
                 _LOGGER.debug(f"read_versions(): A LoadBalancerGroupID is set - '{lb_group}'")
                 self.is_loadbalancer_group_id_set = True
-
 
         # model info as it was stored durin the initial setup phase...
         model_info = self._config_entry.data.get(CONF_TYPE, "UNKNOWN")
@@ -727,29 +718,27 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         else:
             _LOGGER.debug(f"read_versions(): Charger/Controller type: '{lc_model_type}'")
 
-
         self.available_cards_idx = []
         # additional charger stuff...
         if self.intg_type == INTG_TYPE.CHARGER.value:
             # fetching the available cards that are enabled
             idx = 1
-            if self._is_charger_fw_version_60_0_or_higher and self._no_cards_list_is_present:
-                # since FWV 60.0 there is no cards object any longer...
+            if self._cards_as_object_present:
+                for a_card in self.bridge._versions[Tag.CARDS.key]:
+                    if a_card["cardId"]:
+                        self.available_cards_idx.append(str(idx))
+                    idx = idx + 1
+            else:
                 for a_card_number in range(0, 10):
                     a_key_id = f"c{a_card_number}i"
                     if self.bridge._versions.none_null_get(a_key_id, False):
                         self.available_cards_idx.append(str(idx))
                     idx = idx + 1
 
-            elif Tag.CARDS.key in self.bridge._versions:
-                for a_card in self.bridge._versions[Tag.CARDS.key]:
-                    if a_card["cardId"]:
-                        self.available_cards_idx.append(str(idx))
-                    idx = idx + 1
-            else:
+            if len(self.available_cards_idx) == 0:
                 _LOGGER.info(f"NO CARDS Object found!")
-
-            _LOGGER.info(f"active cards {self.available_cards_idx}")
+            else:
+                _LOGGER.info(f"active cards {self.available_cards_idx}")
 
             # check for the 16A limiter...
             # we now always try to read a possible ccl object and use there the 'cableCurrentLimit' - if there
@@ -805,6 +794,15 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             self._device_info_model_raw = f"{model_info} [16A limited] {comm_mode}"
         else:
             self._device_info_model_raw = f"{model_info} {comm_mode}"
+
+        # charger and controller have both FWV tag...
+        if Tag.FWV.key in self.bridge._versions:
+            sw_version = self.bridge._versions.none_null_get(Tag.FWV.key, "0.0")
+            if '-' in sw_version:
+                _LOGGER.debug(f"read_versions(): firmware version must be patched! {sw_version}")
+                sw_version = sw_version[:sw_version.index('-')]
+        else:
+            sw_version = "UNKNOWN"
 
         if self.mode == LAN:
             self._device_info_dict = {

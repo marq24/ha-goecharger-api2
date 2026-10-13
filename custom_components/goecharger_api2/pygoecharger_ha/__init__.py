@@ -282,12 +282,12 @@ class GoeChargerApiV2Bridge:
                 _LOGGER.debug(f"read_versions(): firmware version must be patched! {fwv}")
                 fwv = fwv[:fwv.index('-')]
 
-            if Version(fwv) >= Version("60.0") and len(self._versions.get(FILTER_CARDS_ID_CLASSIC, [])) == 0:
-                _LOGGER.info(f"read_versions(): HTTP-API '{fwv}' FirmwareVersion detected -> using 'card' keys: {FILTER_CARDS_ID_FWV60}")
+            if len(self._versions.none_null_get(FILTER_CARDS_ID_CLASSIC, [])) == 0:
+                _LOGGER.info(f"read_versions(): '{fwv}' firmware version -> using single 'card' keys: {FILTER_CARDS_ID_FWV60}")
                 self._FILTER_ALL_STATES = FILTER_ALL_STATES.format(CARDS_ENERGY_FILTER=FILTER_CARDS_ENGY_FWV60)
                 self._FILTER_ALL_CONFIG = FILTER_ALL_CONFIG.format(CARDS_ID_FILTER=FILTER_CARDS_ID_FWV60)
             else:
-                _LOGGER.info(f"read_versions(): HTTP-API '{fwv}' FirmwareVersion detected -> 'cards' list is present")
+                _LOGGER.info(f"read_versions(): '{fwv}' firmware version -> 'cards' object is present")
                 self._FILTER_ALL_STATES = FILTER_ALL_STATES.format(CARDS_ENERGY_FILTER=FILTER_CARDS_ENGY_CLASSIC)
                 self._FILTER_ALL_CONFIG = FILTER_ALL_CONFIG.format(CARDS_ID_FILTER=FILTER_CARDS_ID_CLASSIC)
         return True
