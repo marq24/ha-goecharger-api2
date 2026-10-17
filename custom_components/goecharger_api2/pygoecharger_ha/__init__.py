@@ -130,28 +130,45 @@ class ExpiringStore:
 
 class GoeChargerApiV2Bridge:
 
-    def __init__(self, intg_type:str, host: str, access_password:str, serial:str, token:str, web_session, lang: str = "en") -> None:
+    def __init__(self, web_session, intg_type:str,
+                 host:str|None=None, access_password:str|None=None, serial:str|None=None, token:str|None=None,
+                 lang:str = "en") -> None:
         self.ws_url = None
         if host is not None:
-            self.host_url = f"http://{host}"
+            # THIS IS LAN ACCESS...
             self.token = None
+            # the user has the option to specify also the 'http://' or if PARANOID 'https://' in the
+            # config entry
+            if not host.startswith(("http://", "https://")):
+                self.host_url = f"http://{host}"
+            else:
+                _LOGGER.debug(f"__init__(): keep original host {host}")
+                self.host_url = f"{host}"
 
             # could we use the local websocket...?
             if access_password is not None and len(access_password.strip()) > 0:
                 self.access_password = access_password.strip()
-                self.ws_url = f"ws://{host}/ws"
+                # getting the correct web socket URL...
+                if self.host_url.startswith("https://"):
+                    self.ws_url = f"wss://{self.host_url[8:]}/ws"
+                else:
+                    self.ws_url = f"ws://{self.host_url[7:]}/ws"
 
         elif serial is not None and token is not None:
-            # the Cloud-API endpoint!
+            # THIS IS WAN ACCESS... the Cloud-API endpoint!
             # looks like that CONTROLLER and CHARGER use the SAME API-Endpoint?!
             # in contrast to the documentation :-/
             self.host_url = f"https://{serial.zfill(6)}.api.v3.go-e.io"
             self.token = f"Bearer {token}"
 
-            # could we use the wan websocket...?
+            # could we use the WAN websocket...?
             if access_password is not None and len(access_password.strip()) > 0:
                 self.access_password = access_password.strip()
                 self.ws_url = f"wss://app.v3.go-e.io/{serial}"
+
+        if self.host_url is None or len(self.host_url) == 0:
+            _LOGGER.error(f"__init__(): NO 'self.host_url' - invalid constructor usage")
+            raise ValueError("You must either specify a host, or a serial+token")
 
         if intg_type is not None and intg_type == INTG_TYPE.CONTROLLER.value:
             self.isController = True

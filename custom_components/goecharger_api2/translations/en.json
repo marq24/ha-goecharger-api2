@@ -2,7 +2,7 @@
   "selector": {
     "stype": {
       "options": {
-        "lan": "LAN: Local API v2 access via local network [http]",
+        "lan": "LAN: Local API v2 access via local network [http/https]",
         "wan": "WAN: Cloud API v2 access via internet [https]"
       }
     },
@@ -38,6 +38,7 @@
           "limit_to_11kw": "Apply 11kW limit (for 22kW variants only) - will restrict all relevant settings to a max of 16A (instead of 32A)"
         },
         "data_description": {
+          "host": "Additionally you can include the prefix 'https://', if this is required",
           "password": "Providing the Password is optional. When you specify one, the integration will make use of the websocket communication. This makes the polling interval obsolete, and you will get the latest data in HA as soon as something changes. This includes any changes in the wallbox configuration.",
           "delay": "If you have specified a password, the sensors in Home Assistant will be updated immediately when new data arrives via the WebSocket connection. This can lead to some sensors being updated very frequently and potentially overloading your HA database. If you enable this option, the sensors will only be updated at the configured update interval."
         }

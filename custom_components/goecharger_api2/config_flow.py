@@ -331,7 +331,8 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _test_host(self, intg_type:str, host:str, pwd:str, serial:str, token:str):
         try:
             session = async_create_clientsession(self.hass)
-            client = GoeChargerApiV2Bridge(intg_type=intg_type, host=host, access_password=pwd, serial=serial, token=token, web_session=session,
+            client = GoeChargerApiV2Bridge(web_session=session, intg_type=intg_type,
+                                           host=host, access_password=pwd, serial=serial, token=token,
                                            lang=self.hass.config.language.lower())
 
             # when the user has specified a password, then we will first try to establish a local WEBSOCKET connection

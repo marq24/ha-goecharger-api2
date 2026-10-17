@@ -314,22 +314,22 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         if CONF_MODE in config_entry.data and config_entry.data.get(CONF_MODE) == WAN:
             self.mode = WAN
             self.bridge = GoeChargerApiV2Bridge(
+                web_session=async_get_clientsession(hass),
                 intg_type=self.intg_type,
                 host=None,
                 access_password=config_entry.data.get(CONF_PASSWORD, None),
                 serial=config_entry.data.get(CONF_ID),
                 token=config_entry.data.get(CONF_TOKEN),
-                web_session=async_get_clientsession(hass),
                 lang=lang)
         else:
             self.mode = LAN
             self.bridge = GoeChargerApiV2Bridge(
+                web_session=async_get_clientsession(hass),
                 intg_type=self.intg_type,
                 host=config_entry.data.get(CONF_HOST),
                 access_password=config_entry.data.get(CONF_PASSWORD, None),
                 serial=None,
                 token=None,
-                web_session=async_get_clientsession(hass),
                 lang=lang)
 
         global SCAN_INTERVAL
