@@ -31,6 +31,19 @@ blueprint:
   homeassistant:
     min_version: 2024.6.0
   input:
+    charger_config_entry:
+      name: Target go-eCharger (optional)
+      description: >
+        Select the go-eCharger integration entry to receive all data, including
+        night and sunset zeros. Required when using multiple chargers. Leave
+        empty to keep the service's default charger selection. When selected,
+        choose explicit Car connected entities from this same integration entry;
+        device and area targets are not supported with an explicit charger.
+      default: ""
+      selector:
+        config_entry:
+          integration: goecharger_api2
+
     car_connected:
       name: Car connected Entity
       description: Entity from go-eCharger API2 integration that indicates the vehicle connection status
@@ -168,7 +181,25 @@ blueprint:
         boolean:
 
 variables:
+  charger_config_entry: !input charger_config_entry
   car_connected_entity: !input car_connected_entity
+  charger_target_valid: >
+    {% if not charger_config_entry %}
+      {{ true }}
+    {% else %}
+      {% set entities = car_connected_entity.get('entity_id', []) %}
+      {% set entities = [entities] if entities is string else entities %}
+      {% set ns = namespace(valid=entities | length > 0
+        and not car_connected_entity.get('device_id')
+        and not car_connected_entity.get('area_id')
+        and config_entry_attr(charger_config_entry, 'domain') == 'goecharger_api2') %}
+      {% for entity in entities %}
+        {% if config_entry_id(entity) != charger_config_entry %}
+          {% set ns.valid = false %}
+        {% endif %}
+      {% endfor %}
+      {{ ns.valid }}
+    {% endif %}
   multiplier: !input power_multiplier
   grid_single_entity: !input grid_single_entity
   grid_single_invert: !input grid_single_invert
@@ -227,6 +258,12 @@ triggers:
     id: sunset
 
 actions:
+  - if:
+      - condition: template
+        value_template: '{{ not charger_target_valid }}'
+    then:
+      - stop: "Select Car connected entities belonging to the target go-eCharger integration entry."
+        error: true
   - choose:
       # Daylight, car connected: real data every 5 seconds
       - conditions:
@@ -240,10 +277,12 @@ actions:
             before: sunset
         sequence:
           - action: goecharger_api2.set_pv_data
-            data:
-              pgrid: '{{ ((pgrid_value | float(0)) * (multiplier | float(1))) | round(0) | int }}'
-              ppv: '{{ ((ppv_value | float(0)) * (multiplier | float(1))) | round(0) | int }}'
-              pakku: '{{ ((pakku_value | float(0)) * (multiplier | float(1))) | round(0) | int }}'
+            data: >
+              {% set payload = dict(
+                pgrid=((pgrid_value | float(0)) * (multiplier | float(1))) | round(0) | int,
+                ppv=((ppv_value | float(0)) * (multiplier | float(1))) | round(0) | int,
+                pakku=((pakku_value | float(0)) * (multiplier | float(1))) | round(0) | int) %}
+              {{ dict(payload, configid=charger_config_entry) if charger_config_entry else payload }}
 
       # Night, car connected: zeros every 30 seconds (flushes stale averages)
       - conditions:
@@ -263,10 +302,9 @@ actions:
             value_template: '{{ now().second % 30 < 5 }}'
         sequence:
           - action: goecharger_api2.set_pv_data
-            data:
-              pgrid: 0
-              ppv: 0
-              pakku: 0
+            data: >
+              {% set payload = dict(pgrid=0, ppv=0, pakku=0) %}
+              {{ dict(payload, configid=charger_config_entry) if charger_config_entry else payload }}
 
       # Sunset: one immediate zero push, regardless of car connection
       - conditions:
@@ -274,9 +312,8 @@ actions:
             id: sunset
         sequence:
           - action: goecharger_api2.set_pv_data
-            data:
-              pgrid: 0
-              ppv: 0
-              pakku: 0
+            data: >
+              {% set payload = dict(pgrid=0, ppv=0, pakku=0) %}
+              {{ dict(payload, configid=charger_config_entry) if charger_config_entry else payload }}
 
 mode: single

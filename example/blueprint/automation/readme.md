@@ -34,6 +34,20 @@ This blueprint enables automatic PV surplus charging for go-eCharger wallboxes b
 
 ## Configuration
 
+### Target go-eCharger
+Select the go-eCharger integration entry when more than one charger is configured.
+All three transmission paths (daylight, night and sunset) use this entry.
+Create one automation per charger and select its own **Car connected** entity.
+
+Leaving this input empty preserves the service's existing default selection;
+the blueprint omits `configid` rather than passing an empty ID. The service
+uses its first registered charger, so select an explicit target for multiple chargers.
+
+With an explicit target, select individual Car connected entities belonging to
+that same integration entry. Mixed chargers, device/area targets and a removed
+or invalid entry stop the automation with an error visible in its trace.
+The blueprint does not silently fall back to another charger.
+
 ### Car Connected
 Select the "car connected" entity (`binary_sensor`) of your go-eCharger from the API2 integration.
 - Example: `binary_sensor.goe_123456_car_0`
