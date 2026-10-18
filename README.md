@@ -1,4 +1,4 @@
-# Home Assistant Integration 'go-eCharger & go-eController [via WebSocket & APIv2]'
+# <sub><img src="https://raw.githubusercontent.com/marq24/ha-goecharger-api2/main/custom_components/goecharger_api2/brand/icon.png" style="align:bottom;height:42px;padding:3px;border:1px solid #a0a0a0;border-radius: 5px;"></sub> Home Assistant Integration 'go-eCharger & go-eController [via WebSocket & APIv2]'
 
 ![logo](https://github.com/marq24/ha-goecharger-api2/raw/main/logo.png)
 
