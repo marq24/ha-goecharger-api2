@@ -1,5 +1,8 @@
 {
   "name": "go-e APIv2 Connect",
+  "zip_release": true,
+  "filename": "goecharger_api2.zip",
+  "content_in_root": false,
   "homeassistant": "2023.8.0",
   "hacs": "1.18.0",
   "render_readme": true
