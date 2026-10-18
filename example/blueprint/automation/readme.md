@@ -89,6 +89,35 @@ Choose **ONE** method:
 | Night, car connected | Zero values every 30 seconds |
 | At sunset | One immediate zero push, regardless of car connection |
 
+### Invalid measurements
+
+Daylight updates require finite numeric states for every used grid and PV
+entity and, when enabled, every selected battery entity. `unknown`,
+`unavailable`, missing entities, text, NaN and infinity skip the entire update;
+they are not replaced with zero or omitted from a partial sum. A real zero is
+valid. Each used state is captured once for validation and calculation.
+Non-finite totals or unit conversion results also skip the update.
+
+The existing grid method precedence remains single entity, then consumption /
+feed-in, then phases. Both consumption and feed-in must be selected; phases
+require exactly three distinct entities. An incomplete selected method does
+not fall back to another method. Unused grid inputs are ignored.
+
+An empty battery selection means no battery measurement and still sends zero.
+Disabling battery transmission ignores any selected battery entities and also
+sends zero. An enabled, selected but unavailable battery skips the update.
+At least one PV entity is required. The multiplier must be finite and positive.
+
+The failed condition is visible in the automation trace. Transmission resumes
+on the next daylight tick with valid measurements and a connected car. Night
+and sunset zeros remain independent of measurement validity.
+
+**This is input validation, not a charging-stop policy.** Skipping transmission
+does not issue a Stop command or clear previous `pvopt_*` averages. Ensure your
+installation has an appropriate independent response to loss of measurement
+data. The blueprint does not check source timestamps or freshness: an old but
+numeric state passes validation. No fixed age threshold is assumed.
+
 The go-eCharger calculates its `pvopt_*` averages from the last values it has received, no matter how old they are. Without the zero values, a car that is (re)connected at night can start charging at sunrise on the basis of the previous day's surplus, even though the PV generation has not started yet.
 
 ## go-eCharger Setup

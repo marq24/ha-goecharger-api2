@@ -11,6 +11,11 @@ blueprint:
     - Night, car connected: zero values every 30 seconds.
     - At sunset: one immediate zero push, even if no car is connected.
 
+    Daylight updates are skipped if any used power source is missing, non-numeric
+    or non-finite. Disabled battery inputs are ignored. Skipping an update does
+    not command the charger to stop and does not clear its previous averages.
+    This blueprint does not verify the age of otherwise numeric measurements.
+
     The zero values keep the go-eCharger from working with stale `pvopt_*` averages. The
     charger calculates these averages from the last values it has received, no matter how
     old they are. Without the zero values, a car that is (re)connected at night can start
@@ -213,18 +218,46 @@ variables:
   battery_list: !input battery_entities
   battery_invert_flag: !input battery_invert
 
+  # Preserve method precedence; an incomplete selected method must not fall back.
+  grid_sources: >
+    {% if grid_single_entity %}
+      {{ [grid_single_entity] }}
+    {% elif grid_consumption or grid_feedin %}
+      {{ [grid_consumption, grid_feedin] }}
+    {% elif grid_phases | length == 3 and grid_phases | unique | list | length == 3 %}
+      {{ grid_phases }}
+    {% else %}
+      {{ [] }}
+    {% endif %}
+  # Capture each used state once, so validation and arithmetic use the same sample.
+  power_samples: >
+    {% set ns = namespace(samples={}) %}
+    {% for entity in (grid_sources + pv_list + (battery_list if battery_enable else [])) | unique %}
+      {% set ns.samples = dict(ns.samples, **{entity: states(entity)}) if entity else ns.samples %}
+    {% endfor %}
+    {{ ns.samples }}
+  measurements_valid: >
+    {% set ns = namespace(valid=grid_sources | length > 0 and pv_list | length > 0
+      and is_number(multiplier) and multiplier | float(0) > 0) %}
+    {% for entity in grid_sources + pv_list + (battery_list if battery_enable else []) %}
+      {% if not entity or not is_number(power_samples.get(entity)) %}
+        {% set ns.valid = false %}
+      {% endif %}
+    {% endfor %}
+    {{ ns.valid }}
+
   pgrid_value: >
     {% if grid_single_entity %}
-      {% set value = states(grid_single_entity) | float(0) %}
+      {% set value = power_samples.get(grid_single_entity) | float(0) %}
       {{ (value * -1) if grid_single_invert else value }}
     {% elif grid_consumption and grid_feedin %}
-      {% set cons_val = states(grid_consumption) | float(0) %}
-      {% set feed_val = states(grid_feedin) | float(0) %}
+      {% set cons_val = power_samples.get(grid_consumption) | float(0) %}
+      {% set feed_val = power_samples.get(grid_feedin) | float(0) %}
       {{ cons_val - feed_val }}
     {% elif grid_phases | length >= 3 %}
       {% set ns = namespace(total=0) %}
       {% for entity in grid_phases[:3] %}
-        {% set ns.total = ns.total + (states(entity) | float(0)) %}
+        {% set ns.total = ns.total + (power_samples.get(entity) | float(0)) %}
       {% endfor %}
       {{ (ns.total * -1) if grid_phases_invert else ns.total }}
     {% else %}
@@ -234,7 +267,7 @@ variables:
   ppv_value: >
     {% set ns = namespace(total=0) %}
     {% for entity in pv_list %}
-      {% set ns.total = ns.total + (states(entity) | float(0)) %}
+      {% set ns.total = ns.total + (power_samples.get(entity) | float(0)) %}
     {% endfor %}
     {{ (ns.total * -1) if pv_invert_flag else ns.total }}
 
@@ -242,12 +275,16 @@ variables:
     {% if battery_enable %}
       {% set ns = namespace(total=0) %}
       {% for entity in battery_list %}
-        {% set ns.total = ns.total + (states(entity) | float(0)) %}
+        {% set ns.total = ns.total + (power_samples.get(entity) | float(0)) %}
       {% endfor %}
       {{ (ns.total * -1) if battery_invert_flag else ns.total }}
     {% else %}
       0
     {% endif %}
+
+  pgrid_watts: '{{ (pgrid_value | float(0)) * (multiplier | float(0)) }}'
+  ppv_watts: '{{ (ppv_value | float(0)) * (multiplier | float(0)) }}'
+  pakku_watts: '{{ (pakku_value | float(0)) * (multiplier | float(0)) }}'
 
 triggers:
   - trigger: time_pattern
@@ -276,12 +313,17 @@ actions:
           - condition: sun
             before: sunset
         sequence:
+          - condition: template
+            alias: "Skip daylight update when a used measurement is invalid"
+            value_template: >
+              {{ measurements_valid and is_number(pgrid_watts)
+                and is_number(ppv_watts) and is_number(pakku_watts) }}
           - action: goecharger_api2.set_pv_data
             data: >
               {% set payload = dict(
-                pgrid=((pgrid_value | float(0)) * (multiplier | float(1))) | round(0) | int,
-                ppv=((ppv_value | float(0)) * (multiplier | float(1))) | round(0) | int,
-                pakku=((pakku_value | float(0)) * (multiplier | float(1))) | round(0) | int) %}
+                pgrid=(pgrid_watts | float) | round(0) | int,
+                ppv=(ppv_watts | float) | round(0) | int,
+                pakku=(pakku_watts | float) | round(0) | int) %}
               {{ dict(payload, configid=charger_config_entry) if charger_config_entry else payload }}
 
       # Night, car connected: zeros every 30 seconds (flushes stale averages)
