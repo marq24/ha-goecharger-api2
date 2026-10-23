@@ -11,6 +11,11 @@ blueprint:
     - Night, car connected: zero values every 30 seconds.
     - At sunset: one immediate zero push, even if no car is connected.
 
+    Daylight updates are skipped if any used power source is missing, non-numeric
+    or non-finite. Disabled battery inputs are ignored. Skipping an update does
+    not command the charger to stop and does not clear its previous averages.
+    This blueprint does not verify the age of otherwise numeric measurements.
+
     The zero values keep the go-eCharger from working with stale `pvopt_*` averages. The
     charger calculates these averages from the last values it has received, no matter how
     old they are. Without the zero values, a car that is (re)connected at night can start
@@ -31,6 +36,19 @@ blueprint:
   homeassistant:
     min_version: 2024.6.0
   input:
+    charger_config_entry:
+      name: Target go-eCharger (optional)
+      description: >
+        Select the go-eCharger integration entry to receive all data, including
+        night and sunset zeros. Required when using multiple chargers. Leave
+        empty to keep the service's default charger selection. When selected,
+        choose explicit Car connected entities from this same integration entry;
+        device and area targets are not supported with an explicit charger.
+      default: ""
+      selector:
+        config_entry:
+          integration: goecharger_api2
+
     car_connected:
       name: Car connected Entity
       description: Entity from go-eCharger API2 integration that indicates the vehicle connection status
@@ -168,7 +186,25 @@ blueprint:
         boolean:
 
 variables:
+  charger_config_entry: !input charger_config_entry
   car_connected_entity: !input car_connected_entity
+  charger_target_valid: >
+    {% if not charger_config_entry %}
+      {{ true }}
+    {% else %}
+      {% set entities = car_connected_entity.get('entity_id', []) %}
+      {% set entities = [entities] if entities is string else entities %}
+      {% set ns = namespace(valid=entities | length > 0
+        and not car_connected_entity.get('device_id')
+        and not car_connected_entity.get('area_id')
+        and config_entry_attr(charger_config_entry, 'domain') == 'goecharger_api2') %}
+      {% for entity in entities %}
+        {% if config_entry_id(entity) != charger_config_entry %}
+          {% set ns.valid = false %}
+        {% endif %}
+      {% endfor %}
+      {{ ns.valid }}
+    {% endif %}
   multiplier: !input power_multiplier
   grid_single_entity: !input grid_single_entity
   grid_single_invert: !input grid_single_invert
@@ -182,18 +218,46 @@ variables:
   battery_list: !input battery_entities
   battery_invert_flag: !input battery_invert
 
+  # Preserve method precedence; an incomplete selected method must not fall back.
+  grid_sources: >
+    {% if grid_single_entity %}
+      {{ [grid_single_entity] }}
+    {% elif grid_consumption or grid_feedin %}
+      {{ [grid_consumption, grid_feedin] }}
+    {% elif grid_phases | length == 3 and grid_phases | unique | list | length == 3 %}
+      {{ grid_phases }}
+    {% else %}
+      {{ [] }}
+    {% endif %}
+  # Capture each used state once, so validation and arithmetic use the same sample.
+  power_samples: >
+    {% set ns = namespace(samples={}) %}
+    {% for entity in (grid_sources + pv_list + (battery_list if battery_enable else [])) | unique %}
+      {% set ns.samples = dict(ns.samples, **{entity: states(entity)}) if entity else ns.samples %}
+    {% endfor %}
+    {{ ns.samples }}
+  measurements_valid: >
+    {% set ns = namespace(valid=grid_sources | length > 0 and pv_list | length > 0
+      and is_number(multiplier) and multiplier | float(0) > 0) %}
+    {% for entity in grid_sources + pv_list + (battery_list if battery_enable else []) %}
+      {% if not entity or not is_number(power_samples.get(entity)) %}
+        {% set ns.valid = false %}
+      {% endif %}
+    {% endfor %}
+    {{ ns.valid }}
+
   pgrid_value: >
     {% if grid_single_entity %}
-      {% set value = states(grid_single_entity) | float(0) %}
+      {% set value = power_samples.get(grid_single_entity) | float(0) %}
       {{ (value * -1) if grid_single_invert else value }}
     {% elif grid_consumption and grid_feedin %}
-      {% set cons_val = states(grid_consumption) | float(0) %}
-      {% set feed_val = states(grid_feedin) | float(0) %}
+      {% set cons_val = power_samples.get(grid_consumption) | float(0) %}
+      {% set feed_val = power_samples.get(grid_feedin) | float(0) %}
       {{ cons_val - feed_val }}
     {% elif grid_phases | length >= 3 %}
       {% set ns = namespace(total=0) %}
       {% for entity in grid_phases[:3] %}
-        {% set ns.total = ns.total + (states(entity) | float(0)) %}
+        {% set ns.total = ns.total + (power_samples.get(entity) | float(0)) %}
       {% endfor %}
       {{ (ns.total * -1) if grid_phases_invert else ns.total }}
     {% else %}
@@ -203,7 +267,7 @@ variables:
   ppv_value: >
     {% set ns = namespace(total=0) %}
     {% for entity in pv_list %}
-      {% set ns.total = ns.total + (states(entity) | float(0)) %}
+      {% set ns.total = ns.total + (power_samples.get(entity) | float(0)) %}
     {% endfor %}
     {{ (ns.total * -1) if pv_invert_flag else ns.total }}
 
@@ -211,12 +275,16 @@ variables:
     {% if battery_enable %}
       {% set ns = namespace(total=0) %}
       {% for entity in battery_list %}
-        {% set ns.total = ns.total + (states(entity) | float(0)) %}
+        {% set ns.total = ns.total + (power_samples.get(entity) | float(0)) %}
       {% endfor %}
       {{ (ns.total * -1) if battery_invert_flag else ns.total }}
     {% else %}
       0
     {% endif %}
+
+  pgrid_watts: '{{ (pgrid_value | float(0)) * (multiplier | float(0)) }}'
+  ppv_watts: '{{ (ppv_value | float(0)) * (multiplier | float(0)) }}'
+  pakku_watts: '{{ (pakku_value | float(0)) * (multiplier | float(0)) }}'
 
 triggers:
   - trigger: time_pattern
@@ -227,6 +295,12 @@ triggers:
     id: sunset
 
 actions:
+  - if:
+      - condition: template
+        value_template: '{{ not charger_target_valid }}'
+    then:
+      - stop: "Select Car connected entities belonging to the target go-eCharger integration entry."
+        error: true
   - choose:
       # Daylight, car connected: real data every 5 seconds
       - conditions:
@@ -239,11 +313,18 @@ actions:
           - condition: sun
             before: sunset
         sequence:
+          - condition: template
+            alias: "Skip daylight update when a used measurement is invalid"
+            value_template: >
+              {{ measurements_valid and is_number(pgrid_watts)
+                and is_number(ppv_watts) and is_number(pakku_watts) }}
           - action: goecharger_api2.set_pv_data
-            data:
-              pgrid: '{{ ((pgrid_value | float(0)) * (multiplier | float(1))) | round(0) | int }}'
-              ppv: '{{ ((ppv_value | float(0)) * (multiplier | float(1))) | round(0) | int }}'
-              pakku: '{{ ((pakku_value | float(0)) * (multiplier | float(1))) | round(0) | int }}'
+            data: >
+              {% set payload = dict(
+                pgrid=(pgrid_watts | float) | round(0) | int,
+                ppv=(ppv_watts | float) | round(0) | int,
+                pakku=(pakku_watts | float) | round(0) | int) %}
+              {{ dict(payload, configid=charger_config_entry) if charger_config_entry else payload }}
 
       # Night, car connected: zeros every 30 seconds (flushes stale averages)
       - conditions:
@@ -263,10 +344,9 @@ actions:
             value_template: '{{ now().second % 30 < 5 }}'
         sequence:
           - action: goecharger_api2.set_pv_data
-            data:
-              pgrid: 0
-              ppv: 0
-              pakku: 0
+            data: >
+              {% set payload = dict(pgrid=0, ppv=0, pakku=0) %}
+              {{ dict(payload, configid=charger_config_entry) if charger_config_entry else payload }}
 
       # Sunset: one immediate zero push, regardless of car connection
       - conditions:
@@ -274,9 +354,8 @@ actions:
             id: sunset
         sequence:
           - action: goecharger_api2.set_pv_data
-            data:
-              pgrid: 0
-              ppv: 0
-              pakku: 0
+            data: >
+              {% set payload = dict(pgrid=0, ppv=0, pakku=0) %}
+              {{ dict(payload, configid=charger_config_entry) if charger_config_entry else payload }}
 
 mode: single
