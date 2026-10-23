@@ -128,7 +128,9 @@ blueprint:
       input:
         grid_phase_entities:
           name: Grid Phase Entities (L1, L2, L3)
-          description: Select exactly 3 entities for phases L1, L2, L3
+          description: >
+            Select 3 entities for phases L1, L2, L3. If more are selected,
+            only the first 3 are used, preserving existing configurations.
           default: []
           selector:
             entity:
@@ -219,13 +221,17 @@ variables:
   battery_invert_flag: !input battery_invert
 
   # Preserve method precedence; an incomplete selected method must not fall back.
+  # No grid method sends pgrid 0; phase lists use the first three, as before.
+  # An empty entity ID marks an invalid selected phase method, not PV-only mode.
   grid_sources: >
     {% if grid_single_entity %}
       {{ [grid_single_entity] }}
     {% elif grid_consumption or grid_feedin %}
       {{ [grid_consumption, grid_feedin] }}
-    {% elif grid_phases | length == 3 and grid_phases | unique | list | length == 3 %}
-      {{ grid_phases }}
+    {% elif grid_phases | length >= 3 and grid_phases[:3] | unique | list | length == 3 %}
+      {{ grid_phases[:3] }}
+    {% elif grid_phases | length > 0 %}
+      {{ [''] }}
     {% else %}
       {{ [] }}
     {% endif %}
@@ -237,7 +243,7 @@ variables:
     {% endfor %}
     {{ ns.samples }}
   measurements_valid: >
-    {% set ns = namespace(valid=grid_sources | length > 0 and pv_list | length > 0
+    {% set ns = namespace(valid=pv_list | length > 0
       and is_number(multiplier) and multiplier | float(0) > 0) %}
     {% for entity in grid_sources + pv_list + (battery_list if battery_enable else []) %}
       {% if not entity or not is_number(power_samples.get(entity)) %}
