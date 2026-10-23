@@ -35,12 +35,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
 
             entity = GoeChargerNumber(coordinator, description)
             entities.append(entity)
-
-            # currently only the 'Tag.AMP.key' entity needs to be modified
-            # based on MIN and MAX AMP settings... [have in mind that
-            # 'data_key' is not unique !!!]
-            if entity.data_key == Tag.AMP.key:
-                coordinator.entities[entity.data_key] = entity
     else:
         for description in CONTROLLER_NUMBER_SENSORS:
             entity = GoeChargerNumber(coordinator, description)
@@ -52,6 +46,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
 class GoeChargerNumber(GoeChargerBaseEntity, NumberEntity):
     def __init__(self, coordinator: GoeChargerDataUpdateCoordinator, description: ExtNumberEntityDescription):
         super().__init__(entity_type=Platform.NUMBER, coordinator=coordinator, description=description)
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+
+        # currently only the 'Tag.AMP.key' entity needs to be modified
+        # based on MIN and MAX AMP settings... [have in mind that
+        # 'data_key' is not unique !!!]
+        if self.data_key == Tag.AMP.key:
+            self.coordinator.entities[self.data_key] = self
 
     @property
     def native_value(self):

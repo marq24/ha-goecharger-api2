@@ -278,7 +278,7 @@ class GoeChargerApiV2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("_check_ws_connection_and_flags(): Waiting for the ws connection to be established (max 30 seconds)")
             await asyncio.wait_for(ready_event.wait(), timeout=30.0)
             if ready_event.has_errors():
-                _LOGGER.debug(f"_check_ws_connection_and_flags(): ws connection failed! errors: {ready_event.errors}")
+                _LOGGER.debug(f"_check_ws_connection_and_flags(): ws connection failed! errors: {ready_event._error}")
                 return False
 
             if ready_event.is_set():

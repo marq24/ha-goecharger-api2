@@ -235,6 +235,8 @@ class GoeChargerApiV2Bridge:
         return len(self._versions) + len(self._states) + len(self._config) + len(self._ws_states)
 
     def clear_data(self):
+        if self._ws_debounced_update_task is not None and not self._ws_debounced_update_task.done():
+            self._ws_debounced_update_task.cancel()
         self._LAST_CONFIG_UPDATE_TS = 0
         self._LAST_FULL_STATE_UPDATE_TS = 0
         self._REQUEST_IDS_DATA = False
@@ -277,7 +279,9 @@ class GoeChargerApiV2Bridge:
             self._versions = self._read_filtered_data_from_ws_source(filters=self._FILTER_VERSIONS, log_info="read_versions (via websocket)")
         else:
             for attempt in range(5):
-                self._versions = await self._read_filtered_data(filters=self._FILTER_VERSIONS, log_info=f"read_versions (attempt {attempt+1})")
+                ret = await self._read_filtered_data(filters=self._FILTER_VERSIONS, log_info=f"read_versions (attempt {attempt+1})")
+                if ret is not None and len(ret) > 0 and isinstance(ret, NonNullDict):
+                    self._versions = ret
                 if self._versions is not None and len(self._versions) > 0:
                     break
                 if attempt < 4:
@@ -367,7 +371,9 @@ class GoeChargerApiV2Bridge:
             if self.ws_connected:
                 self._states = self._read_filtered_data_from_ws_source(filters=self._FILTER_ALL_STATES, log_info="read_all_states")
             else:
-                self._states = await self._read_filtered_data(filters=self._FILTER_ALL_STATES, log_info="read_all_states")
+                ret = await self._read_filtered_data(filters=self._FILTER_ALL_STATES, log_info="read_all_states")
+                if ret is not None and len(ret) > 0 and isinstance(ret, NonNullDict):
+                    self._states = ret
             if len(self._states) > 0:
                 self._LAST_FULL_STATE_UPDATE_TS = time.time()
 
@@ -383,7 +389,9 @@ class GoeChargerApiV2Bridge:
             if self.ws_connected:
                 self._config = self._read_filtered_data_from_ws_source(filters=self._FILTER_ALL_CONFIG, log_info="read_all_config")
             else:
-                self._config = await self._read_filtered_data(filters=self._FILTER_ALL_CONFIG, log_info="read_all_config")
+                ret = await self._read_filtered_data(filters=self._FILTER_ALL_CONFIG, log_info="read_all_config")
+                if ret is not None and len(ret) > 0 and isinstance(ret, NonNullDict):
+                    self._config = ret
 
             if len(self._config) > 0:
                 self._LAST_CONFIG_UPDATE_TS = time.time()
@@ -856,7 +864,7 @@ class GoeChargerApiV2Bridge:
 
                 self._ws_hashed_password = self._ws_compute_hashed_password(hash_type, self.access_password, serial)
                 _logging_pwd = self._ws_hashed_password.decode('utf-8')
-                _LOGGER.debug(f"ws_connect(): Computed hashed password {hash_type}: {_logging_pwd[:6]}...{_logging_pwd[-6:]}")
+                _LOGGER.debug(f"ws_connect(): Computed hashed password {hash_type}: {_logging_pwd[:3]}...{_logging_pwd[-3:]}")
 
                 token1 = normalized_auth.get('token1')
                 token2 = normalized_auth.get('token2')
