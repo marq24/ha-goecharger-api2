@@ -72,7 +72,7 @@ COMMUNICATION_MODE_WEBSOCKET: Final = "WEBSOCKET"
 COMMUNICATION_MODE_HTTPGET: Final = "HTTPGET"
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
-    if config_entry.version < CONFIG_VERSION:
+    if config_entry.version == 1:
         if config_entry.data is not None and len(config_entry.data) > 0:
             _LOGGER.debug(f"Migrating configuration from version {config_entry.version}.{config_entry.minor_version}")
             if config_entry.options is not None and len(config_entry.options):
@@ -81,6 +81,23 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                 new_data = config_entry.data
             hass.config_entries.async_update_entry(config_entry, data=new_data, options={}, version=CONFIG_VERSION, minor_version=CONFIG_MINOR_VERSION)
             _LOGGER.debug(f"Migration to configuration version {config_entry.version}.{config_entry.minor_version} successful")
+
+    # migrate device registry entries -> actually we DELETE ALL...
+    if config_entry.version == 2 and config_entry.minor_version == 0:
+        try:
+            _LOGGER.debug(f"Migrating configuration from version {config_entry.version}.{config_entry.minor_version}")
+            a_device_reg = device_reg.async_get(hass)
+            if a_device_reg is not None:
+                all_devices = device_reg.async_entries_for_config_entry(a_device_reg, config_entry.entry_id)
+                for a_device in all_devices:
+                    _LOGGER.debug(f"async_migrate_entry(): PURGING device: {a_device.id}")
+                    a_device_reg.async_remove_device(device_id=a_device.id)
+        except BaseException as ex:
+            _LOGGER.warning(f"async_migrate_entry(): failed: {type(ex).__name__} - {ex}")
+
+        hass.config_entries.async_update_entry(config_entry, version=CONFIG_VERSION, minor_version=CONFIG_MINOR_VERSION)
+        _LOGGER.info(f"async_migrate_entry(): Migration to configuration version {config_entry.version}.{config_entry.minor_version} successful")
+
     return True
 
 
@@ -139,9 +156,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     # start the limit to 16a limiiter...
     if coordinator.limit_to16a:
         asyncio.create_task(coordinator.check_for_16a_limit(hass, config_entry.entry_id))
-
-    # checker that cleaing orphan/outdated device registry entries...
-    asyncio.create_task(coordinator.cleanup_device_registry(hass))
 
     # finally, register the websocket-connection watchdog...
     if use_websocket:
@@ -267,28 +281,6 @@ async def check_and_write_to_16a(hass: HomeAssistant, config_entry_id: str, brid
                         await bridge.write_value_to_key(a_key, res[a_key])
                 except Exception as e:
                     _LOGGER.error(f"16A checker: Error while forcing 16A settings: {type(e).__name__} - {e}")
-
-@staticmethod
-async def check_device_registry(hass: HomeAssistant):
-    _LOGGER.info(f"check device registry...")
-    if hass is not None:
-        a_device_reg = device_reg.async_get(hass)
-        if a_device_reg is not None:
-            key_list = []
-            all_domain_devices = []
-            for a_config_entry in hass.config_entries.async_entries(DOMAIN):
-                all_domain_devices.extend(async_entries_for_config_entry(a_device_reg, a_config_entry.entry_id))
-            for a_device_entry in all_domain_devices:
-                if hasattr(a_device_entry, "identifiers"):
-                    ident_value = a_device_entry.identifiers
-                    if len(next(iter(ident_value))) != 4:
-                        _LOGGER.debug(f"found a OLD {DOMAIN} DeviceEntry: {a_device_entry}")
-                        key_list.append(a_device_entry.id)
-
-            if len(key_list) > 0:
-                _LOGGER.info(f"NEED TO DELETE old {DOMAIN} DeviceEntries: {key_list}")
-                for a_device_entry_id in key_list:
-                    a_device_reg.async_remove_device(device_id=a_device_entry_id)
 
 
 class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
@@ -804,38 +796,20 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         else:
             sw_version = "UNKNOWN"
 
-        if self.mode == LAN:
-            self._device_info_dict = {
-                # be careful when adjusting the 'identifiers' -> since this will create probably new DeviceEntries
-                # and there exists also code which CLEAN all Devices that does not have 4 (four) identifier values!!
-                #"identifiers": {(DOMAIN, f"lan@.@{self.intg_type.lower()}@.@{self._serial}")},
-                "identifiers": {(
-                    DOMAIN,
-                    self._serial,
-                    self._config_entry.data.get(CONF_HOST),
-                    self._config_entry.title)},
-                "manufacturer": MANUFACTURER,
-                "name": self._config_entry.title,
-                "model": f"{self._device_info_model_raw}",
-                "sw_version": f"{sw_version}"
-                # hw_version
-            }
-        else:
-            self._device_info_dict = {
-                # be careful when adjusting the 'identifiers' -> since this will create probably new DeviceEntries
-                # and there exists also code which CLEAN all Devices that does not have 4 (four) identifier values!!
-                #"identifiers": {(DOMAIN, f"wan@.@{self.intg_type.lower()}@.@{self._serial}")},
-                "identifiers": {(
-                    DOMAIN,
-                    self._serial,
-                    self._config_entry.data.get(CONF_TOKEN),
-                    self._config_entry.title)},
-                "manufacturer": MANUFACTURER,
-                "name": self._config_entry.title,
-                "model": f"{self._device_info_model_raw}",
-                "sw_version": f"{sw_version}"
-                # hw_version
-            }
+        self._device_info_dict = {
+            # be careful when adjusting the 'identifiers' -> since this will create probably new DeviceEntries
+            # and there exists also code which CLEAN all Devices that does not have 4 (four) identifier values!!
+            "identifiers": {(
+                DOMAIN,
+                self.intg_type,
+                self.mode,
+                self._serial)},
+            "manufacturer": MANUFACTURER,
+            "name": self._config_entry.title,
+            "model": f"{self._device_info_model_raw}",
+            "sw_version": f"{sw_version}"
+            # hw_version
+        }
 
         return True
 
@@ -844,12 +818,6 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         await asyncio.sleep(15)
         _LOGGER.debug(f"check relevant entities for 16A limit NOW!")
         await check_and_write_to_16a(hass=hass, config_entry_id=entry_id, bridge=self.bridge, is_lbgroup_id_set=self.is_loadbalancer_group_id_set)
-
-    async def cleanup_device_registry(self, hass: HomeAssistant):
-        _LOGGER.debug(f"check device registry for orphan {DOMAIN} entries... in 20sec")
-        await asyncio.sleep(20)
-        _LOGGER.debug(f"check device registry for orphan {DOMAIN} entries NOW!")
-        await check_device_registry(hass=hass)
 
     def is_valid_charger_entity(self, description: EntityDescription) -> bool:
         if description.key == Tag.TMA.key and hasattr(description, "idx"):

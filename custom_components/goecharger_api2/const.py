@@ -23,7 +23,7 @@ DOMAIN: Final = "goecharger_api2"
 ISSUE_URL: Final = "https://github.com/marq24/ha-goecharger-api2/issues"
 
 CONFIG_VERSION: Final = 2
-CONFIG_MINOR_VERSION: Final = 0
+CONFIG_MINOR_VERSION: Final = 1
 
 STARTUP_MESSAGE: Final = f"""
 -------------------------------------------------------------------
