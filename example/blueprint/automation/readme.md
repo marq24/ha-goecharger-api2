@@ -60,7 +60,10 @@ The go-eCharger expects **watts**. This factor is applied to grid, PV and batter
 The default of `1` keeps the behavior of earlier versions, so existing automations keep working unchanged.
 
 ### Grid Power Setup
-Choose **ONE** method:
+Choose **ONE** method when grid measurements are available. Leaving all grid
+methods empty preserves PV-only configurations: `pgrid=0` is sent together
+with the measured PV and optional battery values. This is an intentional
+absence of grid measurement, not a fallback for an unavailable selected sensor.
 
 **Single Entity**: Use if you have one entity with positive (import) and negative (export) values
 - Example: `sensor.meter_power_now`
@@ -70,6 +73,10 @@ Choose **ONE** method:
 
 **3-Phase Entities**: Use individual phase entities (L1, L2, L3)
 - Example: `sensor.grid_l1_power`, `sensor.grid_l2_power`, `sensor.grid_l3_power`
+- Select three distinct entities. Existing selections with more than three
+  entries continue to use only the first three; additional entries are ignored.
+- For installations with fewer measured phases, use **Single Entity** with a
+  sensor reporting their total. Selecting only one or two phase entities is invalid.
 
 ### PV Power
 - Select all PV entities (multiple supported)
@@ -99,9 +106,12 @@ valid. Each used state is captured once for validation and calculation.
 Non-finite totals or unit conversion results also skip the update.
 
 The existing grid method precedence remains single entity, then consumption /
-feed-in, then phases. Both consumption and feed-in must be selected; phases
-require exactly three distinct entities. An incomplete selected method does
-not fall back to another method. Unused grid inputs are ignored.
+feed-in, then phases. Both consumption and feed-in must be selected. A selected
+phase method requires at least three entries, with three distinct, usable
+entities in the first three positions; only those first three are read and
+summed. An incomplete selected method does not fall back to another method or
+PV-only mode. Unused grid inputs are ignored. If no grid method is selected,
+`pgrid=0` is valid and PV/battery validation still applies.
 
 An empty battery selection means no battery measurement and still sends zero.
 Disabling battery transmission ignores any selected battery entities and also
