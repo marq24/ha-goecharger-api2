@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import logging
+import math
 from numbers import Number
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,6 +14,17 @@ from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 _COORDINATOR_PER_CONFIGENTRYID_MAP = {}
+
+
+def _is_finite_number(value) -> bool:
+    """NaN and infinity are Numbers, but would be sent to the charger as invalid JSON."""
+    if not isinstance(value, Number):
+        return False
+    try:
+        return math.isfinite(float(value))
+    except (TypeError, ValueError, OverflowError):
+        return False
+
 
 class GoeChargerApiV2Service():
     def __init__(self, hass: HomeAssistant, config: ConfigEntry, coordinator):  # pylint: disable=unused-argument
@@ -45,10 +57,10 @@ class GoeChargerApiV2Service():
         pgrid = call.data.get('pgrid', None)
         ppv = call.data.get('ppv', 0)
         pakku = call.data.get('pakku', 0)
-        if pgrid is not None and isinstance(pgrid, Number):
-            if not isinstance(ppv, Number):
+        if pgrid is not None and _is_finite_number(pgrid):
+            if not _is_finite_number(ppv):
                 ppv = 0
-            if not isinstance(pakku, Number):
+            if not _is_finite_number(pakku):
                 pakku = 0
 
             payload = {

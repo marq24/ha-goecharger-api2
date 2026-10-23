@@ -266,7 +266,7 @@ async def check_and_write_to_16a(hass: HomeAssistant, config_entry_id: str, brid
                         _LOGGER.info(f"reduce {a_key} to 16A -> writing {res[a_key]}")
                         await bridge.write_value_to_key(a_key, res[a_key])
                 except Exception as e:
-                    _LOGGER.error(f"16A checker: Error while forcing 16A settings:", e)
+                    _LOGGER.error(f"16A checker: Error while forcing 16A settings: {type(e).__name__} - {e}")
 
 @staticmethod
 async def check_device_registry(hass: HomeAssistant):
@@ -651,7 +651,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
 
         except ClientConnectionError as cc_err:
             self._handle_client_connection_error("async_write_key()", cc_err)
-            raise ValueError(f"ClientConnectionError while writing {key} to wallbox: {type(cc_err.__name__)} - {cc_err}") from cc_err
+            raise ValueError(f"ClientConnectionError while writing {key} to wallbox: {type(cc_err).__name__} - {cc_err}") from cc_err
         except Exception as e:
             _LOGGER.error(f"Error while writing single {key} to wallbox: {e}")
             raise ValueError(f"Exception while writing {key} to wallbox: {e}") from e
@@ -671,7 +671,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             return result
 
         except ClientConnectionError as exception:
-            self._handle_client_connection_error(f"async_write_multiple_keys(): {type(exception).__name__} - {exception}")
+            self._handle_client_connection_error("async_write_multiple_keys()", exception)
             raise ValueError(f"ClientConnectionError while writing multiple {key} to wallbox: {type(exception).__name__} - {exception}") from exception
         except Exception as e:
             _LOGGER.error(f"Error while writing multiple {key} to wallbox: {type(e).__name__} - {e}")
