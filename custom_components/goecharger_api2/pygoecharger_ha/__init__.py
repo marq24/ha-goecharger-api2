@@ -133,7 +133,10 @@ class GoeChargerApiV2Bridge:
     def __init__(self, web_session, intg_type:str,
                  host:str|None=None, access_password:str|None=None, serial:str|None=None, token:str|None=None,
                  lang:str = "en") -> None:
+
+        self.host_url = None
         self.ws_url = None
+
         if host is not None:
             # THIS IS LAN ACCESS...
             self.token = None
@@ -574,7 +577,7 @@ class GoeChargerApiV2Bridge:
                     except aiohttp.ClientResponseError as io_exc:
                         _LOGGER.warning(f"_write_values_int(): ClientResponseError while 'await res.json(): {io_exc}")
 
-                elif res.status == 500 and int(res.headers['Content-Length']) > 0:
+                elif res.status == 500 and (res.content_length or 0) > 0:
                     try:
                         r_json = await res.json()
                         return {"err": r_json}

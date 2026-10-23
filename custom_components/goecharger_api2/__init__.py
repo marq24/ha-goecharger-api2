@@ -266,7 +266,7 @@ async def check_and_write_to_16a(hass: HomeAssistant, config_entry_id: str, brid
                         _LOGGER.info(f"reduce {a_key} to 16A -> writing {res[a_key]}")
                         await bridge.write_value_to_key(a_key, res[a_key])
                 except Exception as e:
-                    _LOGGER.error(f"16A checker: Error while forcing 16A settings:", e)
+                    _LOGGER.error(f"16A checker: Error while forcing 16A settings: {type(e).__name__} - {e}")
 
 @staticmethod
 async def check_device_registry(hass: HomeAssistant):
@@ -591,7 +591,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         self._CLIENT_COMMUNICATION_ERROR_TS = time.time()
         self._CLIENT_COMMUNICATION_ERROR_COUNT += 1
         if self._CLIENT_COMMUNICATION_ERROR_COUNT > 5:
-            _LOGGER.warning(f"{msg}: Too many ClientConnectionError #{self._CLIENT_COMMUNICATION_ERROR_COUNT} while fetching data:{type(exception).__name__} - {exception} - will try to restart integration.", stack_info=True)
+            _LOGGER.warning(f"{msg}: Too many ClientConnectionError #{self._CLIENT_COMMUNICATION_ERROR_COUNT} while fetching data: {type(exception).__name__} - {exception} - will try to restart integration.", stack_info=True)
             if not self._RESTART_TRIGGERED:
                 _LOGGER.info(f"{msg}: TRIGGER RESTART...")
                 self._RESTART_TRIGGERED = True
@@ -651,10 +651,10 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
 
         except ClientConnectionError as cc_err:
             self._handle_client_connection_error("async_write_key()", cc_err)
-            raise ValueError(f"ClientConnectionError while writing {key} to wallbox: {type(cc_err.__name__)} - {cc_err}") from cc_err
+            raise ValueError(f"ClientConnectionError while writing {key} to wallbox: {type(cc_err).__name__} - {cc_err}") from cc_err
         except Exception as e:
-            _LOGGER.error(f"Error while writing single {key} to wallbox: {e}")
-            raise ValueError(f"Exception while writing {key} to wallbox: {e}") from e
+            _LOGGER.error(f"Error while writing single {key} to wallbox: {type(e).__name__} - {e}")
+            raise ValueError(f"Exception while writing {key} to wallbox: {type(e).__name__} - {e}") from e
 
     async def async_write_multiple_keys(self, attr:dict, key: str, value, entity: Entity = None) -> dict:
         if self._CLIENT_COMMUNICATION_ERROR_TS + CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS > time.time():
