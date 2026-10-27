@@ -504,20 +504,19 @@ class GoeChargerApiV2Bridge:
     async def write_value_to_key(self, key, value) -> dict:
         is_button_press = value is not None and str(value) == IS_TRIGGER
 
-        if not is_button_press and self.ws_connected and self._ws_connection is not None:
-            await self._ws_send_command(key, value)
-            self._ws_LAST_NEW_DATA_NOTIFY = 0
-            return None
+        if self.ws_connected and self._ws_connection is not None:
+            if is_button_press:
+                # ignoring button presses when connected via WebSockets
+                return {key: value}
+            else:
+                if await self._ws_send_command(key, value):
+                    self._ws_LAST_NEW_DATA_NOTIFY = 0
+                    return {key: value}
+                else:
+                    return {}
         else:
-            if value is None:
-                args = f"{key}=null"
-            elif isinstance(value, (bool, int, float)):
-                args = {key: str(value).lower()}
-            elif isinstance(value, dict):
-                args = {key: json.dumps(value).replace(' ','')}
-            elif isinstance(value, str) and value == IS_TRIGGER:
+            if is_button_press:
                 # BUTTON's have only effect for POLLING (will not do anything when connected via WebSockets)
-
                 # these are special trigger actions that we want to call from the FE...
                 match key:
                     case Tag.INTERNAL_FORCE_CONFIG_READ.key:
@@ -530,9 +529,16 @@ class GoeChargerApiV2Bridge:
 
                 return {key: value}
             else:
-                args = {key: '"'+str(value)+'"'}
+                if value is None:
+                    args = f"{key}=null"
+                elif isinstance(value, (bool, int, float)):
+                    args = {key: str(value).lower()}
+                elif isinstance(value, dict):
+                    args = {key: json.dumps(value).replace(' ','')}
+                else:
+                    args = {key: '"'+str(value)+'"'}
 
-            return await self._write_values_int(args, a_result_key = key, a_result_value = value)
+                return await self._write_values_int(args, a_result_key = key, a_result_value = value)
 
     async def write_multiple_values_to_keys(self, args, key, value) -> dict:
         if self.ws_connected and self._ws_connection is not None:
@@ -541,7 +547,7 @@ class GoeChargerApiV2Bridge:
                 await asyncio.sleep(0.75)
 
             self._ws_LAST_NEW_DATA_NOTIFY = 0
-            return None
+            return {}
         else:
             params = {}
             for a_key, a_value in args.items():

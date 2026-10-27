@@ -542,8 +542,8 @@ NUMBER_SENSORS = [
     # pgt
     ExtNumberEntityDescription(
         key=Tag.PGT.key,
-        native_max_value=5000,
-        native_min_value=-5000,
+        native_max_value=35000,
+        native_min_value=-35000,
         native_step=1,
         #entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfPower.WATT,

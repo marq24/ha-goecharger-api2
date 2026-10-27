@@ -58,7 +58,7 @@ from .const import (
     CONFIG_VERSION, CONFIG_MINOR_VERSION
 )
 from .entity import CustomFriendlyNameEntity
-from .service import GoeChargerApiV2Service
+from .service import GoeChargerApiV2Service, add_config_entry_to_service, remove_config_entry_from_service
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -157,6 +157,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                                          supports_response=SupportsResponse.OPTIONAL)
             hass.services.async_register(DOMAIN, SERVICE_STOP_CHARGING, service.stop_charging,
                                          supports_response=SupportsResponse.OPTIONAL)
+        else:
+            # we need to let the service know the config-entry...
+            add_config_entry_to_service(config_entry, coordinator)
 
     # start the limit to 16a limiiter...
     if coordinator.limit_to16a:
@@ -192,6 +195,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
             coordinator.clear_data()
             hass.data[DOMAIN].pop(config_entry.entry_id)
             hass.data[DOMAIN][ACTIVE_CHARGER_COUNTER] = hass.data[DOMAIN][ACTIVE_CHARGER_COUNTER] - 1
+            remove_config_entry_from_service(config_entry)
 
         # ONLY remove the SERVICES if this is the LAST ACTIVE config_entry that will be unloaded!
         if hass.data[DOMAIN][ACTIVE_CHARGER_COUNTER] == 0:
@@ -670,9 +674,9 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             self.handle_write_result("multiple", value, key, result, entity)
             return result
 
-        except ClientConnectionError as exception:
-            self._handle_client_connection_error(f"async_write_multiple_keys(): {type(exception).__name__} - {exception}")
-            raise ValueError(f"ClientConnectionError while writing multiple {key} to wallbox: {type(exception).__name__} - {exception}") from exception
+        except ClientConnectionError as cce:
+            self._handle_client_connection_error(f"async_write_multiple_keys(): {type(cce).__name__} - {cce}", cce)
+            raise ValueError(f"ClientConnectionError while writing multiple {key} to wallbox: {type(cce).__name__} - {cce}") from cce
         except Exception as e:
             _LOGGER.error(f"Error while writing multiple {key} to wallbox: {type(e).__name__} - {e}")
             raise ValueError(f"Exception while writing multiple {key} to wallbox: {type(e).__name__} - {e}") from e
