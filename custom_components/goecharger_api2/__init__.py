@@ -231,13 +231,13 @@ async def check_and_write_to_16a(hass: HomeAssistant, config_entry_id: str, brid
                                 if hasattr(entity, "orphaned_timestamp") is False or entity.orphaned_timestamp is None:
                                     if entity.translation_key not in key_list:
                                         key_list.append(entity.translation_key)
-                                        _LOGGER.info(f"16A checker: adding entity {entity.translation_key} to list")
+                                        _LOGGER.info(f"16A checker: adding entity '{entity.translation_key}' to list")
                                     else:
-                                        _LOGGER.debug(f"16A checker: entity {entity.translation_key} already in list")
+                                        _LOGGER.debug(f"16A checker: entity '{entity.translation_key}' already in list")
                                 else:
-                                    _LOGGER.debug(f"16A checker: ignoring entity {entity.translation_key} because it is orphaned")
+                                    _LOGGER.debug(f"16A checker: ignoring entity '{entity.translation_key}' because it is orphaned")
                             else:
-                                _LOGGER.debug(f"16A checker: ignoring entity {entity.translation_key} because it is disabled")
+                                _LOGGER.debug(f"16A checker: ignoring entity '{entity.translation_key}' because it is disabled")
 
             if len(key_list) > 0:
                 _LOGGER.info(f"16A checker: found {len(key_list)} entities with max current of {MAX_A}A - {key_list}")
@@ -753,37 +753,45 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                 ccl_obj = self.bridge._versions.none_null_get(Tag.CLL.key, {})
                 if len(ccl_obj) > 0:
                     ccl_cable_limit_val = ccl_obj.get("cableCurrentLimit", "-1")
-                    _LOGGER.debug(f"read_versions(): read CLL:cableCurrentLimit: '{ccl_cable_limit_val}'")
                     try:
                         ccl_cable_limit_int = int(ccl_cable_limit_val)
                         if ccl_cable_limit_int > 0:
+                            _LOGGER.debug(f"read_versions(): read CLL:cableCurrentLimit: '{ccl_cable_limit_val}'")
                             wb_has_16a_cable_limit = ccl_cable_limit_int <= 16
                             use_adi_as_fallback = False
                         else:
-                            _LOGGER.debug(f"read_versions(): no 'cableCurrentLimit' found in {ccl_obj}")
+                            _LOGGER.debug(f"read_versions(): no 'cableCurrentLimit' found in CLL object, but there IS content: {ccl_obj} - will not enforce the 16A CABLE limit")
+                            # 20266/10/28 this is astounding for me - as reported in #176 a 'go-eCharger_V5' running
+                            # FW '59.4' does NOT contain the key 'cableCurrentLimit' - I even installed the '59.4' FW
+                            # on my Flex and there the key is still present also in that 'old' FW... so I must assume,
+                            # that ONLY a FLEX Wallbox will contain this 'cableCurrentLimit' key :-/
+                            wb_has_16a_cable_limit = False
+                            use_adi_as_fallback = False
+
                     except BaseException as exc:
                         _LOGGER.debug(f"read_versions(): try to handle CLL:cableCurrentLimit caused: {type(exc).__name__} - {exc}")
                         if self._is_core_wallbox:
                             wb_has_16a_cable_limit = True
                 else:
-                    _LOGGER.debug(f"read_versions(): CLL object is empty! {ccl_obj}")
+                    _LOGGER.debug(f"read_versions(): CLL object is empty! {ccl_obj} (or was not present) - we probably check ADI key...")
 
             if wb_has_16a_cable_limit is None and use_adi_as_fallback:
                 wb_has_16a_cable_limit = self.bridge._versions.none_null_get(Tag.ADI.key, False)
+                _LOGGER.debug(f"read_versions(): USE Fallback to API-ADI key in order to set a possible 16A limit - with the result ADI is: {wb_has_16a_cable_limit} (or not present)")
 
             # if we haven't seen any 'wb_has_16a_cable_limit' yet, then we enable the limit just to be sure...
             if wb_has_16a_cable_limit is None:
                 _LOGGER.debug(f"read_versions(): enforcing 'wb_has_16a_cable_limit=True' cause previously the code did not set any value")
                 wb_has_16a_cable_limit = True
 
-            self.limit_to16a = (self._config_entry.data.get(CONF_11KWLIMIT, False)
-                                or self.bridge._versions.none_null_get(Tag.VAR.key, -1) == 11
-                                or wb_has_16a_cable_limit)
+            a = self._config_entry.data.get(CONF_11KWLIMIT, False)
+            b = self.bridge._versions.none_null_get(Tag.VAR.key, -1) == 11
+            self.limit_to16a = a or b or wb_has_16a_cable_limit
 
             if (self.limit_to16a):
-                _LOGGER.info(f"read_versions(): Charger LIMIT to 16A is active")
+                _LOGGER.info(f"read_versions(): Charger LIMIT to 16A is active [CONF_11KWLIMIT: {a}, VAR==11: {b}, DETECTED CABLE-LIMIT: {wb_has_16a_cable_limit}]")
             else:
-                _LOGGER.info(f"read_versions(): Charger NO LIMIT detected")
+                _LOGGER.info(f"read_versions(): Charger NO LIMIT detected [CONF_11KWLIMIT: {a}, VAR==11: {b}, DETECTED CABLE-LIMIT: {wb_has_16a_cable_limit}]")
         else:
             # no additional controller stuff... but we need to init some variables
             self.limit_to16a = False
