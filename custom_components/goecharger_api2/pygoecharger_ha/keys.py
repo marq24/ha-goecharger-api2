@@ -624,7 +624,8 @@ class Tag(ApiKey, Enum):
     # rsrr | R/W | TYPE | Config | rampupAtStartAndReconnectionRate in %/s
     # smd | R | TYPE | Status | smart meter data
     # tab | R | TYPE | Status | time at boot in utc in milliseconds, add rbt to get to current utc time
-    # tcl | R/W | TYPE | Config | temporary current limit (does not change the user current limit, will be reset after 10min if not updated regulary)
+    # Expiring runtime value: poll with status so expiry is not cached for 24h.
+    TCL = ApiKey(key="tcl", cat=CAT.STATUS, writeable=True)
     # tsi | R | TYPE | Status | transaction start rfidid (only available when sendRfid)
     # tzt | R/W | TYPE | Config | timezone type, freetext string for app selection
     # ufa | R/W | TYPE | Config | Underfrequency Control activation threshold
