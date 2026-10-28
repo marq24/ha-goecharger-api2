@@ -112,6 +112,7 @@
     "number": {
       "ama": {"name": "Max. Stromlimit"},
       "amp": {"name": "Angeforderter Strom"},
+      "tcl": {"name": "Temporäres Stromlimit"},
       "ate": {"name": "Next-Trip Lademenge"},
       "att": {"name": "Next-Trip Beenden um (Min. nach 0 Uhr)"},
       "awp": {"name": "Schwellenwert für Günstigen-Strompreis (ohne Gebühren!)"},

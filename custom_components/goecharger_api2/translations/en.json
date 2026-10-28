@@ -112,6 +112,7 @@
     "number": {
       "ama": {"name": "Maximum current limit"},
       "amp": {"name": "Requested current"},
+      "tcl": {"name": "Temporary current limit"},
       "ate": {"name": "Automatic stop energy"},
       "att": {"name": "Automatic stop time"},
       "awp": {"name": "Awattar maximum price threshold"},

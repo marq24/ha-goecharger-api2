@@ -1,8 +1,6 @@
 import asyncio
 import datetime
 import logging
-import math
-
 from numbers import Number
 
 from homeassistant.config_entries import ConfigEntry
@@ -12,20 +10,11 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from custom_components.goecharger_api2.const import WAN
 from custom_components.goecharger_api2.pygoecharger_ha.const import INTG_TYPE
-from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
+from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag, is_finite_number
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 _COORDINATOR_PER_CONFIG_ENTRY_ID_MAP: dict[str, DataUpdateCoordinator] = {}
-
-def _is_finite_number(value) -> bool:
-    """NaN and infinity are Numbers, but would be sent to the charger as invalid JSON."""
-    if not isinstance(value, Number):
-        return False
-    try:
-        return math.isfinite(float(value))
-    except (TypeError, ValueError, OverflowError):
-        return False
 
 def add_config_entry_to_service(config: ConfigEntry, coordinator: DataUpdateCoordinator):
     global _COORDINATOR_PER_CONFIG_ENTRY_ID_MAP
@@ -71,10 +60,10 @@ class GoeChargerApiV2Service():
         pgrid = call.data.get('pgrid', None)
         ppv = call.data.get('ppv', 0)
         pakku = call.data.get('pakku', 0)
-        if pgrid is not None and _is_finite_number(pgrid):
-            if not _is_finite_number(ppv):
+        if pgrid is not None and is_finite_number(pgrid):
+            if not is_finite_number(ppv):
                 ppv = 0
-            if not _is_finite_number(pakku):
+            if not is_finite_number(pakku):
                 pakku = 0
 
             payload = {
@@ -93,24 +82,39 @@ class GoeChargerApiV2Service():
                     }
 
             except (ValueError, TypeError) as exc:
+                _LOGGER.debug(f"Service-set_pv_data(): Error {type(exc).__name__}: {exc}")
                 if call.return_response:
                     return {"error": str(exc), "date": str(datetime.datetime.now().time())}
 
         if call.return_response:
             return {"error": "No Grid Power provided (or false data)", "date": str(datetime.datetime.now().time())}
 
+    async def set_temporary_current_limit(self, call: ServiceCall):
+        config_id, coordinator = self.get_coordinator(call)
+        _LOGGER.debug(f"Service-set_temporary_current_limit(): Provided config_id: {config_id} -> using {coordinator.name} serial: {coordinator._serial}")
+        try:
+            validated_input_current = Tag.TCL.tag_func_validate_input(call.data.get("current"), coordinator.data, coordinator.limit_to16a)
+            result_current = await coordinator.async_write_key(Tag.TCL.key, validated_input_current, require_ack=True)
+            Tag.TCL.tag_func_validate_output(result_current, validated_input_current)
+        except ValueError as exc:
+            _LOGGER.debug(f"Service-set_temporary_current_limit(): ValueError: {exc}")
+            raise ServiceValidationError(str(exc)) from exc
+
+        if call.return_response:
+            return {"success": True, "current": result_current, "acknowledged": True}
+
     async def stop_charging(self, call: ServiceCall):
         if not self._stop_in_progress:
+            _LOGGER.debug(f"Service-stop_charging(): Force STOP_CHARGING")
             config_id, coordinator = self.get_coordinator(call)
             self._stop_in_progress = True
-            _LOGGER.debug(f"Force STOP_CHARGING")
-            _LOGGER.debug(f"Provided config_id: {config_id} -> using {coordinator.name} serial: {coordinator._serial}")
+            _LOGGER.debug(f"Service-stop_charging(): Provided config_id: {config_id} -> using {coordinator.name} serial: {coordinator._serial}")
             try:
                 resp = await coordinator.async_write_key(Tag.FRC.key, 1)
                 if Tag.FRC.key in resp:
-                    _LOGGER.debug(f"STOP_CHARGING: waiting for 5 minutes...")
+                    _LOGGER.debug(f"Service-stop_charging(): STOP_CHARGING: waiting for 5 minutes...")
                     await asyncio.sleep(300)
-                    _LOGGER.debug(f"STOP_CHARGING: 5 minutes are over... disable charging LOCK again")
+                    _LOGGER.debug(f"Service-stop_charging(): STOP_CHARGING: 5 minutes are over... disable charging LOCK again")
 
                     resp = await coordinator.async_write_key(Tag.FRC.key, 0)
 
@@ -130,6 +134,7 @@ class GoeChargerApiV2Service():
                         return {"error": "A STOP_CHARGING request could not be send", "date": str(datetime.datetime.now().time())}
 
             except (ValueError, TypeError) as exc:
+                _LOGGER.debug(f"Service-stop_charging(): Error {type(exc).__name__}: {exc}")
                 if call.return_response:
                     return {"error": str(exc), "date": str(datetime.datetime.now().time())}
 

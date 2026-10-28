@@ -58,17 +58,51 @@ class GoeChargerNumber(GoeChargerBaseEntity, NumberEntity):
             self.coordinator.entities[self.data_key] = self
 
     @property
+    def available(self):
+        super_val = super().available
+        if self.tag is not None and hasattr(self.tag, "tag_func_get_min_max_bounds"):
+            try:
+                self.tag.tag_func_get_min_max_bounds(self.coordinator.data, self.coordinator.limit_to16a)
+                return super_val and self.data_key in self.coordinator.data
+            except (ValueError, TypeError):
+                return False
+        return super_val
+
+    @property
+    def native_min_value(self):
+        super_val = super().native_min_value
+        if self.tag is not None and hasattr(self.tag, "tag_func_get_min_max_bounds"):
+            try:
+                return self.tag.tag_func_get_min_max_bounds(self.coordinator.data, self.coordinator.limit_to16a)[0]
+            except (ValueError, TypeError):
+                pass
+
+        return super_val
+
+    @property
+    def native_max_value(self):
+        super_val = super().native_max_value
+        if self.tag is not None and hasattr(self.tag, "tag_func_get_min_max_bounds"):
+            try:
+                return self.tag.tag_func_get_min_max_bounds(self.coordinator.data, self.coordinator.limit_to16a)[1]
+            except (ValueError, TypeError):
+                pass
+
+        return super_val
+
+    @property
     def native_value(self):
         try:
             value = None
             if self.coordinator.data is not None:
+                value = (self.coordinator.data or {}).get(self.data_key)
                 if self.entity_description.idx is not None:
-                    value = self.coordinator.data[self.data_key][self.entity_description.idx]
-                else:
-                    value = self.coordinator.data[self.data_key]
+                    # this is still some sort of silly access...
+                    value = value[self.entity_description.idx]
 
             if value is None or value == "":
                 return "unknown"
+
             elif self.entity_description.handle_as_float is not None and self.entity_description.handle_as_float:
                 if self.entity_description.factor is not None and self.entity_description.factor > 0:
                     value = float(int(value) / self.entity_description.factor)
@@ -89,38 +123,37 @@ class GoeChargerNumber(GoeChargerBaseEntity, NumberEntity):
         return value
 
     async def async_set_native_value(self, value) -> None:
+        validate_write_success = False
+        if self.tag is not None:
+            if hasattr(self.tag, "tag_func_validate_input"):
+                # ok let's verify the value that we should set...
+                value = self.tag.tag_func_validate_input(value, self.coordinator.data, self.coordinator.limit_to16a)
+
+            validate_write_success =  hasattr(self.tag, "tag_func_validate_output")
+
         # _LOGGER.info(f"set_native {self.data_key} {value} idx? {self.entity_description.idx}) factor: {self.entity_description.factor} float? {self.entity_description.handle_as_float}")
         try:
-            if self.entity_description.idx is not None:
-                # we have to write all values of the object... [not only the set one]
-                obj = self.coordinator.data[self.data_key]
-
-                if int(value) == 0 and self.entity_description.write_zero_as_null is not None and self.entity_description.write_zero_as_null:
-                    obj[self.entity_description.idx] = None
-                elif self.entity_description.factor is not None and self.entity_description.factor > 0:
-                    # no special handling for 'handle_as_float' here - since the float's just exist in the GUI... if the
-                    # backend these values are (keep my fingers crossed) always int's
-                    obj[self.entity_description.idx] = int(value * self.entity_description.factor)
-                elif self.entity_description.handle_as_float is not None and self.entity_description.handle_as_float:
-                    obj[self.entity_description.idx] = float(value)
-                else:
-                    # we will write all numbers as integer's [no decimal's/fractions!!!]
-                    obj[self.entity_description.idx] = int(value)
-
-                await self.coordinator.async_write_key(self.data_key, obj, self)
-
+            desc = self.entity_description
+            if int(value) == 0 and desc.write_zero_as_null:
+                final_value_to_set = None
+            elif desc.factor and desc.factor > 0:
+                final_value_to_set = int(value * desc.factor)
+            elif desc.handle_as_float:
+                final_value_to_set = float(value)
             else:
-                if int(value) == 0 and self.entity_description.write_zero_as_null is not None and self.entity_description.write_zero_as_null:
-                    await self.coordinator.async_write_key(self.data_key, None, self)
-                elif self.entity_description.factor is not None and self.entity_description.factor > 0:
-                    # no special handling for 'handle_as_float' here - since the float's just exist in the GUI... if the
-                    # backend these values are (keep my fingers crossed) always int's
-                    await self.coordinator.async_write_key(self.data_key, int(value * self.entity_description.factor), self)
-                elif self.entity_description.handle_as_float is not None and self.entity_description.handle_as_float:
-                    await self.coordinator.async_write_key(self.data_key, float(value), self)
-                else:
-                    # we will write all numbers as integer's [no decimal's/fractions!!!]
-                    await self.coordinator.async_write_key(self.data_key, int(value), self)
+                final_value_to_set = int(value)
+
+            if desc.idx is None:
+                final_object_to_write = final_value_to_set
+            else:
+                final_object_to_write = self.coordinator.data[self.data_key]
+                final_object_to_write[desc.idx] = final_value_to_set
+
+            result = await self.coordinator.async_write_key(self.data_key, final_object_to_write, self, require_ack=validate_write_success)
+
+            # must we verify that the setting of the value was successful?
+            if validate_write_success and result:
+                self.tag.tag_func_validate_output(result, value)
 
         except ValueError:
             return "unavailable"

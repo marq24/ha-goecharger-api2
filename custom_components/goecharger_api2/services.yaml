@@ -66,3 +66,26 @@ stop_charging:
       selector:
         config_entry:
           integration: "goecharger_api2"
+set_temporary_current_limit:
+  name: Set temporary current limit
+  description: >-
+    Set or renew an expiring limit without changing requested/maximum current.
+    The charger expires it after approximately ten minutes without renewal.
+    This is not a charging Stop or a failsafe watchdog.
+  fields:
+    configid:
+      name: Charger
+      required: true
+      selector:
+        config_entry:
+          integration: goecharger_api2
+    current:
+      name: Current
+      required: true
+      selector:
+        number:
+          min: 6
+          max: 32
+          step: 1
+          unit_of_measurement: A
+          mode: box
