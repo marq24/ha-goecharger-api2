@@ -14,6 +14,8 @@ from custom_components.goecharger_api2.const import WAN
 from custom_components.goecharger_api2.pygoecharger_ha.const import INTG_TYPE
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 
+from .temporary_current import validate_current, require_acknowledgement
+
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 _COORDINATOR_PER_CONFIG_ENTRY_ID_MAP: dict[str, DataUpdateCoordinator] = {}
@@ -98,6 +100,20 @@ class GoeChargerApiV2Service():
 
         if call.return_response:
             return {"error": "No Grid Power provided (or false data)", "date": str(datetime.datetime.now().time())}
+
+    async def set_temporary_current_limit(self, call: ServiceCall):
+        """Write an explicitly selected charger's expiring limit; no background renewal."""
+        if not call.data.get("configid"):
+            raise ServiceValidationError("Select a go-eCharger config entry explicitly")
+        _, coordinator = self.get_coordinator(call)
+        try:
+            current = validate_current(call.data.get("current"), coordinator.data, coordinator.limit_to16a)
+            result = await coordinator.async_write_key(Tag.TCL.key, current, require_ack=True)
+            require_acknowledgement(result, current)
+        except ValueError as exc:
+            raise ServiceValidationError(str(exc)) from exc
+        if call.return_response:
+            return {"success": True, "current": current, "acknowledged": True}
 
     async def stop_charging(self, call: ServiceCall):
         if not self._stop_in_progress:

@@ -53,6 +53,7 @@ from .const import (
     STARTUP_MESSAGE,
     SERVICE_SET_PV_DATA,
     SERVICE_STOP_CHARGING,
+    SERVICE_SET_TEMPORARY_CURRENT,
     CONF_11KWLIMIT,
     CONF_INTEGRATION_TYPE,
     CONFIG_VERSION, CONFIG_MINOR_VERSION
@@ -155,6 +156,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             service = GoeChargerApiV2Service(hass, config_entry, coordinator)
             hass.services.async_register(DOMAIN, SERVICE_SET_PV_DATA, service.set_pv_data,
                                          supports_response=SupportsResponse.OPTIONAL)
+            hass.services.async_register(DOMAIN, SERVICE_SET_TEMPORARY_CURRENT, service.set_temporary_current_limit,
+                                         supports_response=SupportsResponse.OPTIONAL)
             hass.services.async_register(DOMAIN, SERVICE_STOP_CHARGING, service.stop_charging,
                                          supports_response=SupportsResponse.OPTIONAL)
         else:
@@ -202,6 +205,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
             _LOGGER.info(f"async_unload_entry(): Unloading last active go-eCharger - will remove SERVICES")
             hass.services.async_remove(DOMAIN, SERVICE_SET_PV_DATA)
             hass.services.async_remove(DOMAIN, SERVICE_STOP_CHARGING)
+            hass.services.async_remove(DOMAIN, SERVICE_SET_TEMPORARY_CURRENT)
 
     return unload_ok
 
@@ -639,7 +643,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                 _LOGGER.error(f"_async_update_data(): unexpected: {type(other).__name__} - {other}")
                 raise UpdateFailed() from other
 
-    async def async_write_key(self, key: str, value, entity: Entity = None) -> dict:
+    async def async_write_key(self, key: str, value, entity: Entity = None, *, require_ack: bool = False) -> dict:
         if self._CLIENT_COMMUNICATION_ERROR_TS + CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS > time.time():
             time_info = CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS - (time.time() - self._CLIENT_COMMUNICATION_ERROR_TS)
             _LOGGER.info(f"async_write_key(): skipping due to client communication error for the next {time_info} seconds")
@@ -649,7 +653,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             raise ValueError("async_write_key(): RESTART is TRIGGERED (waiting for random sleep delay)")
 
         try:
-            result = await self.bridge.write_value_to_key(key, value)
+            result = await self.bridge.write_value_to_key(key, value, require_ack=require_ack)
             self.handle_write_result("single", value, key, result, entity)
             return result
 
