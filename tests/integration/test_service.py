@@ -33,7 +33,6 @@ async def test_valid_values_are_written(svc):
         Tag.IDS.key, {"pGrid": -500.0, "pPv": 1500.0, "pAkku": 200.0})
 
 
-@pytest.mark.known_bug("service.py checks pgrid with isinstance(Number) only; NaN and inf pass")
 @pytest.mark.parametrize("bad", [math.nan, math.inf, -math.inf])
 async def test_non_finite_grid_value_is_rejected(svc, bad):
     service, coordinator = svc

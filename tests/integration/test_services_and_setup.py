@@ -309,7 +309,6 @@ async def test_unknown_language_falls_back_to_english_texts(hass, setup_patches)
         await _setup(hass, entry)
 
 
-@pytest.mark.known_bug("the specific message 'could not fetch essential information' is swallowed by the broad except and replaced by the generic websocket message (__init__.py:131)")
 async def test_missing_device_data_is_reported_with_its_own_message(hass, setup_patches):
     from homeassistant.exceptions import ConfigEntryNotReady
     entry = make_entry(hass, password="secret")
