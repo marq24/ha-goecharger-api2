@@ -1,11 +1,12 @@
 """Builds the static site for GitHub Pages from the latest results.
 
 Usage: python build_site.py <site dir> --report <dir with testreport.md and html-all> \
-           --testcases <testcases.md> [--regression <summary.md>]
+           --testcases <testcases.md> [--regression <summary.md>] [--docs <dir with arc42 and test concept>]
 Needs the package `markdown`. Every input is optional except the site directory; a missing part is left out.
 """
 import argparse
 import html
+import re
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
@@ -26,17 +27,31 @@ th{background:var(--head)}code{background:var(--head);padding:.1rem .3rem;border
 footer{color:var(--muted);font-size:.9rem;margin-top:3rem}
 """
 PAGES = [("index.html", "Übersicht"), ("testreport.html", "Testbericht"), ("testcases.html", "Testfälle"),
+         ("testkonzept.html", "Testkonzept"), ("arc42.html", "Architektur (arc42)"),
          ("coverage/index.html", "Abdeckung im Detail")]
+# the diagrams of the arc42 document are Mermaid; the library is loaded from a CDN with a fixed version
+MERMAID = ('<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.4.0/dist/mermaid.esm.min.mjs";'
+           'mermaid.initialize({startOnLoad:true,theme:matchMedia("(prefers-color-scheme: dark)").matches?"dark":"default"});</script>')
+DOC_FILES = {"arc42.html": ("Architektur (arc42)", "arc42-ha-goecharger-api2.md"),
+             "testkonzept.html": ("Testkonzept", "testkonzept-ha-goecharger-api2.md")}
 
 
-def render(site, name, title, body_md, available):
+def render(site, name, title, body_md, available, toc_levels=False):
     nav = "".join(f'<a href="{href}">{label}</a>' for href, label in PAGES if href in available)
-    body = markdown.markdown(body_md, extensions=["tables", "fenced_code"])
+    md = markdown.Markdown(extensions=["tables", "fenced_code", "toc"])
+    body = md.convert(body_md)
+    mermaid = '<code class="language-mermaid">' in body
+    if mermaid:
+        body = re.sub(r'<pre><code class="language-mermaid">(.*?)</code></pre>', r'<pre class="mermaid">\1</pre>', body, flags=re.S)
+    if toc_levels:
+        entries = [t for top in md.toc_tokens for t in (top["children"] if top["level"] == 1 else [top])]
+        items = "".join(f'<li><a href="#{t["id"]}">{html.escape(t["name"])}</a></li>' for t in entries)
+        body = body.replace("</h1>", f"</h1><details><summary>Inhalt</summary><ol>{items}</ol></details>", 1)
     stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     (site / name).write_text(
         f'<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
         f"<title>{html.escape(title)}</title><style>{CSS}</style></head><body><nav><div>{nav}</div></nav>"
-        f"<main>{body}<footer>Erzeugt am {stamp}. Die Tests wurden mit KI-Unterstützung (Claude Code) erstellt und von Oliver geprüft. "
+        f"<main>{body}{MERMAID if mermaid else ''}<footer>Erzeugt am {stamp}. Die Tests wurden mit KI-Unterstützung (Claude Code) erstellt und von Oliver geprüft. "
         f'Quelle: <a href="https://github.com/OliEder/ha-goecharger-api2/tree/tests/regression-suite">Fork OliEder/ha-goecharger-api2</a>.'
         f"</footer></main></body></html>")
 
@@ -47,6 +62,7 @@ def main():
     ap.add_argument("--report")
     ap.add_argument("--testcases")
     ap.add_argument("--regression")
+    ap.add_argument("--docs")
     a = ap.parse_args()
     site = Path(a.site)
     site.mkdir(parents=True, exist_ok=True)
@@ -57,6 +73,9 @@ def main():
             shutil.copytree(Path(a.report) / "html-all", site / "coverage", dirs_exist_ok=True)
     if a.testcases and Path(a.testcases).exists():
         pages["testcases.html"] = ("Testfälle", Path(a.testcases).read_text())
+    for name, (title, filename) in DOC_FILES.items():
+        if a.docs and (Path(a.docs) / filename).exists():
+            pages[name] = (title, (Path(a.docs) / filename).read_text(), True)
     index = ["# Regressionstests für ha-goecharger-api2", "",
              "Tests und Berichte zur Home-Assistant-Integration [marq24/ha-goecharger-api2](https://github.com/marq24/ha-goecharger-api2) "
              "(go-eCharger). Die Tests laufen in einem Fork gegen den Code des Original-Repos und ändern dieses nicht.", ""]
@@ -66,10 +85,11 @@ def main():
     index += ["## Seiten", "", "- [Testbericht](testreport.html): Zeilen-, Zweig- und Pfadabdeckung, Kritikalität",
               "- [Testfälle](testcases.html): jede Testfunktion in einer Zeile",
               "- [Abdeckung im Detail](coverage/index.html): Zeile für Zeile",
-              "- Dokumente (arc42, Testkonzept): [docs/quality](https://github.com/OliEder/ha-goecharger-api2/tree/tests/regression-suite/docs/quality)"]
+              "- [Testkonzept](testkonzept.html): Ziele, Methoden, Kennzahlen und ihre Grenzen",
+              "- [Architektur (arc42)](arc42.html): Aufbau der Integration, Risiken, Entscheidungen"]
     available = set(pages) | {"index.html"} | ({"coverage/index.html"} if (site / "coverage").exists() else set())
-    for name, (title, body) in pages.items():
-        render(site, name, title, body, available)
+    for name, (title, body, *toc) in pages.items():
+        render(site, name, title, body, available, bool(toc))
     render(site, "index.html", "Regressionstests", "\n".join(index), available)
     (site / ".nojekyll").write_text("")
     print("site written to", site)
