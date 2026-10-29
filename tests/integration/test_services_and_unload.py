@@ -82,7 +82,6 @@ async def test_stop_charging_in_websocket_mode_sends_lock_and_unlock(hass):
     assert service._stop_in_progress is False
 
 
-@pytest.mark.known_bug("stop_charging does not reset _stop_in_progress when the first write fails (service.py)")
 async def test_failed_lock_write_blocks_later_stop_requests(hass):
     """a ValueError on the first write leaves _stop_in_progress True forever."""
     coordinator = _coordinator(hass, _entry(hass), websocket=True)
@@ -92,7 +91,6 @@ async def test_failed_lock_write_blocks_later_stop_requests(hass):
     assert service._stop_in_progress is False
 
 
-@pytest.mark.known_bug("stop_charging does not reset _stop_in_progress when the unlock write fails (service.py)")
 async def test_failed_unlock_write_leaves_flag_stuck(hass):
     """if frc=0 cannot be written after the wait, the charger stays locked
     and the flag blocks every later stop_charging call."""
@@ -106,7 +104,6 @@ async def test_failed_unlock_write_leaves_flag_stuck(hass):
 
 # --------------------------------------------------------------------------- WebSocket write results
 
-@pytest.mark.known_bug("write_multiple_values_to_keys returns {} over WebSocket; handle_write_result only skips on None")
 async def test_websocket_multi_write_logs_no_error_on_success(hass, caplog):
     """a successful multi-key write in WebSocket mode is logged as an ERROR."""
     coordinator = _coordinator(hass, _entry(hass), websocket=True)
@@ -159,7 +156,6 @@ def _register_services(hass):
     hass.services.async_register(DOMAIN, SERVICE_STOP_CHARGING, _noop)
 
 
-@pytest.mark.known_bug("ACTIVE_CHARGER_COUNTER is raised for chargers only but lowered for every entry")
 async def test_unloading_a_controller_keeps_the_charger_services(hass):
     """the active-charger counter is only raised for chargers but lowered for every
     entry, so unloading a controller removes the services of a still-running charger."""
@@ -171,7 +167,6 @@ async def test_unloading_a_controller_keeps_the_charger_services(hass):
     assert hass.services.has_service(DOMAIN, SERVICE_SET_PV_DATA)
 
 
-@pytest.mark.known_bug("ACTIVE_CHARGER_COUNTER key does not exist when only controllers are configured")
 async def test_unloading_a_controller_without_any_charger_does_not_raise(hass):
     """with only controllers configured the counter key does not exist."""
     controller = _entry(hass, "999999", intg_type="controller")
