@@ -142,7 +142,7 @@ Quelle: GitHub-Repository [`goecharger/go-eCharger-API-v2`](https://github.com/g
 | Cloud-Token | In der App sichtbar oder über den Schlüssel `cak` lesbar; neuer Token durch Setzen von `cak` | Integration liest `cak` nicht, speichert aber den Token im Config-Entry |
 | Cloud-Rate-Limit | Keins, aber nicht öfter als einmal pro Sekunde abfragen | Integration: Cloud-Intervall mindestens 30 s |
 | Cloud `/api/status` | 403 offline oder Cloud-API aus; 404 keine aktuellen Daten; 200 mit Daten, Header `last-modified`. Parameter `age` (Standard 30 s), `filter` | Integration wertet nur 200 und 400 aus und nutzt `age` nicht |
-| Cloud `/api/set` | 403, 404 (Charger offline), 422 (alle Schlüssel abgelehnt), **202** (mindestens ein Schlüssel gesendet, ohne Garantie) | Integration behandelt in `_write_values_int` nur 200 und 500 als Antwort (Abschnitt 11, R15) |
+| Cloud `/api/set` | 403, 404 (Charger offline), 422 (alle Schlüssel abgelehnt), **202** laut Doku (mindestens ein Schlüssel gesendet, ohne Garantie); laut Maintainer liefert die echte Cloud 200 und die Doku ist hier falsch | Integration behandelt in `_write_values_int` nur 200 und 500 als Antwort (Abschnitt 11, R15, kein Fehler) |
 
 ---
 
@@ -200,7 +200,7 @@ flowchart TB
 | `GoeChargerBaseEntity` (`__init__.py`) | Gemeinsame Basis: Übersetzungsschlüssel, Entity-ID, `unique_id`, `device_info`, Verfügbarkeit | Entity-ID `…goe_<serial>_<schlüssel>` (LAN) oder `…goe_wan_<serial>_…` (Cloud). |
 | `CustomFriendlyNameEntity` (`entity.py`) | Überschreibt den Anzeigenamen ab HA 2026.2 | Greift auf die private Methode `_Entity__async_calculate_state` zu, also fragil bei HA-Updates [Schluss]. |
 | Plattformen | Legen Entitäten aus den Beschreibungslisten an; filtern über `is_valid_charger_entity()` | Wertzugriff mit `idx` (Listen), `tuple_idx` (verschachtelt), `lookup` (Zahl→Text), `factor`, `differential_base_key`. |
-| `service.py` | Zwei HA-Dienste | `set_pv_data`: Netzleistung Pflicht, PV und Batterie optional. `stop_charging`: setzt `frc=1`, wartet 300 s, setzt `frc=0`. Ein Register der Charger (`add_config_entry_to_service`, `remove_config_entry_from_service`) bildet `configid` auf den Koordinator ab; `get_coordinator` lehnt unbekannte oder deaktivierte Entries mit `ServiceValidationError` ab. |
+| `service.py` | Zwei HA-Dienste | `set_pv_data`: Netzleistung Pflicht, PV und Batterie optional. `stop_charging`: setzt `frc=1`, wartet 300 s, setzt `frc=0`. Ein Register der Charger (`add_config_entry_to_service`, `remove_config_entry_from_service`) bildet `configid` auf den Koordinator ab; `get_coordinator` lehnt unbekannte oder deaktivierte Entries mit `ServiceValidationError` ab. Ohne `configid` wird nur dann ein Charger gewählt, wenn genau einer registriert ist, sonst folgt ebenfalls ein `ServiceValidationError` (E10). |
 | `config_flow.py` | Assistent LAN/Cloud, Verbindungstest über WebSocket oder HTTP, Rekonfiguration | Titel und Typ aus den gelesenen Gerätedaten. |
 | `const.py` / `pygoecharger_ha/const.py` | Entity-Beschreibungen; API-Filter (welche Schlüssel für welchen Zyklus); Übersetzungen; Enums (`CAR_VALUES`, `CT_VALUES`) | `FILTER_*`-Zeichenketten bestimmen den Datenumfang je Zyklus. |
 | `example/blueprint/…` | Blueprint für den PV-Überschuss | Eigene Qualitätssicherung im Blueprint (Messwertprüfung, Zielcharger) seit PR #171. |
@@ -281,7 +281,7 @@ Schreibbefehle gehen als `setValue` mit fortlaufender `requestId`. Im lokalen ge
 
 ### 6.5 PV-Überschuss (`set_pv_data`)
 
-1. Blueprint ruft alle 5 Sekunden den Dienst mit `pgrid`, `ppv`, `pakku` auf (und optional `configid`).
+1. Blueprint ruft alle 5 Sekunden den Dienst mit `pgrid`, `ppv`, `pakku` auf (und `configid`; bei mehreren Chargern ist sie seit `4702213` Pflicht, siehe E10).
 2. Cloud-Betrieb: Ist kein Fahrzeug verbunden (`car < 2`), wird **nichts** gesendet (Last-Schutz).
 3. Der Dienst schreibt den Schlüssel `ids` mit `{"pGrid", "pPv", "pAkku"}`.
 4. Im HTTP-Betrieb setzt die Bridge danach ein Flag, damit im Leerlauf zusätzlich `pakku, ppv, pgrid` gelesen werden.
@@ -306,7 +306,7 @@ Schreibbefehle gehen als `setValue` mit fortlaufender `requestId`. Im lokalen ge
 flowchart LR
     subgraph GH[GitHub]
         Repo[Repo main]
-        CI["Workflows:<br/>HACS Action, hassfest,<br/>Zip Release"]
+        CI["Workflows:<br/>HACS Action, hassfest,<br/>Tests, Zip Release"]
         Rel[Release: goecharger_api2.zip]
     end
     HACS[HACS im HA]
@@ -321,7 +321,7 @@ flowchart LR
 ```
 
 - **Build:** Beim Veröffentlichen eines Releases zippt der Workflow den Ordner `custom_components/goecharger_api2` [Code, `release.yaml`].
-- **CI:** HACS Action und hassfest laufen bei Push, Pull Request und täglich. Es gibt keine Testausführung [Code].
+- **CI:** HACS Action und hassfest laufen bei Push, Pull Request und täglich. Seit PR #179 führt `tests.yaml` die Tests bei Push auf `main` und bei Pull Requests aus [Code].
 - **Betrieb:** Läuft im HA-Prozess, keine eigenen Dienste. Zugangsdaten (Passwort, Cloud-Token) liegen im Config-Entry von HA.
 
 ---
@@ -355,10 +355,10 @@ flowchart LR
 - Globale Variable `SCAN_INTERVAL` wird im Koordinator-Konstruktor überschrieben (gilt prozessweit, also für alle Config-Entries) [Code, `__init__.py:331`].
 
 ### 8.7 Test und Qualitätssicherung
-- **Im Repo (Upstream):** HACS-Validierung und hassfest. Keine Unit-, Integrations- oder Blueprint-Tests (gelöscht in `60d9a09`).
-- **Regressionstests im Fork (Branch `tests/regression-suite`):** 987 Tests (420 Vertragsprüfungen je Schlüssel, 567 Verhaltens- und Fehlertests; 958 blockierend, 29 beabsichtigt rot), Zeilenabdeckung 93 %, Zweigabdeckung 85 %, Pfadabdeckung (obere Schranke) 61 %. Messberichte liegen im Fork unter `tests/reports/`; ein Workflow prüft jede neue Upstream-Version (siehe Testkonzept).
+- **Im Repo (Upstream):** HACS-Validierung und hassfest. Die früheren Unit-, Integrations- und Blueprint-Tests wurden in `60d9a09` gelöscht; seit PR #178 (`738c3c6`) liegen die Regressionstests in `tests/integration`.
+- **Regressionstests (`tests/integration`, entstanden im Fork, Branch `tests/regression-suite`):** 989 Tests (420 Vertragsprüfungen je Schlüssel, 569 Verhaltens- und Fehlertests; 972 blockierend, 17 beabsichtigt rot, mit PR #180), Zeilenabdeckung 93 %, Zweigabdeckung 85 %, Pfadabdeckung (obere Schranke) 61 %. Ein Messbericht entsteht von Hand über `test-report.yaml` (siehe Testkonzept).
 - **Testkonzept:** `docs/quality/testkonzept-ha-goecharger-api2.md` beschreibt Umfang, Stufen, Marker, Stand und Lücken.
-- **Vertrag zur offiziellen API:** Im Fork-Branch prüft `test_api_contract.py`, ob jeder dokumentierte Schlüssel unterstützt oder erklärt ist (92 dokumentierte Schlüssel ohne Tag, 38 genutzte Schlüssel ohne Doku, 14 Abweichungen bei Schreibrecht und Kategorie). Die Listen stehen in `tests/integration/contract/` (`classification.json`, `deviations.json`).
+- **Vertrag zur offiziellen API:** Im Repository prüft `test_api_contract.py`, ob jeder dokumentierte Schlüssel unterstützt oder erklärt ist (92 dokumentierte Schlüssel ohne Tag, 38 genutzte Schlüssel ohne Doku, 14 Abweichungen bei Schreibrecht und Kategorie). Die Listen stehen in `tests/integration/contract/` (`classification.json`, `deviations.json`).
 - **Lokal (nicht im Repo):** Unser Fork enthält Blueprint-Tests (240 Fälle) und Integrationstests (12 Fälle) als Arbeitsmittel (`OliEder/ha-goecharger-api2`, Branches `proposal/invalid-data-policy` und `fix/small-bugs`).
 
 ---
@@ -377,7 +377,8 @@ Der Autor führt keine Entscheidungsprotokolle. Die folgenden Einträge sind aus
 | E6 | Hibernation im Polling | Geräte- und Cloud-Last senken | Im Leerlauf nur wenige Werte aktuell |
 | E7 | PV-Daten über HA-Automation statt Zusatzhardware | Kein Zusatzgerät nötig | Qualität liegt im Blueprint und in den Messwerten des Nutzers |
 | E8 | Neustart per Konfigurations-Reload bei dauerhaften Fehlern | Hängende Verbindung selbst heilen | Reload aller Entitäten für ein Verbindungsproblem |
-| E9 | Keine automatisierten Tests im Repo | Aufwand/Haltung des Autors | Regressionen fallen erst bei Nutzern auf |
+| E9 | Keine automatisierten Tests im Repo (überholt: seit PR #178, `738c3c6`, liegen die Tests in `tests/integration`) | Aufwand/Haltung des Autors | Vorher fielen Regressionen erst bei Nutzern auf; jetzt prüft die Suite jede Änderung gegen den Vertrag zur offiziellen API |
+| E10 | Dienste (`set_pv_data`, `stop_charging`) ohne `configid`: nur bei genau einem registrierten Charger wird dieser verwendet, sonst `ServiceValidationError` (Commit `4702213`, 2026-10-29; Entscheidung des Maintainers im Code, im Issue #172 nicht begründet) | Vorher wurde der zuerst registrierte Charger genommen. Nach dem Neuladen eines Entries rückte dieser ans Ende der Liste, der Standard wechselte dann stillschweigend auf einen anderen Charger. Ein falscher Charger bei Schreibzugriffen (Strom, Stopp) wird vermieden [Schluss, aus Diff und Testfund]. | **Verhaltensänderung:** Wer mehrere Charger hat und `configid` bisher wegließ (zum Beispiel ein Blueprint oder eine Automation), bekommt jetzt einen Fehler statt eines Zugriffs auf den ersten Charger. Mit einem Charger oder mit `configid` ändert sich nichts. Alternativen, die nicht gewählt wurden: festen Standard-Charger bestimmen oder die Reihenfolge stabil halten. Tests: `test_without_configid_and_with_two_chargers_no_charger_is_guessed`, `test_with_an_empty_registry_no_charger_can_be_chosen`. `docs/PVSURPLUS.md` verlangt `configid` bei mehreren Chargern bereits; das Blueprint selbst enthält keine `configid` (per `grep` geprüft), ein Aufruf aus dem Blueprint mit mehreren Chargern scheitert deshalb jetzt, sofern der Nutzer sie nicht ergänzt. Am Gerät nicht nachgespielt. |
 
 ---
 
@@ -435,19 +436,22 @@ Nummerierung nur für diese Liste. Status in der Spalte „Beleg“.
 | R10 | `check_and_write_to_16a`: Funktion mit `@staticmethod` auf Modulebene, außerdem privater Zugriff auf `bridge._read_filtered_data`. | Wartbarkeit. | Aus Code gelesen. |
 | R11 | Fehlende Abhängigkeit im Manifest (`bcrypt`), Mindestversion von HA unklar (`hacs.json` 2023.8.0 gegenüber genutzten neueren APIs). | Installationsfehler auf älteren Systemen möglich. | Aus Code und Manifest gelesen. Ob `bcrypt` über HA mitgeliefert wird, habe ich nicht geprüft. |
 | R12 | `CustomFriendlyNameEntity` überschreibt eine private HA-Methode. | Bricht bei HA-Änderungen. | Aus Code gelesen. |
-| R13 | Keine Tests im Repo. | Regressionen werden erst von Nutzern gefunden. | Repo-Inhalt. |
+| R13 | Keine Tests im Repo (überholt: seit PR #178 liegen sie in `tests/integration`). | Regressionen werden erst von Nutzern gefunden. | Repo-Inhalt. |
 | R14 | Bei Teilausfall des Geräts: Daten bleiben stehen, Entitäten bleiben `available`, solange der letzte Update-Erfolg anhält. | Nutzer sieht alte Werte als aktuell. | Aus Code gelesen (`available` = `last_update_success`). Wie sich ein WebSocket-Verlust auf die Verfügbarkeit auswirkt, habe ich nicht geprüft. |
 
 
-**Stand der Risiken nach Version 2026.10.8 und `98af3e0` (2026-10-29, durch Tests im Fork geprüft)**
+**Stand der Risiken nach Version 2026.10.8 und `98af3e0` (2026-10-29, durch Tests geprüft, `main` bei `9e7d62a`)**
 
 | # | Stand | Anmerkung |
 |---|---|---|
-| R1 | **teilweise behoben** | Der `TypeError` im WebSocket-Modus ist weg (`write_value_to_key` liefert jetzt `{key: value}`). Offen: `_stop_in_progress` wird bei Fehlern nicht zurückgesetzt. Test: `known_bug`. |
-| R2 | **behoben** | Register wird für jeden Charger gepflegt, Neuladen ersetzt den alten Koordinator. Offen: ohne `configid` ändert sich der „erste“ Charger nach einem Neuladen. Test: `known_bug`. |
-| R3 | offen | `ACTIVE_CHARGER_COUNTER` bei Controllern. Zwei Tests: `known_bug`. |
+| R1 | **behoben** | Der `TypeError` im WebSocket-Modus ist weg (`write_value_to_key` liefert `{key: value}`), `_stop_in_progress` wird seit `9e7d62a` in einem `finally` zurückgesetzt. Beide Tests sind grün. |
+| R2 | **behoben** | Register wird für jeden Charger gepflegt, Neuladen ersetzt den alten Koordinator. Der wechselnde Standard-Charger ist seit `4702213` über E10 entschieden (kein Standard bei mehreren Chargern). |
+| R3 | **behoben** | Seit `eb5da46` werden Zähler und Dienste nur für Charger angepasst. |
 | R4 | **behoben** | Aufruf hat jetzt zwei Argumente. |
-| R5 | offen | `pgrid` ohne Endlichkeitsprüfung. Drei Tests: `known_bug`. |
+| R5 | **behoben** | Seit `eb5da46` prüft `set_pv_data` auch `pgrid` auf Endlichkeit. |
+| R25 | **behoben** | Seit `eb5da46` bleibt die konkrete `ConfigEntryNotReady`-Meldung erhalten. |
+| R24 | **behoben** | Der Test `test_write_rejected_by_charger_returns_err` ist auf `9e7d62a` grün; wann genau die Antwort mit Fehlertext ausgewertet wird, habe ich nicht nachvollzogen. |
+| R27 | **behoben** | Seit `9e7d62a` überspringt `handle_write_result` im WebSocket-Modus auch ein leeres Ergebnis. |
 
 Neue Risiken aus dem Abgleich mit `main` und den Tests (2026-10-29):
 
@@ -477,7 +481,7 @@ Ergänzungen aus dem Abgleich mit der offiziellen Dokumentation (Abschnitt 3.3):
 
 | # | Befund | Wirkung | Beleg |
 |---|---|---|---|
-| R15 | Laut Cloud-Doku antwortet `/api/set` bei Erfolg mit **HTTP 202**. `_write_values_int` wertet nur `200` (und `500` mit Inhalt) aus, alles andere gilt als Fehler (`failed with http-status …`, Rückgabe `{}`). | Wenn die Cloud tatsächlich 202 sendet, würden Schreibbefehle im Cloud-Polling trotz Erfolg als Fehler geloggt, und `handle_write_result` meldet „could not write“. Im WebSocket-Betrieb ist der Pfad nicht betroffen. | Doku und Code gelesen. **Ob die Cloud 202 oder 200 liefert, ist nicht geprüft**, ebenso nicht, ob Cloud-Nutzer das Problem sehen. |
+| R15 | Laut Cloud-Doku antwortet `/api/set` bei Erfolg mit **HTTP 202**. `_write_values_int` wertet nur `200` (und `500` mit Inhalt) aus, alles andere gilt als Fehler (`failed with http-status …`, Rückgabe `{}`). | Wenn die Cloud tatsächlich 202 sendet, würden Schreibbefehle im Cloud-Polling trotz Erfolg als Fehler geloggt, und `handle_write_result` meldet „could not write“. Im WebSocket-Betrieb ist der Pfad nicht betroffen. | Doku und Code gelesen. **Geklärt am 2026-10-29 durch den Maintainer (Issue #172): Die Cloud antwortet mit HTTP 200, die Doku ist falsch. Kein Fehler im Code.** Von uns nicht gegen die echte Cloud geprüft. |
 | R16 | Der bevorzugte Datenpfad (WebSocket) ist nicht offiziell dokumentiert; Anmeldeverfahren und Nachrichten sind nachgebaut. | Eine Firmware- oder Cloud-Änderung von go-e kann ihn ohne Vorwarnung brechen. Das README erwähnt das schon für Firmware 60.2 und 60.4. | Doku und README gelesen. |
 | R17 | Cloud-`/api/status` liefert standardmäßig Daten bis 30 Sekunden Alter (`age=30`); die Integration setzt `age` nicht. | Im Cloud-Polling können Werte bis zu 30 Sekunden alt sein, ohne dass die Integration das erkennt. | Doku und Code gelesen (kein `age` in den Aufrufen). |
 | R18 | Offiziell bedeutet `pPv < 0` „Standby“, der Dienst `set_pv_data` begrenzt `ppv` in der Oberfläche auf Werte ab 0. | Standby kann über die Oberfläche nicht gesetzt werden. Ob das gewollt ist, ist unklar. | Doku und `services.yaml` gelesen. |
