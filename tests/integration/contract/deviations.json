@@ -1,103 +1,201 @@
 {
- "_comment": "Differences between the official key table and keys.py. status needs_decision: not yet clear whether the code is wrong, the difference is intended, or the documentation has a gap. Remove an entry when it is resolved.",
+ "_comment": "Differences between the official key table and keys.py. status needs_decision: not yet clear whether the code is wrong, the difference is intended, or the documentation has a gap. Remove an entry when it is resolved. per_firmware_lists: values of the same key in the per-firmware key lists (59.4 to 60.4); they often differ from the main table.",
  "deviations": [
   {
    "key": "cco",
    "aspect": "writeable",
    "documented": "R/W",
    "code": "read-only",
-   "status": "needs_decision"
+   "status": "needs_decision",
+   "per_firmware_lists": {
+    "59.4": "R/W/Config",
+    "60.2": "R/W/Config",
+    "60.3": "R/W/Config",
+    "60.4": "R/W/Config"
+   },
+   "per_firmware_lists_agree_with": "main table (code differs from both)"
   },
   {
    "key": "di1",
    "aspect": "writeable",
    "documented": "R/W",
    "code": "read-only",
-   "status": "needs_decision"
+   "status": "needs_decision",
+   "per_firmware_lists": {
+    "59.4": "R/W/Config",
+    "60.2": "R/W/Config",
+    "60.3": "R/W/Config",
+    "60.4": "R/W/Config"
+   },
+   "per_firmware_lists_agree_with": "main table (code differs from both)"
   },
   {
    "key": "esk",
    "aspect": "writeable",
    "documented": "R/W",
    "code": "read-only",
-   "status": "needs_decision"
+   "status": "needs_decision",
+   "per_firmware_lists": {
+    "59.4": "R/W/Config",
+    "60.2": "R/W/Config",
+    "60.3": "R/W/Config",
+    "60.4": "R/W/Config"
+   },
+   "per_firmware_lists_agree_with": "main table (code differs from both)"
   },
   {
    "key": "frm",
    "aspect": "writeable",
    "documented": "R",
    "code": "writeable",
-   "status": "needs_decision"
+   "status": "needs_decision",
+   "per_firmware_lists": {
+    "59.4": "R/W/Config",
+    "60.2": "R/W/Config",
+    "60.3": "R/W/Config",
+    "60.4": "R/W/Config"
+   },
+   "per_firmware_lists_agree_with": "code (main table is the odd one out)"
   },
   {
    "key": "rdbf",
    "aspect": "writeable",
    "documented": "R/W",
    "code": "read-only",
-   "status": "needs_decision"
+   "status": "needs_decision",
+   "per_firmware_lists": {
+    "59.4": "R/W/Config",
+    "60.2": "R/W/Config",
+    "60.3": "R/W/Config",
+    "60.4": "R/W/Config"
+   },
+   "per_firmware_lists_agree_with": "main table (code differs from both)"
   },
   {
    "key": "rdbs",
    "aspect": "writeable",
    "documented": "R/W",
    "code": "read-only",
-   "status": "needs_decision"
+   "status": "needs_decision",
+   "per_firmware_lists": {
+    "59.4": "R/W/Config",
+    "60.2": "R/W/Config",
+    "60.3": "R/W/Config",
+    "60.4": "R/W/Config"
+   },
+   "per_firmware_lists_agree_with": "main table (code differs from both)"
   },
   {
    "key": "rdef",
    "aspect": "writeable",
    "documented": "R/W",
    "code": "read-only",
-   "status": "needs_decision"
+   "status": "needs_decision",
+   "per_firmware_lists": {
+    "59.4": "R/W/Config",
+    "60.2": "R/W/Config",
+    "60.3": "R/W/Config",
+    "60.4": "R/W/Config"
+   },
+   "per_firmware_lists_agree_with": "main table (code differs from both)"
   },
   {
    "key": "rdes",
    "aspect": "writeable",
    "documented": "R/W",
    "code": "read-only",
-   "status": "needs_decision"
+   "status": "needs_decision",
+   "per_firmware_lists": {
+    "59.4": "R/W/Config",
+    "60.2": "R/W/Config",
+    "60.3": "R/W/Config",
+    "60.4": "R/W/Config"
+   },
+   "per_firmware_lists_agree_with": "main table (code differs from both)"
   },
   {
    "key": "rdpl",
    "aspect": "writeable",
    "documented": "R/W",
    "code": "read-only",
-   "status": "needs_decision"
+   "status": "needs_decision",
+   "per_firmware_lists": {
+    "59.4": "R/W/Config",
+    "60.2": "R/W/Config",
+    "60.3": "R/W/Config",
+    "60.4": "R/W/Config"
+   },
+   "per_firmware_lists_agree_with": "main table (code differs from both)"
   },
   {
    "key": "rdre",
    "aspect": "writeable",
    "documented": "R/W",
    "code": "read-only",
-   "status": "needs_decision"
+   "status": "needs_decision",
+   "per_firmware_lists": {
+    "59.4": "R/W/Config",
+    "60.2": "R/W/Config",
+    "60.3": "R/W/Config",
+    "60.4": "R/W/Config"
+   },
+   "per_firmware_lists_agree_with": "main table (code differs from both)"
   },
   {
    "key": "deltaa",
    "aspect": "category",
    "documented": "Other",
    "code": "Status",
-   "status": "needs_decision"
+   "status": "needs_decision",
+   "per_firmware_lists": {
+    "59.4": "R/Unknown",
+    "60.2": "R/Unknown",
+    "60.3": "R/Unknown",
+    "60.4": "R/Unknown"
+   },
+   "per_firmware_lists_agree_with": "main table (code differs from both)"
   },
   {
    "key": "di1",
    "aspect": "category",
    "documented": "Config",
    "code": "Status",
-   "status": "needs_decision"
+   "status": "needs_decision",
+   "per_firmware_lists": {
+    "59.4": "R/W/Config",
+    "60.2": "R/W/Config",
+    "60.3": "R/W/Config",
+    "60.4": "R/W/Config"
+   },
+   "per_firmware_lists_agree_with": "main table (code differs from both)"
   },
   {
    "key": "ids",
    "aspect": "category",
    "documented": "Other",
    "code": "Status",
-   "status": "needs_decision"
+   "status": "needs_decision",
+   "per_firmware_lists": {
+    "59.4": "W/Status",
+    "60.2": "W/Status",
+    "60.3": "W/Status",
+    "60.4": "W/Status"
+   },
+   "per_firmware_lists_agree_with": "code (main table is the odd one out)"
   },
   {
    "key": "lcs",
    "aspect": "category",
    "documented": "Status",
    "code": "Config",
-   "status": "needs_decision"
+   "status": "needs_decision",
+   "per_firmware_lists": {
+    "59.4": "R/Status",
+    "60.2": "R/Status",
+    "60.3": "R/Status",
+    "60.4": "R/Status"
+   },
+   "per_firmware_lists_agree_with": "main table (code differs from both)"
   }
  ]
 }
