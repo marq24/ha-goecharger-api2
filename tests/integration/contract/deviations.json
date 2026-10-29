@@ -1,0 +1,103 @@
+{
+ "_comment": "Differences between the official key table and keys.py. status needs_decision: not yet clear whether the code is wrong, the difference is intended, or the documentation has a gap. Remove an entry when it is resolved.",
+ "deviations": [
+  {
+   "key": "cco",
+   "aspect": "writeable",
+   "documented": "R/W",
+   "code": "read-only",
+   "status": "needs_decision"
+  },
+  {
+   "key": "di1",
+   "aspect": "writeable",
+   "documented": "R/W",
+   "code": "read-only",
+   "status": "needs_decision"
+  },
+  {
+   "key": "esk",
+   "aspect": "writeable",
+   "documented": "R/W",
+   "code": "read-only",
+   "status": "needs_decision"
+  },
+  {
+   "key": "frm",
+   "aspect": "writeable",
+   "documented": "R",
+   "code": "writeable",
+   "status": "needs_decision"
+  },
+  {
+   "key": "rdbf",
+   "aspect": "writeable",
+   "documented": "R/W",
+   "code": "read-only",
+   "status": "needs_decision"
+  },
+  {
+   "key": "rdbs",
+   "aspect": "writeable",
+   "documented": "R/W",
+   "code": "read-only",
+   "status": "needs_decision"
+  },
+  {
+   "key": "rdef",
+   "aspect": "writeable",
+   "documented": "R/W",
+   "code": "read-only",
+   "status": "needs_decision"
+  },
+  {
+   "key": "rdes",
+   "aspect": "writeable",
+   "documented": "R/W",
+   "code": "read-only",
+   "status": "needs_decision"
+  },
+  {
+   "key": "rdpl",
+   "aspect": "writeable",
+   "documented": "R/W",
+   "code": "read-only",
+   "status": "needs_decision"
+  },
+  {
+   "key": "rdre",
+   "aspect": "writeable",
+   "documented": "R/W",
+   "code": "read-only",
+   "status": "needs_decision"
+  },
+  {
+   "key": "deltaa",
+   "aspect": "category",
+   "documented": "Other",
+   "code": "Status",
+   "status": "needs_decision"
+  },
+  {
+   "key": "di1",
+   "aspect": "category",
+   "documented": "Config",
+   "code": "Status",
+   "status": "needs_decision"
+  },
+  {
+   "key": "ids",
+   "aspect": "category",
+   "documented": "Other",
+   "code": "Status",
+   "status": "needs_decision"
+  },
+  {
+   "key": "lcs",
+   "aspect": "category",
+   "documented": "Status",
+   "code": "Config",
+   "status": "needs_decision"
+  }
+ ]
+}

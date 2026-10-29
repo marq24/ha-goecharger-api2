@@ -1,0 +1,1505 @@
+{
+ "source": {
+  "repository": "goecharger/go-eCharger-API-v2",
+  "file": "API_KEYS_FIRMWARE/apikeys-en.md",
+  "commit": "b4d7f85f",
+  "date": "2026-08-12"
+ },
+ "keys": {
+  "acp": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "acs": {
+   "rw": "R/W",
+   "type": "uint8",
+   "category": "Config"
+  },
+  "acu": {
+   "rw": "R",
+   "type": "int",
+   "category": "Status"
+  },
+  "adi": {
+   "rw": "R",
+   "type": "bool",
+   "category": "Status"
+  },
+  "alw": {
+   "rw": "R",
+   "type": "bool",
+   "category": "Status"
+  },
+  "ama": {
+   "rw": "R/W",
+   "type": "uint8",
+   "category": "Config"
+  },
+  "amp": {
+   "rw": "R/W",
+   "type": "uint8",
+   "category": "Config"
+  },
+  "amt": {
+   "rw": "R",
+   "type": "int",
+   "category": "Status"
+  },
+  "ara": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "ate": {
+   "rw": "R/W",
+   "type": "double",
+   "category": "Config"
+  },
+  "atp": {
+   "rw": "R",
+   "type": "optional<...>",
+   "category": "Status"
+  },
+  "att": {
+   "rw": "R/W",
+   "type": "seconds",
+   "category": "Config"
+  },
+  "avgfhz": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "awc": {
+   "rw": "R/W",
+   "type": "uint8",
+   "category": "Config"
+  },
+  "awcp": {
+   "rw": "R",
+   "type": "optional<...>",
+   "category": "Status"
+  },
+  "awe": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "awp": {
+   "rw": "R/W",
+   "type": "float",
+   "category": "Config"
+  },
+  "awpl": {
+   "rw": "W",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "bac": {
+   "rw": "R/W",
+   "type": "uint8_t",
+   "category": "Config"
+  },
+  "bar": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "c0e": {
+   "rw": "R/W",
+   "type": "uint64_t",
+   "category": "Config"
+  },
+  "c0i": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "c0n": {
+   "rw": "R/W",
+   "type": "string",
+   "category": "Config"
+  },
+  "c1e": {
+   "rw": "R/W",
+   "type": "uint64_t",
+   "category": "Config"
+  },
+  "c1i": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "c1n": {
+   "rw": "R/W",
+   "type": "string",
+   "category": "Config"
+  },
+  "c2e": {
+   "rw": "R/W",
+   "type": "uint64_t",
+   "category": "Config"
+  },
+  "c2i": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "c2n": {
+   "rw": "R/W",
+   "type": "string",
+   "category": "Config"
+  },
+  "c3e": {
+   "rw": "R/W",
+   "type": "uint64_t",
+   "category": "Config"
+  },
+  "c3i": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "c3n": {
+   "rw": "R/W",
+   "type": "string",
+   "category": "Config"
+  },
+  "c4e": {
+   "rw": "R/W",
+   "type": "uint64_t",
+   "category": "Config"
+  },
+  "c4i": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "c4n": {
+   "rw": "R/W",
+   "type": "string",
+   "category": "Config"
+  },
+  "c5e": {
+   "rw": "R/W",
+   "type": "uint64_t",
+   "category": "Config"
+  },
+  "c5i": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "c5n": {
+   "rw": "R/W",
+   "type": "string",
+   "category": "Config"
+  },
+  "c6e": {
+   "rw": "R/W",
+   "type": "uint64_t",
+   "category": "Config"
+  },
+  "c6i": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "c6n": {
+   "rw": "R/W",
+   "type": "string",
+   "category": "Config"
+  },
+  "c7e": {
+   "rw": "R/W",
+   "type": "uint64_t",
+   "category": "Config"
+  },
+  "c7i": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "c7n": {
+   "rw": "R/W",
+   "type": "string",
+   "category": "Config"
+  },
+  "c8e": {
+   "rw": "R/W",
+   "type": "uint64_t",
+   "category": "Config"
+  },
+  "c8i": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "c8n": {
+   "rw": "R/W",
+   "type": "string",
+   "category": "Config"
+  },
+  "c9e": {
+   "rw": "R/W",
+   "type": "uint64_t",
+   "category": "Config"
+  },
+  "c9i": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "c9n": {
+   "rw": "R/W",
+   "type": "string",
+   "category": "Config"
+  },
+  "car": {
+   "rw": "R",
+   "type": "optional<...>",
+   "category": "Status"
+  },
+  "cards": {
+   "rw": "R/W",
+   "type": "array",
+   "category": "Config"
+  },
+  "cbl": {
+   "rw": "R",
+   "type": "optional<...>",
+   "category": "Status"
+  },
+  "ccd": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "cch": {
+   "rw": "R/W",
+   "type": "string",
+   "category": "Config"
+  },
+  "cco": {
+   "rw": "R/W",
+   "type": "double",
+   "category": "Config"
+  },
+  "ccrv": {
+   "rw": "R",
+   "type": "string",
+   "category": "Constant"
+  },
+  "ccu": {
+   "rw": "R",
+   "type": "optional<...>",
+   "category": "Status"
+  },
+  "ccw": {
+   "rw": "R",
+   "type": "optional<...>",
+   "category": "Status"
+  },
+  "cdi": {
+   "rw": "R",
+   "type": "object",
+   "category": "Status"
+  },
+  "cfi": {
+   "rw": "R/W",
+   "type": "string",
+   "category": "Config"
+  },
+  "cid": {
+   "rw": "R/W",
+   "type": "string",
+   "category": "Config"
+  },
+  "cle": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "clea": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "cll": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "clp": {
+   "rw": "R/W",
+   "type": "array",
+   "category": "Config"
+  },
+  "cmmr": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "cmp": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "cms": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "cmse": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "csa": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "ct": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "ctrls": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "cus": {
+   "rw": "R",
+   "type": "uint8",
+   "category": "Status"
+  },
+  "cwc": {
+   "rw": "R/W",
+   "type": "string",
+   "category": "Config"
+  },
+  "cwe": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "data": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "del": {
+   "rw": "W",
+   "type": "uint8",
+   "category": "Other"
+  },
+  "deltaa": {
+   "rw": "R",
+   "type": "float",
+   "category": "Other"
+  },
+  "deltap": {
+   "rw": "R",
+   "type": "float",
+   "category": "Status"
+  },
+  "delw": {
+   "rw": "W",
+   "type": "uint8",
+   "category": "Other"
+  },
+  "di1": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "die": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "dii": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "dll": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "dns": {
+   "rw": "R",
+   "type": "object",
+   "category": "Status"
+  },
+  "dsrc": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "dwo": {
+   "rw": "R/W",
+   "type": "optional<...>",
+   "category": "Config"
+  },
+  "err": {
+   "rw": "R",
+   "type": "optional<...>",
+   "category": "Status"
+  },
+  "esk": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "eto": {
+   "rw": "R",
+   "type": "uint64",
+   "category": "Status"
+  },
+  "ferm": {
+   "rw": "R",
+   "type": "uint8",
+   "category": "Status"
+  },
+  "ffb": {
+   "rw": "R",
+   "type": "uint8",
+   "category": "Status"
+  },
+  "fhz": {
+   "rw": "R",
+   "type": "optional<...>",
+   "category": "Status"
+  },
+  "fmt": {
+   "rw": "R/W",
+   "type": "milliseconds",
+   "category": "Config"
+  },
+  "fna": {
+   "rw": "R/W",
+   "type": "string",
+   "category": "Config"
+  },
+  "frc": {
+   "rw": "R/W",
+   "type": "uint8",
+   "category": "Config"
+  },
+  "frm": {
+   "rw": "R",
+   "type": "uint8",
+   "category": "Config"
+  },
+  "fsp": {
+   "rw": "R",
+   "type": "bool",
+   "category": "Status"
+  },
+  "fsptws": {
+   "rw": "R",
+   "type": "optional<...>",
+   "category": "Status"
+  },
+  "fst": {
+   "rw": "R/W",
+   "type": "float",
+   "category": "Config"
+  },
+  "fup": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "fwc": {
+   "rw": "R",
+   "type": "string",
+   "category": "Constant"
+  },
+  "fwv": {
+   "rw": "R",
+   "type": "string",
+   "category": "Constant"
+  },
+  "fzf": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "gmtr": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "gsa": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "hai": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "hla": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "host": {
+   "rw": "R",
+   "type": "optional<...>",
+   "category": "Status"
+  },
+  "hsa": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "ido": {
+   "rw": "R",
+   "type": "optional<...>",
+   "category": "Config"
+  },
+  "ids": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Other"
+  },
+  "inva": {
+   "rw": "R",
+   "type": "milliseconds",
+   "category": "Status"
+  },
+  "la1": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "la3": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "lbl": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "lbp": {
+   "rw": "R",
+   "type": "milliseconds",
+   "category": "Status"
+  },
+  "lbr": {
+   "rw": "R/W",
+   "type": "uint8",
+   "category": "Config"
+  },
+  "lccfc": {
+   "rw": "R",
+   "type": "optional<...>",
+   "category": "Status"
+  },
+  "lccfi": {
+   "rw": "R",
+   "type": "optional<...>",
+   "category": "Status"
+  },
+  "lcctc": {
+   "rw": "R",
+   "type": "optional<...>",
+   "category": "Status"
+  },
+  "lck": {
+   "rw": "R",
+   "type": "uint8",
+   "category": "Status"
+  },
+  "lcs": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "led": {
+   "rw": "R",
+   "type": "object",
+   "category": "Status"
+  },
+  "lfspt": {
+   "rw": "R",
+   "type": "optional<...>",
+   "category": "Status"
+  },
+  "lmo": {
+   "rw": "R/W",
+   "type": "uint8",
+   "category": "Config"
+  },
+  "lmsc": {
+   "rw": "R",
+   "type": "milliseconds",
+   "category": "Status"
+  },
+  "loa": {
+   "rw": "R",
+   "type": "optional<...>",
+   "category": "Status"
+  },
+  "loc": {
+   "rw": "R",
+   "type": "string",
+   "category": "Status"
+  },
+  "loe": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "lof": {
+   "rw": "R/W",
+   "type": "uint8",
+   "category": "Config"
+  },
+  "log": {
+   "rw": "R/W",
+   "type": "string",
+   "category": "Config"
+  },
+  "lop": {
+   "rw": "R/W",
+   "type": "uint16",
+   "category": "Config"
+  },
+  "lopr": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "lot": {
+   "rw": "R/W",
+   "type": "uint32",
+   "category": "Config"
+  },
+  "loty": {
+   "rw": "R/W",
+   "type": "uint8",
+   "category": "Config"
+  },
+  "lpsc": {
+   "rw": "R",
+   "type": "milliseconds",
+   "category": "Status"
+  },
+  "lrc": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "lri": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "lrn": {
+   "rw": "W",
+   "type": "uint8",
+   "category": "Other"
+  },
+  "lrr": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "lse": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "lto": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "lwf": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "map": {
+   "rw": "R/W",
+   "type": "array",
+   "category": "Config"
+  },
+  "mca": {
+   "rw": "R/W",
+   "type": "uint8",
+   "category": "Config"
+  },
+  "mcc": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "mcca": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "mce": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "mci": {
+   "rw": "R/W",
+   "type": "milliseconds",
+   "category": "Config"
+  },
+  "mcpd": {
+   "rw": "R/W",
+   "type": "milliseconds",
+   "category": "Config"
+  },
+  "mcpea": {
+   "rw": "R/W",
+   "type": "optional<...>",
+   "category": "Status"
+  },
+  "mcr": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "mcs": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "mcu": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "men": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "mhe": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "mht": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "mlr": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "mlra": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "mmp": {
+   "rw": "R",
+   "type": "float",
+   "category": "Status"
+  },
+  "modelStatus": {
+   "rw": "R",
+   "type": "uint8",
+   "category": "Status"
+  },
+  "mptwt": {
+   "rw": "R/W",
+   "type": "milliseconds",
+   "category": "Config"
+  },
+  "mpwst": {
+   "rw": "R/W",
+   "type": "milliseconds",
+   "category": "Config"
+  },
+  "mqcn": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "mqg": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "mqss": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "msb": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "msp": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "msr": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "mtp": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "nif": {
+   "rw": "R",
+   "type": "string",
+   "category": "Status"
+  },
+  "nmo": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "nrg": {
+   "rw": "R",
+   "type": "array",
+   "category": "Status"
+  },
+  "ocppa": {
+   "rw": "R",
+   "type": "bool",
+   "category": "Status"
+  },
+  "ocppaa": {
+   "rw": "R",
+   "type": "null or milliseconds",
+   "category": "Status"
+  },
+  "ocppai": {
+   "rw": "R/W",
+   "type": "seconds",
+   "category": "Config"
+  },
+  "ocppao": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "ocppc": {
+   "rw": "R",
+   "type": "bool",
+   "category": "Status"
+  },
+  "ocppca": {
+   "rw": "R",
+   "type": "null or milliseconds",
+   "category": "Status"
+  },
+  "ocppcc": {
+   "rw": "R/W",
+   "type": "string",
+   "category": "Config"
+  },
+  "ocppck": {
+   "rw": "R/W",
+   "type": "string",
+   "category": "Config"
+  },
+  "ocppcm": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "ocppcn": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "ocppcs": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "ocppd": {
+   "rw": "R/W",
+   "type": "string",
+   "category": "Config"
+  },
+  "ocppe": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "ocppf": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "ocppg": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "ocpph": {
+   "rw": "R/W",
+   "type": "seconds",
+   "category": "Config"
+  },
+  "ocppi": {
+   "rw": "R/W",
+   "type": "seconds",
+   "category": "Config"
+  },
+  "ocppla": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "ocpple": {
+   "rw": "R",
+   "type": "string or null",
+   "category": "Status"
+  },
+  "ocpplea": {
+   "rw": "R",
+   "type": "null or milliseconds",
+   "category": "Status"
+  },
+  "ocpplo": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "ocppr": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "ocpprl": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "ocpps": {
+   "rw": "R",
+   "type": "bool",
+   "category": "Status"
+  },
+  "ocppsc": {
+   "rw": "R/W",
+   "type": "string",
+   "category": "Config"
+  },
+  "ocppss": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "ocppti": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "ocppu": {
+   "rw": "R/W",
+   "type": "string",
+   "category": "Config"
+  },
+  "oct": {
+   "rw": "W",
+   "type": "string",
+   "category": "Other"
+  },
+  "ocu": {
+   "rw": "R",
+   "type": "array",
+   "category": "Status"
+  },
+  "oem": {
+   "rw": "R",
+   "type": "string",
+   "category": "Constant"
+  },
+  "pakku": {
+   "rw": "R",
+   "type": "optional<...>",
+   "category": "Status"
+  },
+  "pco": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "pdi": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "pgr": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "pgrid": {
+   "rw": "R",
+   "type": "optional<...>",
+   "category": "Status"
+  },
+  "pgt": {
+   "rw": "R/W",
+   "type": "float",
+   "category": "Config"
+  },
+  "pha": {
+   "rw": "R",
+   "type": "optional<...>",
+   "category": "Status"
+  },
+  "pnp": {
+   "rw": "R",
+   "type": "uint8",
+   "category": "Status"
+  },
+  "po": {
+   "rw": "R/W",
+   "type": "float",
+   "category": "Config"
+  },
+  "ppv": {
+   "rw": "R",
+   "type": "optional<...>",
+   "category": "Status"
+  },
+  "psh": {
+   "rw": "R/W",
+   "type": "float",
+   "category": "Config"
+  },
+  "psmd": {
+   "rw": "R/W",
+   "type": "milliseconds",
+   "category": "Config"
+  },
+  "pvopt_averagePAkku": {
+   "rw": "R",
+   "type": "float",
+   "category": "Status"
+  },
+  "pvopt_averagePGrid": {
+   "rw": "R",
+   "type": "float",
+   "category": "Status"
+  },
+  "pvopt_averagePPv": {
+   "rw": "R",
+   "type": "float",
+   "category": "Status"
+  },
+  "pwm": {
+   "rw": "R",
+   "type": "uint8",
+   "category": "Status"
+  },
+  "rbc": {
+   "rw": "R",
+   "type": "uint32",
+   "category": "Status"
+  },
+  "rbt": {
+   "rw": "R",
+   "type": "milliseconds",
+   "category": "Status"
+  },
+  "rdbf": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "rdbfe": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "rdbs": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "rdbse": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "rde": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "rdef": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "rdefe": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "rdes": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "rdese": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "rdpl": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "rdple": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "rdre": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "rdree": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "rfb": {
+   "rw": "R",
+   "type": "int",
+   "category": "Status"
+  },
+  "rmaf": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "rmav": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "rmif": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "rmiv": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "rsa": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "rsre": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "rsrr": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "rssi": {
+   "rw": "R",
+   "type": "optional<...>",
+   "category": "Status"
+  },
+  "rst": {
+   "rw": "W",
+   "type": "any",
+   "category": "Other"
+  },
+  "scaa": {
+   "rw": "R",
+   "type": "milliseconds",
+   "category": "Status"
+  },
+  "scan": {
+   "rw": "R",
+   "type": "array",
+   "category": "Status"
+  },
+  "sch_satur": {
+   "rw": "R/W",
+   "type": "object",
+   "category": "Config"
+  },
+  "sch_sund": {
+   "rw": "R/W",
+   "type": "object",
+   "category": "Config"
+  },
+  "sch_week": {
+   "rw": "R/W",
+   "type": "object",
+   "category": "Config"
+  },
+  "sdp": {
+   "rw": "R/W",
+   "type": "uint8_t",
+   "category": "Config"
+  },
+  "sh": {
+   "rw": "R/W",
+   "type": "float",
+   "category": "Config"
+  },
+  "smd": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "spl3": {
+   "rw": "R/W",
+   "type": "float",
+   "category": "Config"
+  },
+  "sse": {
+   "rw": "R",
+   "type": "string",
+   "category": "Constant"
+  },
+  "su": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "sua": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "sumd": {
+   "rw": "R/W",
+   "type": "milliseconds",
+   "category": "Config"
+  },
+  "t0h": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "t0l": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "t1h": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "t1l": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "tab": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "tcl": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "tds": {
+   "rw": "R/W",
+   "type": "uint8",
+   "category": "Config"
+  },
+  "tlf": {
+   "rw": "R",
+   "type": "bool",
+   "category": "Status"
+  },
+  "tls": {
+   "rw": "R",
+   "type": "bool",
+   "category": "Status"
+  },
+  "tma": {
+   "rw": "R",
+   "type": "array",
+   "category": "Status"
+  },
+  "tof": {
+   "rw": "R/W",
+   "type": "minutes",
+   "category": "Config"
+  },
+  "tpa": {
+   "rw": "R",
+   "type": "float",
+   "category": "Status"
+  },
+  "trx": {
+   "rw": "R/W",
+   "type": "optional<...>",
+   "category": "Status"
+  },
+  "tse": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "tsi": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "tsss": {
+   "rw": "R",
+   "type": "uint8",
+   "category": "Config"
+  },
+  "typ": {
+   "rw": "R",
+   "type": "string",
+   "category": "Constant"
+  },
+  "tzt": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "ufa": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "ufe": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "ufm": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "ufs": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "upo": {
+   "rw": "R/W",
+   "type": "bool",
+   "category": "Config"
+  },
+  "ust": {
+   "rw": "R/W",
+   "type": "uint8",
+   "category": "Config"
+  },
+  "utc": {
+   "rw": "R/W",
+   "type": "string",
+   "category": "Status"
+  },
+  "var": {
+   "rw": "R",
+   "type": "uint8",
+   "category": "Constant"
+  },
+  "wbw": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "wcb": {
+   "rw": "R",
+   "type": "string",
+   "category": "Status"
+  },
+  "wda": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "wfb": {
+   "rw": "R",
+   "type": "array",
+   "category": "Status"
+  },
+  "wh": {
+   "rw": "R",
+   "type": "double",
+   "category": "Status"
+  },
+  "wifis": {
+   "rw": "R/W",
+   "type": "array",
+   "category": "Config"
+  },
+  "wpb": {
+   "rw": "R",
+   "type": "array",
+   "category": "Status"
+  },
+  "wsc": {
+   "rw": "R",
+   "type": "uint8",
+   "category": "Status"
+  },
+  "wsl": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "wsm": {
+   "rw": "R",
+   "type": "string",
+   "category": "Status"
+  },
+  "wsms": {
+   "rw": "R",
+   "type": "uint8",
+   "category": "Status"
+  },
+  "wst": {
+   "rw": "R",
+   "type": "uint8",
+   "category": "Status"
+  },
+  "zfo": {
+   "rw": "R/W",
+   "type": "float",
+   "category": "Config"
+  }
+ }
+}

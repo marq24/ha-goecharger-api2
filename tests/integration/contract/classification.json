@@ -1,0 +1,401 @@
+{
+ "_comment": "Keys of the official table that the integration does not map to a Tag. 'decision': open = nobody has decided yet whether the gap is intended. Remove an entry when the key gets supported.",
+ "handled_outside_tag": {
+  "c0e": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c0i": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c0n": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c1e": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c1i": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c1n": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c2e": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c2i": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c2n": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c3e": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c3i": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c3n": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c4e": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c4i": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c4n": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c5e": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c5i": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c5n": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c6e": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c6i": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c6n": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c7e": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c7i": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c7n": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c8e": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c8i": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c8n": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c9e": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c9i": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag",
+  "c9n": "RFID card keys of firmware 60.0+ are requested through the FILTER_CARDS_* lists and read in sensor.py, not through Tag"
+ },
+ "not_supported": {
+  "avgfhz": {
+   "group": "grid frequency, grid protection and ramp-up",
+   "decision": "open"
+  },
+  "gmtr": {
+   "group": "grid frequency, grid protection and ramp-up",
+   "decision": "open"
+  },
+  "gsa": {
+   "group": "grid frequency, grid protection and ramp-up",
+   "decision": "open"
+  },
+  "pgr": {
+   "group": "grid frequency, grid protection and ramp-up",
+   "decision": "open"
+  },
+  "rmaf": {
+   "group": "grid frequency, grid protection and ramp-up",
+   "decision": "open"
+  },
+  "rmav": {
+   "group": "grid frequency, grid protection and ramp-up",
+   "decision": "open"
+  },
+  "rmif": {
+   "group": "grid frequency, grid protection and ramp-up",
+   "decision": "open"
+  },
+  "rmiv": {
+   "group": "grid frequency, grid protection and ramp-up",
+   "decision": "open"
+  },
+  "rsa": {
+   "group": "grid frequency, grid protection and ramp-up",
+   "decision": "open"
+  },
+  "rsre": {
+   "group": "grid frequency, grid protection and ramp-up",
+   "decision": "open"
+  },
+  "rsrr": {
+   "group": "grid frequency, grid protection and ramp-up",
+   "decision": "open"
+  },
+  "ufa": {
+   "group": "grid frequency, grid protection and ramp-up",
+   "decision": "open"
+  },
+  "ufe": {
+   "group": "grid frequency, grid protection and ramp-up",
+   "decision": "open"
+  },
+  "ufm": {
+   "group": "grid frequency, grid protection and ramp-up",
+   "decision": "open"
+  },
+  "ufs": {
+   "group": "grid frequency, grid protection and ramp-up",
+   "decision": "open"
+  },
+  "rdbfe": {
+   "group": "random start/stop delays (end timestamps)",
+   "decision": "open"
+  },
+  "rdbse": {
+   "group": "random start/stop delays (end timestamps)",
+   "decision": "open"
+  },
+  "rdefe": {
+   "group": "random start/stop delays (end timestamps)",
+   "decision": "open"
+  },
+  "rdese": {
+   "group": "random start/stop delays (end timestamps)",
+   "decision": "open"
+  },
+  "rdple": {
+   "group": "random start/stop delays (end timestamps)",
+   "decision": "open"
+  },
+  "rdree": {
+   "group": "random start/stop delays (end timestamps)",
+   "decision": "open"
+  },
+  "ocppao": {
+   "group": "OCPP",
+   "decision": "open"
+  },
+  "ocppcm": {
+   "group": "OCPP",
+   "decision": "open"
+  },
+  "ocppcs": {
+   "group": "OCPP",
+   "decision": "open"
+  },
+  "ocppf": {
+   "group": "OCPP",
+   "decision": "open"
+  },
+  "ocppla": {
+   "group": "OCPP",
+   "decision": "open"
+  },
+  "ocpplo": {
+   "group": "OCPP",
+   "decision": "open"
+  },
+  "ocppti": {
+   "group": "OCPP",
+   "decision": "open"
+  },
+  "lrc": {
+   "group": "RFID reading",
+   "decision": "open"
+  },
+  "lri": {
+   "group": "RFID reading",
+   "decision": "open"
+  },
+  "lrr": {
+   "group": "RFID reading",
+   "decision": "open"
+  },
+  "rde": {
+   "group": "RFID reading",
+   "decision": "open"
+  },
+  "tsi": {
+   "group": "RFID reading",
+   "decision": "open"
+  },
+  "ccd": {
+   "group": "controller scan and cloud key",
+   "decision": "open"
+  },
+  "cmmr": {
+   "group": "controller scan and cloud key",
+   "decision": "open"
+  },
+  "cmp": {
+   "group": "controller scan and cloud key",
+   "decision": "open"
+  },
+  "cms": {
+   "group": "controller scan and cloud key",
+   "decision": "open"
+  },
+  "csa": {
+   "group": "controller scan and cloud key",
+   "decision": "open"
+  },
+  "pco": {
+   "group": "controller scan and cloud key",
+   "decision": "open"
+  },
+  "led": {
+   "group": "LED strip and animation",
+   "decision": "open"
+  },
+  "t0h": {
+   "group": "LED strip and animation",
+   "decision": "open"
+  },
+  "t0l": {
+   "group": "LED strip and animation",
+   "decision": "open"
+  },
+  "t1h": {
+   "group": "LED strip and animation",
+   "decision": "open"
+  },
+  "t1l": {
+   "group": "LED strip and animation",
+   "decision": "open"
+  },
+  "die": {
+   "group": "digital input",
+   "decision": "open"
+  },
+  "dii": {
+   "group": "digital input",
+   "decision": "open"
+  },
+  "pdi": {
+   "group": "digital input",
+   "decision": "open"
+  },
+  "mhe": {
+   "group": "MQTT Home Assistant discovery",
+   "decision": "open"
+  },
+  "mht": {
+   "group": "MQTT Home Assistant discovery",
+   "decision": "open"
+  },
+  "lto": {
+   "group": "time and timezone",
+   "decision": "open"
+  },
+  "tab": {
+   "group": "time and timezone",
+   "decision": "open"
+  },
+  "tzt": {
+   "group": "time and timezone",
+   "decision": "open"
+  },
+  "bar": {
+   "group": "network and buttons",
+   "decision": "open"
+  },
+  "hla": {
+   "group": "network and buttons",
+   "decision": "open"
+  },
+  "lbl": {
+   "group": "network and buttons",
+   "decision": "open"
+  },
+  "wbw": {
+   "group": "network and buttons",
+   "decision": "open"
+  },
+  "la1": {
+   "group": "current limits and load balancing",
+   "decision": "open"
+  },
+  "la3": {
+   "group": "current limits and load balancing",
+   "decision": "open"
+  },
+  "lopr": {
+   "group": "current limits and load balancing",
+   "decision": "open"
+  },
+  "tcl": {
+   "group": "current limits and load balancing",
+   "decision": "open"
+  },
+  "dsrc": {
+   "group": "data sources",
+   "decision": "open"
+  },
+  "smd": {
+   "group": "data sources",
+   "decision": "open"
+  }
+ },
+ "undocumented_in_code": {
+  "aus": {
+   "reason": "listed only in the per-firmware key lists, missing from the main key table"
+  },
+  "bri": {
+   "reason": "not in the charger key table; the integration uses them for the go-eController or for MQTT/modbus settings (source not verified)"
+  },
+  "cae": {
+   "reason": "documented in cloudapi-en.md (text), missing from the key table"
+  },
+  "cce": {
+   "reason": "listed only in the per-firmware key lists, missing from the main key table"
+  },
+  "ccf": {
+   "reason": "not in the charger key table; the integration uses them for the go-eController or for MQTT/modbus settings (source not verified)"
+  },
+  "ccn": {
+   "reason": "not in the charger key table; the integration uses them for the go-eController or for MQTT/modbus settings (source not verified)"
+  },
+  "ccp": {
+   "reason": "not in the charger key table; the integration uses them for the go-eController or for MQTT/modbus settings (source not verified)"
+  },
+  "cec": {
+   "reason": "not in the charger key table; the integration uses them for the go-eController or for MQTT/modbus settings (source not verified)"
+  },
+  "cpc": {
+   "reason": "not in the charger key table; the integration uses them for the go-eController or for MQTT/modbus settings (source not verified)"
+  },
+  "ecp": {
+   "reason": "not in the charger key table; the integration uses them for the go-eController or for MQTT/modbus settings (source not verified)"
+  },
+  "evt": {
+   "reason": "listed only in the per-firmware key lists, missing from the main key table"
+  },
+  "iim": {
+   "reason": "not in the charger key table; the integration uses them for the go-eController or for MQTT/modbus settings (source not verified)"
+  },
+  "ips": {
+   "reason": "not in the charger key table; the integration uses them for the go-eController or for MQTT/modbus settings (source not verified)"
+  },
+  "isgo": {
+   "reason": "listed only in the per-firmware key lists, missing from the main key table"
+  },
+  "isn": {
+   "reason": "not in the charger key table; the integration uses them for the go-eController or for MQTT/modbus settings (source not verified)"
+  },
+  "iso2ena": {
+   "reason": "used by the integration (selects), no row in any official key list that was checked"
+  },
+  "isv": {
+   "reason": "not in the charger key table; the integration uses them for the go-eController or for MQTT/modbus settings (source not verified)"
+  },
+  "mck": {
+   "reason": "not in the charger key table; the integration uses them for the go-eController or for MQTT/modbus settings (source not verified)"
+  },
+  "mecd": {
+   "reason": "not in the charger key table; the integration uses them for the go-eController or for MQTT/modbus settings (source not verified)"
+  },
+  "mece": {
+   "reason": "not in the charger key table; the integration uses them for the go-eController or for MQTT/modbus settings (source not verified)"
+  },
+  "mecf": {
+   "reason": "not in the charger key table; the integration uses them for the go-eController or for MQTT/modbus settings (source not verified)"
+  },
+  "mecu": {
+   "reason": "not in the charger key table; the integration uses them for the go-eController or for MQTT/modbus settings (source not verified)"
+  },
+  "mme": {
+   "reason": "not in the charger key table; the integration uses them for the go-eController or for MQTT/modbus settings (source not verified)"
+  },
+  "mmh": {
+   "reason": "not in the charger key table; the integration uses them for the go-eController or for MQTT/modbus settings (source not verified)"
+  },
+  "mqcc": {
+   "reason": "not in the charger key table; the integration uses them for the go-eController or for MQTT/modbus settings (source not verified)"
+  },
+  "mro": {
+   "reason": "not in the charger key table; the integration uses them for the go-eController or for MQTT/modbus settings (source not verified)"
+  },
+  "msc": {
+   "reason": "not in the charger key table; the integration uses them for the go-eController or for MQTT/modbus settings (source not verified)"
+  },
+  "mwo": {
+   "reason": "not in the charger key table; the integration uses them for the go-eController or for MQTT/modbus settings (source not verified)"
+  },
+  "ocppdp": {
+   "reason": "listed only in the per-firmware key lists, missing from the main key table"
+  },
+  "ocppmp": {
+   "reason": "listed only in the per-firmware key lists, missing from the main key table"
+  },
+  "ocpptp": {
+   "reason": "listed only in the per-firmware key lists, missing from the main key table"
+  },
+  "orsch": {
+   "reason": "listed only in the per-firmware key lists, missing from the main key table"
+  },
+  "psm": {
+   "reason": "used by the integration (selects), no row in any official key list that was checked"
+  },
+  "simo": {
+   "reason": "listed only in the per-firmware key lists, missing from the main key table"
+  },
+  "usn": {
+   "reason": "not in the charger key table; the integration uses them for the go-eController or for MQTT/modbus settings (source not verified)"
+  },
+  "usv": {
+   "reason": "not in the charger key table; the integration uses them for the go-eController or for MQTT/modbus settings (source not verified)"
+  },
+  "zfocore": {
+   "reason": "internal pseudo keys of the integration (buttons), not part of the go-e API"
+  },
+  "zforeal": {
+   "reason": "internal pseudo keys of the integration (buttons), not part of the go-e API"
+  }
+ }
+}
