@@ -21,3 +21,7 @@ Things to know:
 - Nothing is rebased or merged by the workflow. It always tests a fresh clone of the upstream version, so the test branch does not have to follow upstream. The last step tries to fast-forward the fork's `main` to upstream and may fail harmlessly.
 - The tests follow upstream `main`. An older release can fail a test that pins behaviour introduced later (for example the 16 A rule since commit `98af3e0` fails on release 2026.10.8), and a release that lacks functions the tests import cannot be collected. The summary says which case happened.
 - Run it by hand: `tests/tools/release_check.sh [tag-or-branch]` (needs the test dependencies and the GitHub CLI for the latest release).
+
+## Home Assistant version of the tests
+
+`requirements_dev.txt` pins `pytest-homeassistant-custom-component` (currently 0.13.375, which brings Home Assistant 2026.10.4). A red run is therefore a change in the code under test, not a new Home Assistant. To see what a Home Assistant update breaks, start `regression-on-release.yaml` by hand with `home_assistant = latest`. To move the pin on purpose: run the suite with the new version, fix what broke, then raise the number in `requirements_dev.txt`. The tests run against the newest Home Assistant only; the minimum version named in `hacs.json` (2023.8.0) is not tested.

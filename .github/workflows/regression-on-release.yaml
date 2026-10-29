@@ -18,6 +18,11 @@ on:
         description: "Tag or branch of marq24/ha-goecharger-api2 (empty = latest release)"
         required: false
         default: ""
+      home_assistant:
+        description: "Home Assistant test framework: pinned (requirements_dev.txt) or latest (newest release, to see what a Home Assistant update breaks)"
+        type: choice
+        options: [pinned, latest]
+        default: pinned
   push:
     branches: [tests/regression-suite]
     paths:
@@ -69,7 +74,12 @@ jobs:
 
       - name: Install test dependencies
         if: steps.ref.outputs.skip != 'true'
-        run: python -m pip install -r requirements_dev.txt msgpack
+        env:
+          HA_MODE: ${{ inputs.home_assistant }}
+        run: |
+          python -m pip install -r requirements_dev.txt msgpack
+          [ "$HA_MODE" = "latest" ] && python -m pip install --upgrade pytest-homeassistant-custom-component || true
+          python -m pip show homeassistant pytest-homeassistant-custom-component | grep -E "^(Name|Version)"
 
       - name: Run the regression tests against the upstream version
         if: steps.ref.outputs.skip != 'true'

@@ -1,2 +1,3 @@
-pytest-homeassistant-custom-component>=0.13.154
+# pinned: 0.13.375 brings Home Assistant 2026.10.4. Raise it on purpose (see tests/tools/README.md).
+pytest-homeassistant-custom-component==0.13.375
 msgpack>=1.1.2
