@@ -6,6 +6,7 @@ import json
 import logging
 import random
 import secrets
+from asyncio import Future
 from collections import ChainMap
 import time
 from typing import Any, Dict, Optional
@@ -220,6 +221,7 @@ class GoeChargerApiV2Bridge:
         self._ws_hashed_password = None
         self._ws_request_id_counter = 0
         self._ws_request_storage = ExpiringStore()
+        self._ws_pending_ack: [str, Future] = {}
         self._ws_debounced_update_task = None
         self._ws_LAST_UPDATE = 0
         self._ws_LAST_NEW_DATA_NOTIFY = 0
@@ -501,7 +503,7 @@ class GoeChargerApiV2Bridge:
                 _LOGGER.warning(f"_read_all_data(): BaseException: {type(err).__name__}: {err}")
         return {}
 
-    async def write_value_to_key(self, key, value) -> dict:
+    async def write_value_to_key(self, key, value, require_ack: bool = False) -> dict:
         is_button_press = value is not None and str(value) == IS_TRIGGER
 
         if self.ws_connected and self._ws_connection is not None:
@@ -509,7 +511,7 @@ class GoeChargerApiV2Bridge:
                 # ignoring button presses when connected via WebSockets
                 return {key: value}
             else:
-                if await self._ws_send_command(key, value):
+                if await self._ws_send_command(key, value, wait_for_response=require_ack):
                     self._ws_LAST_NEW_DATA_NOTIFY = 0
                     return {key: value}
                 else:
@@ -573,7 +575,7 @@ class GoeChargerApiV2Bridge:
                     try:
                         r_json = await res.json()
                         if r_json is not None and len(r_json) > 0:
-                            if a_result_key in r_json and r_json[a_result_key]:
+                            if a_result_key in r_json and r_json[a_result_key] is True:
                                 # ignore 'force-update' for 'ids' (PV surplus charging)
                                 if a_result_key != Tag.IDS.key:
                                     self._LAST_CONFIG_UPDATE_TS = 0
@@ -628,6 +630,7 @@ class GoeChargerApiV2Bridge:
 
     async def ws_close(self, ws):
         """Close the WebSocket connection cleanly."""
+        self._fail_pending_acknowledgements()
         if self._ws_serial is not None:
             _LOGGER.debug(f"ws_close(): for '{self._ws_serial}' called")
         else:
@@ -728,9 +731,15 @@ class GoeChargerApiV2Bridge:
             result[key_str] = self._ws_normalize_value(value)
         return result
 
-    async def _ws_send_command(self, key: str, value):
-        """Send a setValue command via WebSocket"""
-        _LOGGER.debug(f"_ws_send_command(): Sending {key}:{value} via WebSocket...")
+    def _fail_pending_acknowledgements(self):
+        """Wake bounded confirmation waits when a connection disappears."""
+        for pending in self._ws_pending_ack.values():
+            if not pending.done():
+                pending.set_result(False)
+        self._ws_pending_ack.clear()
+
+    async def _ws_send_command(self, key: str, value, wait_for_response: bool = False):
+        """Optionally wait for the matching inner setValue response, not just send_json."""
         self._ws_request_id_counter += 1
         the_request_id_to_use = int(self._ws_request_id_counter)
 
@@ -740,40 +749,54 @@ class GoeChargerApiV2Bridge:
         #if value is None:
         #    value = "null"
 
-        original_message = {
-            "type": "setValue",
-            "requestId": the_request_id_to_use,
-            "key": key,
-            "value": value
-        }
-
-        # for debugging purpose we want to keep the original message
-        self._ws_request_storage.set(str(the_request_id_to_use), original_message)
-
-        if self._ws_secured:
-            # the local websocket needs special handling...
-            payload = json.dumps(original_message)
-            h = hmac.new(bytearray(self._ws_hashed_password), bytearray(payload.encode()), hashlib.sha256)
-            secure_message = {
-                "type": "securedMsg",
-                "data": payload,
-                "requestId": f"{original_message['requestId']}sm",
-                "hmac": h.hexdigest()
+        request_key = str(the_request_id_to_use)
+        pending = asyncio.get_running_loop().create_future() if wait_for_response else None
+        if pending is not None:
+            self._ws_pending_ack[request_key] = pending
+        try:
+            original_message = {
+                "type": "setValue",
+                "requestId": the_request_id_to_use,
+                "key": key,
+                "value": value
             }
 
-            # Pack as msgpack with 0x00 prefix
-            # _LOGGER.debug(f"_ws_send_command(): Sending {key}={value} as SECURED BYTES")
-            # msg_packed = b'\x00' + msgpack.packb(secure_message)
-            # await self._ws_connection.send_bytes(msg_packed)
+            # for debugging purpose we want to keep the original message
+            self._ws_request_storage.set(str(the_request_id_to_use), original_message)
 
-            _LOGGER.debug(f"_ws_send_command(): Sending {key}={value} as SECURED JSON")
-            await self._ws_connection.send_json(secure_message)
-        else:
-            # the cloud API can receive real JSON data...
-            _LOGGER.debug(f"_ws_send_command(): Sending {key}={value} as JSON")
-            await self._ws_connection.send_json(original_message)
+            if self._ws_secured:
+                # the local websocket needs special handling...
+                payload = json.dumps(original_message)
+                h = hmac.new(bytearray(self._ws_hashed_password), bytearray(payload.encode()), hashlib.sha256)
+                secure_message = {
+                    "type": "securedMsg",
+                    "data": payload,
+                    "requestId": f"{original_message['requestId']}sm",
+                    "hmac": h.hexdigest()
+                }
 
-        return True
+                # Pack as msgpack with 0x00 prefix
+                # _LOGGER.debug(f"_ws_send_command(): Sending {key}={value} as SECURED BYTES")
+                # msg_packed = b'\x00' + msgpack.packb(secure_message)
+                # await self._ws_connection.send_bytes(msg_packed)
+
+                _LOGGER.debug(f"_ws_send_command(): Sending {key}={value} as SECURED JSON")
+                await self._ws_connection.send_json(secure_message)
+            else:
+                # the cloud API can receive real JSON data...
+                _LOGGER.debug(f"_ws_send_command(): Sending {key}={value} as JSON")
+                await self._ws_connection.send_json(original_message)
+
+            if pending is not None:
+                return await asyncio.wait_for(pending, timeout=3)
+            return True
+        except asyncio.TimeoutError:
+            _LOGGER.warning("Timed out waiting for charger acknowledgement for %s", key)
+            return False
+        finally:
+            self._ws_pending_ack.pop(request_key, None)
+            if pending is not None and not pending.done():
+                pending.cancel()
 
     async def ws_connect(self, a_event: TargetedEvent=None, keep_ws_states_after_close: bool=False):
         """Connect to WebSocket with full authentication and message handling"""
@@ -1007,6 +1030,7 @@ class GoeChargerApiV2Bridge:
             # self.ws_connected flag... -> but we must keep it ON
             self.ws_connected = True
 
+        self._fail_pending_acknowledgements()
         self.ws_connection_start = 0
         self._ws_connection = None
         self._ws_LAST_UPDATE = 0
@@ -1046,10 +1070,16 @@ class GoeChargerApiV2Bridge:
                     #_LOGGER.debug(f"extract_ws_message_data(): Received 'deltaStatus' with {len(filtered_data)} keys")
 
         elif msg_type == 'response':
+            pending = self._ws_pending_ack.get(str(data.get('requestId', '')))
+            if pending is not None and not pending.done():
+                # A secured envelope acknowledgement (e.g. '1sm') is not the
+                # inner setValue response ('1') and cannot complete this future.
+                pending.set_result(data.get('success') is True)
+
             the_request_payload = None
             if 'requestId' in data:
                 the_request_id = data.get('requestId', 'INVALID')
-                the_request_payload = self._ws_request_storage.get(the_request_id)
+                the_request_payload = self._ws_request_storage.get(str(the_request_id))
 
             if data.get('success'):
                 status_data = data.get('status', {})
