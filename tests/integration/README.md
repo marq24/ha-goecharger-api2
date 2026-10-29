@@ -26,6 +26,13 @@ does not install manifest requirements, so it is part of `requirements_dev.txt`.
 | `test_coordinator_failures.py` | Error counter, 2 minute pause, restart after more than 5 errors, writes during an outage, `ConfigEntryNotReady` at start | code |
 | `test_config_flow_failures.py` | Wrong, silent or unreachable devices and wrong cloud token end the flow with `auth_lan` / `auth_wan` and create no entry (plus a positive control) | code |
 | `test_api_contract.py` | Official key table against the code: every documented key supported or classified, undocumented keys explained, read/write flag and category equal to the docs | `contract/api_keys.json` (generated from the official table) |
+| `test_platform_values.py`, `test_platform_actions.py` | Entities: how raw values become states (sensor, number, select, switch, binary sensor) and what a write sends (number, select incl. car profiles, switch, button) | code |
+| `test_bridge_polling.py` | Read cycle: hibernation, configuration refresh, versions, state housekeeping | code, README (hibernation) |
+| `test_bridge_write_paths.py` | Every path from a value to the charger and back (HTTP, WebSocket, answers) | official docs, code |
+| `test_ws_connect_paths.py` | Successful WebSocket logins and the message loop; address building | current implementation |
+| `test_coordinator_runtime.py` | Write results, 16 A limiter, device detection, WebSocket start, reconnect, watchdog, housekeeping | code |
+| `test_services_and_setup.py` | `set_pv_data`, `stop_charging`, charger lookup, setup and unload of entries | code |
+| `test_config_flow_paths.py` | Successful setups, interval rules, reconfiguration, WebSocket check | code |
 | `test_migration.py` | Config entry migration 1 -> 2.1 and 2.0 -> 2.1 | code |
 | `test_services_and_unload.py` | `stop_charging`, multi-charger registry, unloading entries | reported bugs |
 | `test_service.py` | `set_pv_data` input validation | reported bugs |
@@ -58,3 +65,7 @@ A new difference to the documentation has no marker, so it is blocking.
 If an entity ID changes on purpose, regenerate the file and review the diff:
 `UPDATE_SNAPSHOT=1 python -m pytest tests/integration/test_entity_ids.py -k snapshot`
 Changing an ID breaks dashboards, automations and statistics of existing users.
+
+## Helpers
+
+`factories.py` builds config entries, real coordinators and bridges (with an optional fake WebSocket connection) for the tests.
