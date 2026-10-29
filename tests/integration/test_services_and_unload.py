@@ -146,22 +146,6 @@ async def test_reloaded_charger_replaces_stale_coordinator(hass):
     assert found is new_a
 
 
-@pytest.mark.known_bug("a reloaded entry is appended behind the others, so the default charger changes")
-async def test_default_charger_does_not_change_after_reload(hass):
-    """without configid the first registered charger is used. After A is reloaded it
-    is appended behind B, so the default silently switches from A to B."""
-    a = _coordinator(hass, _entry(hass, "111111"), websocket=False)
-    b = _coordinator(hass, _entry(hass, "222222"), websocket=False)
-    service = GoeChargerApiV2Service(hass, a._config_entry, a)
-    add_config_entry_to_service(b._config_entry, b)
-    _, before = service.get_coordinator(_call())
-
-    remove_config_entry_from_service(a._config_entry)
-    add_config_entry_to_service(a._config_entry, a)
-    _, after = service.get_coordinator(_call())
-    assert after is before
-
-
 # --------------------------------------------------------------------------- unload counting
 
 def _register_services(hass):

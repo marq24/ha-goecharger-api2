@@ -3,6 +3,7 @@
 Setup and unload run the real functions of the integration; only the platform loading, the data
 polling and the WebSocket start are replaced.
 """
+import inspect
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -22,7 +23,7 @@ from custom_components.goecharger_api2 import (
 )
 from custom_components.goecharger_api2 import service as service_module
 from custom_components.goecharger_api2.const import DOMAIN, SERVICE_SET_PV_DATA, SERVICE_STOP_CHARGING
-from custom_components.goecharger_api2.service import GoeChargerApiV2Service
+from custom_components.goecharger_api2.service import GoeChargerApiV2Service, add_config_entry_to_service
 from custom_components.goecharger_api2.pygoecharger_ha import NonNullDict
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 
@@ -166,10 +167,24 @@ async def test_without_configid_the_first_registered_charger_is_used(hass):
     assert service.get_coordinator(_call())[1] is coordinator
 
 
+# since 4702213 a call without configid is only answered when exactly one charger is registered
+REFUSES_GUESSING = "zero (or multiple)" in inspect.getsource(GoeChargerApiV2Service.get_coordinator)
+
+
 async def test_with_an_empty_registry_no_charger_can_be_chosen(hass):
     service, _ = _service(hass)
     service_module._COORDINATOR_PER_CONFIG_ENTRY_ID_MAP.clear()
-    with pytest.raises((StopIteration, RuntimeError)):
+    expected = ServiceValidationError if REFUSES_GUESSING else (StopIteration, RuntimeError)
+    with pytest.raises(expected):
+        service.get_coordinator(_call())
+
+
+@pytest.mark.skipif(not REFUSES_GUESSING, reason="this version still picks the first registered charger")
+async def test_without_configid_and_with_two_chargers_no_charger_is_guessed(hass):
+    service, _ = _service(hass)
+    other = make_coordinator(hass, serial="222222")
+    add_config_entry_to_service(other._config_entry, other)
+    with pytest.raises(ServiceValidationError, match="zero \\(or multiple\\)"):
         service.get_coordinator(_call())
 
 
