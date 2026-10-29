@@ -113,7 +113,8 @@ TRANSLATIONS: Final = {
         "coord_null_data": "Es konnten keine Daten abgerufen werden. Bitte prüfe Dein Home Assistant System Protokoll auf mögliche Fehlermeldungen der Integration.",
         "coord_no_device_data": "Es konnten keine Daten zu Deinem konfigurierten Gerät abgerufen werden. Bitte prüfe Dein Home Assistant System Protokoll auf mögliche Fehlermeldungen der Integration.",
         "websocket_start_failed": "Der Websocket konnte innerhalb von einer Minute nicht gestartet werden. Bitte prüfe Dein Home Assistant System Protokoll auf mögliche Fehlermeldungen der Integration.",
-
+        "ws_start_task_is_none": "start_websocket_and_wait_for_first_data(): WebSocket-Verbindungs-Task konnte nicht erstellt werden!",
+        "ws_fetch_essential_data_timed_out": "start_websocket_and_wait_for_first_data(): Zwingend erforderliche Daten nicht verfügbar - Timeout!",
         "car": {
             0: "Unbekannt/Fehler",
             1: "Inaktiv/Frei",
@@ -286,6 +287,8 @@ TRANSLATIONS: Final = {
         "coord_null_data": "Coordinator could not provided any data. Please check your Home Assistant system log for possible error messages.",
         "coord_no_device_data": "Coordinator could not fetch essential information from your configured device. Please check your Home Assistant system log for possible error messages.",
         "websocket_start_failed": "The Websocket could not be started within one minute. Please check your Home Assistant system log for possible error messages.",
+        "ws_start_task_is_none": "start_websocket_and_wait_for_first_data(): Could not create websocket connect task!",
+        "ws_fetch_essential_data_timed_out": "start_websocket_and_wait_for_first_data(): Could not fetch essential data - Timeout",
 
         "car": {
             0: "Unknown/Error",

@@ -71,7 +71,7 @@ class GoeChargerApiV2Service():
         pgrid = call.data.get('pgrid', None)
         ppv = call.data.get('ppv', 0)
         pakku = call.data.get('pakku', 0)
-        if pgrid is not None and isinstance(pgrid, Number):
+        if pgrid is not None and _is_finite_number(pgrid):
             if not _is_finite_number(ppv):
                 ppv = 0
             if not _is_finite_number(pakku):

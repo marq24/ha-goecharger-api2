@@ -129,6 +129,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                 raise ConfigEntryNotReady(lang_map["coord_no_device_data"])
 
         except BaseException as exc:
+            if isinstance(exc, ConfigEntryNotReady):
+                raise exc
             _LOGGER.error(f"async_setup_entry(): Error starting websocket connection: {type(exc).__name__} - {exc}", stack_info=True)
             raise ConfigEntryNotReady(lang_map["websocket_start_failed"])
     else:
@@ -194,14 +196,15 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
             coordinator.stop_watchdog()
             coordinator.clear_data()
             hass.data[DOMAIN].pop(config_entry.entry_id)
-            hass.data[DOMAIN][ACTIVE_CHARGER_COUNTER] = hass.data[DOMAIN][ACTIVE_CHARGER_COUNTER] - 1
-            remove_config_entry_from_service(config_entry)
+            if coordinator.intg_type == INTG_TYPE.CHARGER.value:
+                hass.data[DOMAIN][ACTIVE_CHARGER_COUNTER] = hass.data[DOMAIN][ACTIVE_CHARGER_COUNTER] - 1
+                remove_config_entry_from_service(config_entry)
 
-        # ONLY remove the SERVICES if this is the LAST ACTIVE config_entry that will be unloaded!
-        if hass.data[DOMAIN][ACTIVE_CHARGER_COUNTER] == 0:
-            _LOGGER.info(f"async_unload_entry(): Unloading last active go-eCharger - will remove SERVICES")
-            hass.services.async_remove(DOMAIN, SERVICE_SET_PV_DATA)
-            hass.services.async_remove(DOMAIN, SERVICE_STOP_CHARGING)
+                # ONLY remove the SERVICES if this is the LAST ACTIVE config_entry that will be unloaded!
+                if hass.data[DOMAIN][ACTIVE_CHARGER_COUNTER] == 0:
+                    _LOGGER.info(f"async_unload_entry(): Unloading last active go-eCharger - will remove SERVICES")
+                    hass.services.async_remove(DOMAIN, SERVICE_SET_PV_DATA)
+                    hass.services.async_remove(DOMAIN, SERVICE_STOP_CHARGING)
 
     return unload_ok
 
@@ -446,7 +449,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         self._ws_start_task = self._config_entry.async_create_background_task(self.hass, target, "ws_connection")
 
         if self._ws_start_task is None:
-            raise ConfigEntryNotReady("start_websocket_and_wait_for_first_data(): Could not create websocket connect task!")
+            raise ConfigEntryNotReady(self.lang_map["ws_start_task_is_none"])
 
         # 3. Wait ONLY until the first message is processed (or time out)
         try:
@@ -457,7 +460,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.warning("start_websocket_and_wait_for_first_data(): Connection to websocket timed out after one minute!")
             self._ws_start_task.cancel()
             # NOT SURE WHAT TO DO NOW ???!
-            raise ConfigEntryNotReady("start_websocket_and_wait_for_first_data(): Could not fetch essential data")
+            raise ConfigEntryNotReady(self.lang_map["ws_fetch_essential_data_timed_out"])
 
         # we must check, if connected_event has errors...
         if connected_event.has_errors():
