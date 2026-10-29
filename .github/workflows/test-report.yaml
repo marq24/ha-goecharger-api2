@@ -33,7 +33,7 @@ jobs:
           [ -n "$ref" ] || ref="$(gh api repos/marq24/ha-goecharger-api2/releases/latest --jq .tag_name)"
           echo "ref=$ref" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.14"
 
