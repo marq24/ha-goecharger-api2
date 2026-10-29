@@ -1,0 +1,69 @@
+name: Test report (manual)
+
+# Builds the full test report (line, branch and path coverage, criticality) for a version of
+# marq24/ha-goecharger-api2. Started by hand only; nothing is committed. The report is shown in the job
+# summary and kept as an artifact. Like regression-on-release.yaml it clones the upstream version fresh and
+# copies only tests/integration and tests/tools of this branch into it.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Tag or branch of marq24/ha-goecharger-api2 (empty = latest release)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the tests (this branch)
+        uses: actions/checkout@v4
+
+      - name: Decide which upstream version to measure
+        id: ref
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_REF: ${{ inputs.ref }}
+        run: |
+          ref="$INPUT_REF"
+          [ -n "$ref" ] || ref="$(gh api repos/marq24/ha-goecharger-api2/releases/latest --jq .tag_name)"
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install test dependencies
+        run: pip install -r requirements_dev.txt msgpack pytest-cov radon
+
+      - name: Clone the upstream version and add the tests
+        env:
+          REF: ${{ steps.ref.outputs.ref }}
+        run: |
+          git clone --depth 1 --branch "$REF" https://github.com/marq24/ha-goecharger-api2 "$RUNNER_TEMP/src"
+          mkdir -p "$RUNNER_TEMP/src/tests"
+          cp -R tests/integration tests/tools "$RUNNER_TEMP/src/tests/"
+
+      - name: Measure and build the report
+        working-directory: ${{ runner.temp }}/src
+        env:
+          TESTS_COMMIT: ${{ github.sha }}
+          SOURCE_REF: ${{ steps.ref.outputs.ref }}
+        run: sh tests/tools/measure.sh "$RUNNER_TEMP/report"
+
+      - name: Show the report
+        if: always()
+        run: |
+          [ -f "$RUNNER_TEMP/report/testreport.md" ] && cat "$RUNNER_TEMP/report/testreport.md" >> "$GITHUB_STEP_SUMMARY" || true
+
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: testreport-${{ steps.ref.outputs.ref }}
+          path: ${{ runner.temp }}/report
+          if-no-files-found: ignore
