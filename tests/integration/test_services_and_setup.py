@@ -289,7 +289,7 @@ async def test_unknown_language_falls_back_to_english_texts(hass, setup_patches)
     from homeassistant.exceptions import ConfigEntryNotReady
     hass.config.language = "xx"
     entry = make_entry(hass, password="secret")
-    setup_patches.ws_start.return_value = False
+    setup_patches.ws_start.side_effect = RuntimeError("connection broke")
     with pytest.raises(ConfigEntryNotReady, match="The Websocket could not be started"):
         await _setup(hass, entry)
 
