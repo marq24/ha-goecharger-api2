@@ -269,10 +269,6 @@
    "group": "current limits and load balancing",
    "decision": "open"
   },
-  "tcl": {
-   "group": "current limits and load balancing",
-   "decision": "open"
-  },
   "dsrc": {
    "group": "data sources",
    "decision": "open"

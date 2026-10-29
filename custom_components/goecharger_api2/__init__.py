@@ -566,7 +566,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         await self.async_refresh()
 
     def handle_write_result(self, a_type, value, key, result, entity):
-        if result is None and self.bridge.ws_connected:
+        if self.bridge.ws_connected and (result is None or len(result) == 0):
             # when using websocket - the writing result will be handled
             # already in the ws-response processor...
             return

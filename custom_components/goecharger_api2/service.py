@@ -110,13 +110,13 @@ class GoeChargerApiV2Service():
             self._stop_in_progress = True
             _LOGGER.debug(f"Service-stop_charging(): Provided config_id: {config_id} -> using {coordinator.name} serial: {coordinator._serial}")
             try:
-                resp = await coordinator.async_write_key(Tag.FRC.key, 1)
+                resp = await coordinator.async_write_key(Tag.FRC.key, 1)#, require_ack=True)
                 if Tag.FRC.key in resp:
                     _LOGGER.debug(f"Service-stop_charging(): STOP_CHARGING: waiting for 5 minutes...")
                     await asyncio.sleep(300)
                     _LOGGER.debug(f"Service-stop_charging(): STOP_CHARGING: 5 minutes are over... disable charging LOCK again")
 
-                    resp = await coordinator.async_write_key(Tag.FRC.key, 0)
+                    resp = await coordinator.async_write_key(Tag.FRC.key, 0)#, require_ack=True)
 
                     self._stop_in_progress = False
                     if call.return_response:
@@ -128,7 +128,6 @@ class GoeChargerApiV2Service():
 
                 else:
                     _LOGGER.debug(f"response does not contain {Tag.FRC.key}: {resp}")
-
                     self._stop_in_progress = False
                     if call.return_response:
                         return {"error": "A STOP_CHARGING request could not be send", "date": str(datetime.datetime.now().time())}
@@ -137,7 +136,8 @@ class GoeChargerApiV2Service():
                 _LOGGER.debug(f"Service-stop_charging(): Error {type(exc).__name__}: {exc}")
                 if call.return_response:
                     return {"error": str(exc), "date": str(datetime.datetime.now().time())}
-
+            finally:
+                self._stop_in_progress = False
         else:
             if call.return_response:
                 return {"error": "A STOP_CHARGING request is already in progress", "date": str(datetime.datetime.now().time())}

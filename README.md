@@ -17,7 +17,7 @@ So it's either enabled HTTP v2 API or password to use the websocket [[see instru
 
 
 > [!IMPORTANT]
-> __Please note__, _that this integration is __not official__, nor is it supported by the go-e manufacture from Austrian. I (marq24) am not affiliated with go-e.com in any way. This integration is based on the go-e API and the available go-e API documentation. (and some reverse engineering)_.
+> __Please note__, _that this integration is __not official__, nor is it supported by the go-e manufacture from Austria. I (marq24) am not affiliated with go-e.com in any way. This integration is based on the go-e API and the available go-e API documentation. (and some reverse engineering)_.
 
 [![hacs_badge][hacsbadge]][hacs] [![hainstall][hainstallbadge]][hainstall] [![Wero][werobadge]][wero] [![wise][wisebadge]][wise] [![Revolut][revolutbadge]][revolut] [![PayPal][paypalbadge]][paypal] [![github][ghsbadge]][ghs] [![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
 

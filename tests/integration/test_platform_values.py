@@ -169,7 +169,7 @@ async def test_number_set_value_writes_the_converted_value(hass, data, descripti
     number, coordinator = _number(hass, data, **description)
     coordinator.async_write_key = AsyncMock()
     await number.async_set_native_value(value)
-    coordinator.async_write_key.assert_awaited_once_with(expected[0], expected[1], number)
+    coordinator.async_write_key.assert_awaited_once_with(expected[0], expected[1], number, require_ack=False)
 
 
 IDX_WRITE_CASES = [
@@ -186,7 +186,7 @@ async def test_number_set_value_writes_the_whole_list(hass, description, value, 
     number, coordinator = _number(hass, {"lop": [1, 2, 3]}, key="lop", **description)
     coordinator.async_write_key = AsyncMock()
     await number.async_set_native_value(value)
-    coordinator.async_write_key.assert_awaited_once_with("lop", expected, number)
+    coordinator.async_write_key.assert_awaited_once_with("lop", expected, number, require_ack=False)
 
 
 async def test_number_set_value_swallows_write_errors(hass):

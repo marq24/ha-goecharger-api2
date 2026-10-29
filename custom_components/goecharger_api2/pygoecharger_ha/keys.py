@@ -702,7 +702,7 @@ class Tag(ApiKey, Enum):
     # tab | R | TYPE | Status | time at boot in utc in milliseconds, add rbt to get to current utc time
 
     # tcl | R/W | TYPE | Config | temporary current limit (does not change the user current limit, will be reset after 10min if not updated regularly)
-    TCL = ApiKey(key="tcl", cat=CAT.STATUS, writeable=True)
+    TCL = ApiKey(key="tcl", cat=CAT.CONFIG, writeable=True)
     # tsi | R | TYPE | Status | transaction start rfidid (only available when sendRfid)
     # tzt | R/W | TYPE | Config | timezone type, freetext string for app selection
     # ufa | R/W | TYPE | Config | Underfrequency Control activation threshold
