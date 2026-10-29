@@ -3,9 +3,9 @@
 | | |
 |---|---|
 | **Gegenstand** | Automatisierte Tests der Home-Assistant-Integration `goecharger_api2` (go-eCharger, go-eController) |
-| **Stand** | 2026-10-29, Fork `OliEder/ha-goecharger-api2`, Branch `tests/regression-suite` (Branch `tests/regression-suite`), aufbauend auf `main` bei `98af3e0` |
-| **Bezug** | Architektur und Risiken: `arc42-ha-goecharger-api2.md` (Risiken R1 bis R29). Regeln: `CLAUDE.md` / `AGENTS.md` der Arbeitsumgebung. |
-| **Status der Tests** | Die Tests liegen im Fork. Es gibt keinen PR an das Upstream-Repository. Das Dokument wurde mit KI-Unterstützung (Claude Code) erstellt und von Oliver geprüft. |
+| **Stand** | 2026-10-29, `main` bei `9e7d62a` (die Tests entstanden im Fork `OliEder/ha-goecharger-api2`, Branch `tests/regression-suite`) |
+| **Bezug** | Architektur und Risiken: `arc42-ha-goecharger-api2.md` (Risiken R1 bis R30). Regeln: `CLAUDE.md` / `AGENTS.md` der Arbeitsumgebung. |
+| **Status der Tests** | Die Tests liegen seit PR #178 (`738c3c6`) in diesem Repository, `.github/workflows/tests.yaml` führt sie seit PR #179 bei Push auf `main` und bei Pull Requests aus. Das Dokument wurde mit KI-Unterstützung (Claude Code) erstellt und von Oliver geprüft. |
 
 **Lesehinweis.** Alle Tests laufen mit Attrappen. Sie belegen, was der Code tut und was die Doku sagt, **nicht**, was ein echter Charger tut. Wo das für eine Aussage wichtig ist, steht es dabei.
 
@@ -74,7 +74,7 @@ Reihenfolge der Testtiefe nach Auswirkung auf den Betrieb (steuert ein physische
 | R6 keine `unique_id` im Config-Flow (kein Schutz vor Doppelanlage) | – | **nicht abgedeckt** |
 | R7 README „24 h“, Code „1 h“ | `test_read_all_reads_the_configuration_only_every_hour` | Code-Verhalten festgehalten (Abweichung zum README bleibt) |
 | R8 Zugangsdaten | – | bewusst nicht Teil der Tests |
-| R15 Cloud-Antwort 202 | `test_cloud_write_accepts_http_202` | `known_bug`, rot (nur nach Doku) |
+| R15 Cloud-Antwort | `test_cloud_write_succeeds_with_http_200` | grün; Doku nennt 202, Maintainer bestätigt 200 |
 | R16 WebSocket nicht dokumentiert | `test_ws_protocol.py`, `test_ws_login_failures.py` | Verhalten festgehalten |
 | R17 Cloud `age` nicht gesetzt | – | **nicht abgedeckt** |
 | R18 `ppv` negativ (Standby) | – | **nicht abgedeckt** |
@@ -124,7 +124,7 @@ Verbindlich nach `CLAUDE.md` / `AGENTS.md`. Der Stand wird hier ehrlich festgeha
 ## 6. Testumgebung
 
 - **Software:** Python 3.14.3, Home Assistant 2026.10.4 (festgelegt durch `pytest-homeassistant-custom-component`), `pytest`, `pytest-asyncio` (Modus `auto`). `msgpack` muss zusätzlich installiert werden, weil das Test-Framework die Anforderungen aus dem Manifest nicht installiert.
-- **Ort:** lokale virtuelle Umgebung (Python 3.14, `pip install -r requirements_dev.txt`); die Tests laufen im Branch `tests/regression-suite`. Messbericht und Werkzeuge: `tests/reports/`, `tests/tools/`.
+- **Ort:** lokale virtuelle Umgebung (Python 3.14, `pip install -r requirements_dev.txt`); Werkzeuge: `tests/tools/`; der Messbericht entsteht von Hand über `.github/workflows/test-report.yaml` (die abgelegten Berichte unter `tests/reports/` wurden entfernt).
 - **Aufruf:**
   - alles: `python -m pytest tests/integration`
   - blockierende Menge: `python -m pytest tests/integration -m "not known_bug and not needs_decision"`
@@ -158,18 +158,18 @@ Verbindlich nach `CLAUDE.md` / `AGENTS.md`. Der Stand wird hier ehrlich festgeha
 
 - Eine **neue** Abweichung zur Doku hat keinen Marker und blockiert sofort.
 - Wird ein Fehler behoben, schlägt das Entfernen des Markers nicht automatisch an. Der Test wird **grün**, der Marker bleibt stehen und muss von Hand entfernt werden. Das ist ein Nachteil gegenüber `xfail(strict)`. Mitigation: nach jedem Update von `main` die Marker prüfen (`-m known_bug -q`).
-- Blockierende Menge heute: grün (958 bestanden). Bekannte Fehler: 29 (15 `known_bug`, 14 `needs_decision`).
+- Blockierende Menge heute: grün (972 bestanden, mit PR #180). Offene Funde: 17, alle `needs_decision` (14 Abweichungen in `test_api_contract`, 3 Controller-Schlüssel). Alle `known_bug` sind behoben und ihre Marker entfernt.
 
 ---
 
 ## 9. Aktueller Stand
 
-Stand 2026-10-29 (Messung nach dem Ausbau um Controller-Vertrag, Wertebereiche und Transportvergleich), Branch `tests/regression-suite` im Fork. Details und Rohdaten: `tests/reports/2026-10-29/testreport.md`.
+Stand 2026-10-29 (Messung nach dem Ausbau um Controller-Vertrag, Wertebereiche und Transportvergleich), `main` bei `9e7d62a`. Die Abdeckung wurde vor den letzten Fehlerbehebungen gemessen; einen neuen Bericht liefert `test-report.yaml`.
 
 | Kennzahl | Wert |
 |---|---|
-| Tests gesammelt | 987, davon 420 parametrisierte Vertragsprüfungen je Schlüssel; **567 Verhaltens- und Fehlertests** |
-| Ergebnis | 958 bestanden, 29 beabsichtigt rot (15 `known_bug`, 14 `needs_decision`); blockierende Menge 958 von 958 grün |
+| Tests gesammelt | 989, davon 420 parametrisierte Vertragsprüfungen je Schlüssel; **567 Verhaltens- und Fehlertests** |
+| Ergebnis | 972 bestanden, 17 beabsichtigt rot (alle `needs_decision`); blockierende Menge 972 von 972 grün (mit PR #180, sonst 961 blockierend und 28 rot) |
 | Zeilenabdeckung | 92,9 % (vorher 55,2 %) |
 | Zweigabdeckung | 84,9 % (vorher 31,8 %) |
 | **Pfadabdeckung** (obere Schranke der Basispfade) | **61 %** alle Funktionen, **62 %** Kernmodule (vorher 20 % und 27 %) |
@@ -231,13 +231,13 @@ Erledigt seit der ersten Fassung: Plattformen, Lesezyklus im Polling, Schreibpfa
 | Neue Entität oder neuer Schlüssel | Vertragstest schlägt an; Schlüssel zuordnen oder in die Klassifikation aufnehmen |
 | Abweichung `needs_decision` geklärt | Eintrag entfernen oder Doku-Lücke vermerken und Marker entfernen |
 
-**Zuständig:** Oliver (Fork und Tests). Änderungen am Upstream-Repository macht ausschließlich der Maintainer.
+**Zuständig:** Oliver (Tests und Doku). Änderungen am Code macht der Maintainer; Oliver schlägt sie höchstens vor.
 
 ---
 
 ## 13. Eintritts- und Abschlusskriterien
 
-- **Vor jedem Push in den Fork:** blockierende Menge grün (`-m "not known_bug and not needs_decision"`).
+- **Vor jedem Push und jedem Pull Request:** blockierende Menge grün (`-m "not known_bug and not needs_decision"`).
 - **Vor jedem Update auf einen neuen Upstream-Stand:** `main` holen, Gesamtlauf starten, neue Rotfälle einordnen (neuer Fehler oder behobener bekannter Fehler).
 - **Abschluss des Testkonzepts „offizielle API“:** Punkte 1 bis 3 aus Abschnitt 10 umgesetzt, Punkt 4 mindestens einmal durchgeführt und dokumentiert.
 
