@@ -71,6 +71,10 @@ async def test_stop_charging_in_websocket_mode_sends_lock_and_unlock(hass):
     """The reported TypeError is gone: frc=1, wait, frc=0."""
     coordinator = _coordinator(hass, _entry(hass), websocket=True)
     service = GoeChargerApiV2Service(hass, coordinator._config_entry, coordinator)
+    async def mock_async_write_key(key, value, require_ack=False):
+        await coordinator.bridge._ws_connection.send_json({"key": key, "value": value})
+        return {key: value}
+    coordinator.async_write_key = AsyncMock(side_effect=mock_async_write_key)
     with patch(SERVICE_SLEEP, AsyncMock()):
         result = await service.stop_charging(_call())
     assert result["success"] == "true"
