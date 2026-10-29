@@ -158,20 +158,20 @@ Verbindlich nach `CLAUDE.md` / `AGENTS.md`. Der Stand wird hier ehrlich festgeha
 
 - Eine **neue** Abweichung zur Doku hat keinen Marker und blockiert sofort.
 - Wird ein Fehler behoben, schlägt das Entfernen des Markers nicht automatisch an. Der Test wird **grün**, der Marker bleibt stehen und muss von Hand entfernt werden. Das ist ein Nachteil gegenüber `xfail(strict)`. Mitigation: nach jedem Update von `main` die Marker prüfen (`-m known_bug -q`).
-- Blockierende Menge heute: grün (885 bestanden). Bekannte Fehler: 26 (12 `known_bug`, 14 `needs_decision`).
+- Blockierende Menge heute: grün (958 bestanden). Bekannte Fehler: 29 (15 `known_bug`, 14 `needs_decision`).
 
 ---
 
 ## 9. Aktueller Stand
 
-Stand 2026-10-29 (später am Tag), Branch `tests/regression-suite` im Fork. Details und Rohdaten: `tests/reports/2026-10-29/testreport.md`.
+Stand 2026-10-29 (Messung nach dem Ausbau um Controller-Vertrag, Wertebereiche und Transportvergleich), Branch `tests/regression-suite` im Fork. Details und Rohdaten: `tests/reports/2026-10-29/testreport.md`.
 
 | Kennzahl | Wert |
 |---|---|
-| Tests gesammelt | 911, davon 420 parametrisierte Vertragsprüfungen je Schlüssel; **491 Verhaltens- und Fehlertests** |
-| Ergebnis | 885 bestanden, 26 beabsichtigt rot (12 `known_bug`, 14 `needs_decision`); blockierende Menge 885 von 885 grün |
-| Zeilenabdeckung | 93,0 % (vorher 55,2 %) |
-| Zweigabdeckung | 85,0 % (vorher 31,8 %) |
+| Tests gesammelt | 987, davon 420 parametrisierte Vertragsprüfungen je Schlüssel; **567 Verhaltens- und Fehlertests** |
+| Ergebnis | 958 bestanden, 29 beabsichtigt rot (15 `known_bug`, 14 `needs_decision`); blockierende Menge 958 von 958 grün |
+| Zeilenabdeckung | 92,9 % (vorher 55,2 %) |
+| Zweigabdeckung | 84,9 % (vorher 31,8 %) |
 | **Pfadabdeckung** (obere Schranke der Basispfade) | **61 %** alle Funktionen, **62 %** Kernmodule (vorher 20 % und 27 %) |
 | Pfadabdeckung nach Kritikalität | K1 kritisch 66 %, K2 hoch 60 %, K3 mittel 64 %, K4 niedrig 48 % |
 
@@ -186,7 +186,9 @@ Stand 2026-10-29 (später am Tag), Branch `tests/regression-suite` im Fork. Deta
 | `test_coordinator_failures.py`, `test_coordinator_runtime.py`, `test_coordinator_errors.py` | Fehlerzähler und Pause, Laufzeitpfade, Schreibfehler |
 | `test_services_and_unload.py`, `test_services_and_setup.py`, `test_service.py` | Dienste, Register, Start und Ende eines Entries |
 | `test_config_flow_failures.py`, `test_config_flow_paths.py`, `test_migration.py` | Config-Flow, Migration |
-| `test_versions_16a.py`, `test_entity_ids.py`, `test_bridge.py` | 16-A-Entscheidung, Entity-IDs, Schreibfehler der Bridge |
+| `test_versions_16a.py`, `test_versions_transport_parity.py`, `test_entity_ids.py`, `test_bridge.py` | 16-A-Entscheidung (je nach Code-Stand), gleiches Ergebnis über HTTP und WebSocket, Entity-IDs, Schreibfehler der Bridge |
+| `test_controller_contract.py` | Controller-Schlüssel gegen die Tabelle der go-eController-API (59 Prüfungen, 3 davon beabsichtigt rot) |
+| `test_value_ranges.py` | Wertebereiche und Optionslisten aus dem Modbus-Profil (`amp`, `ama`, `lbr`, `frc`, `psm` u. a.) |
 
 **Kritikalität der Pfade.** Jede Funktion ist einer Klasse zugeordnet (K1 ändert den Charger oder die Konfiguration, K2 Verbindung, Anmeldung, Start, K3 Anzeige, K4 Hilfsfunktionen). Die Zuordnung mit Begründung steht in `tests/tools/criticality.py`; der Report listet je Klasse die offenen Lücken (Abschnitt 5.1).
 

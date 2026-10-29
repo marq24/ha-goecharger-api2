@@ -356,7 +356,7 @@ flowchart LR
 
 ### 8.7 Test und Qualitätssicherung
 - **Im Repo (Upstream):** HACS-Validierung und hassfest. Keine Unit-, Integrations- oder Blueprint-Tests (gelöscht in `60d9a09`).
-- **Regressionstests im Fork (Branch `tests/regression-suite`):** 911 Tests (420 Vertragsprüfungen je Schlüssel, 491 Verhaltens- und Fehlertests), Zeilenabdeckung 93 %, Zweigabdeckung 85 %, Pfadabdeckung (obere Schranke) 61 %. Messberichte liegen im Fork unter `tests/reports/`; ein Workflow prüft jede neue Upstream-Version (siehe Testkonzept).
+- **Regressionstests im Fork (Branch `tests/regression-suite`):** 987 Tests (420 Vertragsprüfungen je Schlüssel, 567 Verhaltens- und Fehlertests; 958 blockierend, 29 beabsichtigt rot), Zeilenabdeckung 93 %, Zweigabdeckung 85 %, Pfadabdeckung (obere Schranke) 61 %. Messberichte liegen im Fork unter `tests/reports/`; ein Workflow prüft jede neue Upstream-Version (siehe Testkonzept).
 - **Testkonzept:** `docs/quality/testkonzept-ha-goecharger-api2.md` beschreibt Umfang, Stufen, Marker, Stand und Lücken.
 - **Vertrag zur offiziellen API:** Im Fork-Branch prüft `test_api_contract.py`, ob jeder dokumentierte Schlüssel unterstützt oder erklärt ist (92 dokumentierte Schlüssel ohne Tag, 38 genutzte Schlüssel ohne Doku, 14 Abweichungen bei Schreibrecht und Kategorie). Die Listen stehen in `tests/integration/contract/` (`classification.json`, `deviations.json`).
 - **Lokal (nicht im Repo):** Unser Fork enthält Blueprint-Tests (240 Fälle) und Integrationstests (12 Fälle) als Arbeitsmittel (`OliEder/ha-goecharger-api2`, Branches `proposal/invalid-data-policy` und `fix/small-bugs`).
@@ -458,6 +458,7 @@ Neue Risiken aus dem Abgleich mit `main` und den Tests (2026-10-29):
 | R26 | Nach `03b0fc3` speichert das Schreiben im WebSocket-Modus den gewünschten Wert sofort in `coordinator.data`. | Lehnt der Charger ab (nur eine Warnung im Log), zeigt HA den abgelehnten Wert, bis das Gerät den Schlüssel erneut meldet. | Aus Code abgeleitet, Verhalten im Test festgehalten. |
 | R27 | `write_multiple_values_to_keys` liefert im WebSocket-Modus `{}`; `handle_write_result` überspringt nur `None`. | Nach jeder erfolgreichen Fahrzeugauswahl steht ein falscher `ERROR` im Log („could not write multiple value“). | Im Test gezeigt (`known_bug`). |
 | R29 | `98af3e0`: Fehlt `cableCurrentLimit` in `cll`, wird nicht mehr auf 16 A begrenzt und `adi` nicht mehr geprüft; Core-Geräte ohne den Schlüssel waren vorher vorsichtshalber begrenzt. | Sliders erlauben höhere Werte; der Charger begrenzt einen Adapter selbst. Die Annahme „nur Flex hat den Schlüssel“ ist nicht belegt. | Aus Diff gelesen, Verhalten im Test festgehalten. |
+| R30 | Laut Maintainer (Issue #176) setzt die Integration das Maximum der Stromstärke (Max Ampere) bei jedem Neustart zurück. | Ein zuvor eingestellter Wert geht verloren; die Grenze gilt dann nicht mehr, bis sie neu gesetzt wird. | Aussage des Maintainers, **nicht** von uns nachgespielt und kein Test dazu. Ob das vom 16-A-Begrenzer (R29) oder von der Wertübernahme beim Start kommt, ist offen. |
 
 Die Zahl R28 wurde bewusst ausgelassen; die Nummerierung folgt der Reihenfolge der Funde.
 
