@@ -50,6 +50,9 @@ jobs:
 
       - name: Measure and build the report
         working-directory: ${{ runner.temp }}/src
+        env:
+          TESTS_COMMIT: ${{ github.sha }}
+          SOURCE_REF: ${{ steps.ref.outputs.ref }}
         run: sh tests/tools/measure.sh "$RUNNER_TEMP/report"
 
       - name: Show the report
