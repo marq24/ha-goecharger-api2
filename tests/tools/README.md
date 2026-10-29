@@ -7,20 +7,19 @@
 | `pathmetric.py` | Prints the path coverage (upper bound of basis paths) per criticality class from a path-trace file. |
 | `build_report.py` | Builds `testreport.md` from coverage, junit and path-trace data. |
 | `measure.sh` | Runs everything and builds the report. |
-| `release_check.sh` | Tests a release (or branch) of the upstream integration with the tests of this branch. Used by the workflow `.github/workflows/regression-on-release.yaml`. |
+| `release_check.sh` | Tests a release (or branch) of the upstream integration with the tests of this branch. Run by hand, for example to test an older release with the current tests. |
 
 Needs `pytest-cov` and `radon` in addition to `requirements_dev.txt`.
 
-## Testing every new upstream release automatically
+## Running the tests automatically
 
-`.github/workflows/regression-on-release.yaml` checks every three hours for a new release of `marq24/ha-goecharger-api2`. A new release is cloned fresh, the tests of this branch are copied into the clone, and the blocking tests run (`release_check.sh`). The result appears in the job summary; a red run means a blocking test failed. After the run the tag `tested/<release>` is set in the fork, so a release is tested once. The summary also lists known-bug tests that now pass, which means the bug looks fixed in that version.
+`.github/workflows/tests.yaml` runs the blocking tests (`-m "not known_bug and not needs_decision"`) on every push to `main` and on every pull request that touches `custom_components/`, `tests/` or `requirements_dev.txt`. A second, non-blocking step runs the tests marked `known_bug` or `needs_decision` and lists them in the job summary; a test that passes there means the finding looks fixed and its marker can go.
+
+`.github/workflows/test-report.yaml` builds the full report (coverage, paths, criticality) by hand for a release or branch.
 
 Things to know:
-- GitHub cannot start a workflow in a fork when another repository publishes a release. The workflow therefore polls.
-- Scheduled workflows only run from the **default branch**. Either make `tests/regression-suite` the default branch of the fork, or copy the workflow file to `main`. Actions must be enabled for the fork (Actions tab).
-- Nothing is rebased or merged by the workflow. It always tests a fresh clone of the upstream version, so the test branch does not have to follow upstream. The last step tries to fast-forward the fork's `main` to upstream and may fail harmlessly.
-- The tests follow upstream `main`. An older release can fail a test that pins behaviour introduced later (for example the 16 A rule since commit `98af3e0` fails on release 2026.10.8), and a release that lacks functions the tests import cannot be collected. The summary says which case happened.
-- Run it by hand: `tests/tools/release_check.sh [tag-or-branch]` (needs the test dependencies and the GitHub CLI for the latest release).
+- The tests follow `main`. An older release can fail a test that pins behaviour introduced later (for example the 16 A rule since commit `98af3e0` fails on release 2026.10.8), and a release that lacks functions the tests import cannot be collected.
+- Test an older release by hand: `tests/tools/release_check.sh [tag-or-branch]` (needs the test dependencies and the GitHub CLI for the latest release).
 
 ## Home Assistant version of the tests
 

@@ -2,8 +2,8 @@ name: Test report (manual)
 
 # Builds the full test report (line, branch and path coverage, criticality) for a version of
 # marq24/ha-goecharger-api2. Started by hand only; nothing is committed. The report is shown in the job
-# summary and kept as an artifact. Like regression-on-release.yaml it clones the upstream version fresh and
-# copies only tests/integration and tests/tools of this branch into it.
+# summary and kept as an artifact. It clones the chosen version fresh and copies only tests/integration and
+# tests/tools of this branch into it.
 
 on:
   workflow_dispatch:
