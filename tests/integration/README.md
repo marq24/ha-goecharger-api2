@@ -27,11 +27,11 @@ does not install manifest requirements, so it is part of `requirements_dev.txt`.
 | `test_service.py` | `set_pv_data` input validation | reported bugs |
 | `test_bridge.py`, `test_coordinator_errors.py` | write errors, connection error counting | reported bugs |
 
-## xfail(strict=True)
+## Known bugs fail on purpose
 
-A test with this marker describes behaviour that is wrong today. The run stays green, and turns red
-(XPASS) as soon as the bug is fixed. Then remove the marker. Current list: see
-`python -m pytest tests/integration -rx`.
+A test marked `@pytest.mark.known_bug("...")` describes behaviour that is wrong today, so the run is
+red until the bug is fixed. To get a green run without them: `python -m pytest tests/integration -m "not known_bug"`.
+List them with `python -m pytest tests/integration -m known_bug -q`. When a bug is fixed, remove the marker.
 
 ## Entity ID snapshot
 

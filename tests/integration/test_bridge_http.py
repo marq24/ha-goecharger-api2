@@ -95,7 +95,7 @@ async def test_write_success_returns_key_and_value(hass, aioclient_mock):
     assert await _lan(hass).write_value_to_key("amp", 10) == {"amp": 10}
 
 
-@pytest.mark.xfail(strict=True, reason=(
+@pytest.mark.known_bug((
     "http-en.md: the answer holds 'true for success, or a string error message' per key. The bridge "
     "tests the value for truthiness, so an error string counts as success. Not verified on a real charger."))
 async def test_write_rejected_by_charger_returns_err(hass, aioclient_mock):
@@ -119,7 +119,7 @@ async def test_write_other_key_forces_config_and_state_refresh(hass, aioclient_m
     assert bridge._LAST_CONFIG_UPDATE_TS == 0 and bridge._LAST_FULL_STATE_UPDATE_TS == 0
 
 
-@pytest.mark.xfail(strict=True, reason=(
+@pytest.mark.known_bug((
     "Official cloud docs: /api/set answers HTTP 202 on success; the bridge only accepts 200. "
     "Not verified against the real cloud. Remove the marker when the behaviour is clarified."))
 async def test_cloud_write_accepts_http_202(hass, aioclient_mock):
