@@ -1,0 +1,104 @@
+name: Regression tests on new upstream release
+
+# Tests every new release of marq24/ha-goecharger-api2 with the tests of this branch.
+# GitHub cannot start a workflow in this fork when another repository publishes a release, so the
+# workflow asks for the latest release every three hours. A release is tested once: afterwards the tag
+# "tested/<release>" is set in this fork. Nothing is rebased or merged: the upstream release is cloned
+# fresh and only tests/integration of this branch is copied into it (tests/tools/release_check.sh).
+#
+# Scheduled workflows only run from the default branch of the repository. This file therefore has to be
+# on the default branch of the fork (see tests/tools/README.md).
+
+on:
+  schedule:
+    - cron: "23 */3 * * *"
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Tag or branch of marq24/ha-goecharger-api2 (empty = latest release)"
+        required: false
+        default: ""
+  push:
+    branches: [tests/regression-suite]
+    paths:
+      - "tests/**"
+      - ".github/workflows/regression-on-release.yaml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: regression-on-release
+  cancel-in-progress: false
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the tests (branch tests/regression-suite)
+        uses: actions/checkout@v4
+        with:
+          ref: tests/regression-suite
+          fetch-depth: 0
+
+      - name: Decide which upstream version to test
+        id: ref
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_REF: ${{ inputs.ref }}
+        run: |
+          REF="$INPUT_REF"
+          if [ -z "$REF" ]; then
+            REF="$(gh api repos/marq24/ha-goecharger-api2/releases/latest --jq .tag_name)"
+          fi
+          SKIP=false
+          if [ "${{ github.event_name }}" = "schedule" ] && git ls-remote --exit-code --tags origin "refs/tags/tested/$REF" >/dev/null 2>&1; then
+            SKIP=true
+          fi
+          echo "ref=$REF" >> "$GITHUB_OUTPUT"
+          echo "skip=$SKIP" >> "$GITHUB_OUTPUT"
+          echo "Upstream version: $REF (already tested: $SKIP)"
+
+      - name: Set up Python
+        if: steps.ref.outputs.skip != 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements_dev.txt
+
+      - name: Install test dependencies
+        if: steps.ref.outputs.skip != 'true'
+        run: python -m pip install -r requirements_dev.txt msgpack
+
+      - name: Run the regression tests against the upstream version
+        if: steps.ref.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: tests/tools/release_check.sh "${{ steps.ref.outputs.ref }}" "$RUNNER_TEMP/check"
+
+      - name: Keep the results
+        if: always() && steps.ref.outputs.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-${{ steps.ref.outputs.ref }}
+          path: |
+            ${{ runner.temp }}/check/*.xml
+            ${{ runner.temp }}/check/*.txt
+            ${{ runner.temp }}/check/summary.md
+          if-no-files-found: ignore
+
+      - name: Remember that this release was tested
+        if: always() && steps.ref.outputs.skip != 'true' && github.event_name == 'schedule'
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git tag -a "tested/${{ steps.ref.outputs.ref }}" -m "regression tests: ${{ job.status }}"
+          git push origin "tested/${{ steps.ref.outputs.ref }}"
+
+      - name: Sync the fork main with upstream (best effort)
+        if: github.event_name == 'schedule'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh repo sync "${{ github.repository }}" --branch main --source marq24/ha-goecharger-api2
