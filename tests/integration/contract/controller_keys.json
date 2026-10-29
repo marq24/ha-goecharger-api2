@@ -1,0 +1,420 @@
+{
+ "source": {
+  "repository": "goecharger/go-eController-API",
+  "file": "apikeys-en.md",
+  "commit": "094d08d",
+  "date": "2026-04-20"
+ },
+ "keys": {
+  "awc": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "awcp": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "awp": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "awpl": {
+   "rw": "W",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "bri": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "cce": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "ccf": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "ccn": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "ccp": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "ccw": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "cec": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "cle": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "clea": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "cpc": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "cwe": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "data": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "delw": {
+   "rw": "W",
+   "type": "TYPE",
+   "category": "Unknown"
+  },
+  "dll": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "dns": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "fna": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "fwv": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "hai": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "host": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "hsa": {
+   "rw": "W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "iim": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "ips": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "isn": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "isv": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "loc": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "lwf": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "mcc": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "mcca": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "mce": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "mcr": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "mcs": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "mcu": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "mecd": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "mece": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "mecf": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "mecu": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "men": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "mlr": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "mlra": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "mme": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "mmh": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "mmp": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "mqcn": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "mqg": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "mqss": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "msb": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "msp": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "msr": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "mtp": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "nif": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "oct": {
+   "rw": "W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "ocu": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "oem": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Constant"
+  },
+  "rbc": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "rbt": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "rssi": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "rst": {
+   "rw": "W",
+   "type": "TYPE",
+   "category": "Unknown"
+  },
+  "scaa": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "scan": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "sse": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Constant"
+  },
+  "tds": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "tof": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "tse": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "tsss": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "typ": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Constant"
+  },
+  "usn": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "usv": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "utc": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "wcb": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "wda": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "wfb": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "wifis": {
+   "rw": "R/W",
+   "type": "TYPE",
+   "category": "Config"
+  },
+  "wpb": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "wsc": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "wsl": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "wsm": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "wsms": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  },
+  "wst": {
+   "rw": "R",
+   "type": "TYPE",
+   "category": "Status"
+  }
+ }
+}
