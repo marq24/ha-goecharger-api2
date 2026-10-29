@@ -141,7 +141,11 @@ class GoeChargerApiV2Service():
         global _COORDINATOR_PER_CONFIG_ENTRY_ID_MAP
         config_id = call.data.get('configid', None)
         if config_id is None:
-            coordinator = next(iter(_COORDINATOR_PER_CONFIG_ENTRY_ID_MAP.values()))
+            if len(_COORDINATOR_PER_CONFIG_ENTRY_ID_MAP) == 1:
+                coordinator = next(iter(_COORDINATOR_PER_CONFIG_ENTRY_ID_MAP.values()))
+            else:
+                _LOGGER.warning(f"get_coordinator(): no 'config_id' provided but length of _COORDINATOR_PER_CONFIG_ENTRY_ID_MAP != 1: {len(_COORDINATOR_PER_CONFIG_ENTRY_ID_MAP)}")
+                raise ServiceValidationError(f"No 'config_id' provided BUT zero (or multiple) goecharger_api2 config entries registered with the service.")
         else:
             # Fetch the config entry
             entry = self._hass.config_entries.async_get_entry(config_id)
