@@ -103,19 +103,19 @@ ERROR_WORDS = ("except", "raise", "error", "warning", "fail", "invalid", "timeou
 
 
 def crit_section():
-    names = ["K1 kritisch", "K2 hoch", "K3 mittel", "K4 niedrig"]
-    w("""## 5. Pfade nach Kritikalität
+    names = ["K1 critical", "K2 high", "K3 medium", "K4 low"]
+    w("""## 5. Paths by criticality
 
-**Maßstab.** Kritikalität ist die Auswirkung eines falschen Pfades auf den Nutzer, nicht die Häufigkeit. Die Einstufung gilt für eine ganze Funktion und damit für alle ihre Pfade. Die Zuordnung steht in `tests/tools/criticality.py` (mit Begründung je Funktion) und ist eine Einschätzung, keine Messung.
+**Scale.** Criticality is the impact of a wrong path on the user, not the frequency. The rating applies to a whole function and thus to all its paths. The assignment is in `tests/tools/criticality.py` (with a reason per function) and is an assessment, not a measurement.
 
-| Klasse | Bedeutung | Beispiele |
+| Class | Meaning | Examples |
 |---|---|---|
-| **K1 kritisch** | Ändert den Charger, seine Grenzen oder die HA-Konfiguration; ein falscher Pfad kann den Charger sperren, falsche Werte senden, Geräte löschen oder Dienste entfernen | `write_value_to_key`, `stop_charging`, `set_pv_data`, `check_and_write_to_16a`, `async_migrate_entry` |
-| **K2 hoch** | Verbindung, Anmeldung, Erholung, Start; ein falscher Pfad macht die Integration unverfügbar oder zeigt alte Daten | `ws_connect`, `_async_update_data`, `async_setup_entry`, Config-Flow |
-| **K3 mittel** | Korrektheit dessen, was angezeigt oder erkannt wird, ohne Schreiben | Wertdarstellung der Entitäten, `is_valid_charger_entity` |
-| **K4 niedrig** | Hilfsfunktionen, Namen, Symbole, Logging | `_ws_normalize_value`, `unique_id`, Anzeigename |
+| **K1 critical** | Changes the charger, its limits or the HA configuration; a wrong path can lock the charger, send wrong values, delete devices or remove services | `write_value_to_key`, `stop_charging`, `set_pv_data`, `check_and_write_to_16a`, `async_migrate_entry` |
+| **K2 high** | Connection, login, recovery, start; a wrong path makes the integration unavailable or shows old data | `ws_connect`, `_async_update_data`, `async_setup_entry`, config flow |
+| **K3 medium** | Correctness of what is shown or detected, without writing | Value display of the entities, `is_valid_charger_entity` |
+| **K4 low** | Helper functions, names, icons, logging | `_ws_normalize_value`, `unique_id`, display name |
 
-| Klasse | Funktionen | CC (Basispfade) | Pfade vorher | Pfade jetzt (obere Schranke) | Zeilen | Zweige | nie ausgeführt |
+| Class | Functions | CC (base paths) | Paths before | Paths now (upper bound) | Lines | Branches | never executed |
 |---|---|---|---|---|---|---|---|""")
     for k in names:
         rows = [r for r in funcs if r["klass"] == k]
@@ -123,96 +123,96 @@ def crit_section():
         now = sum(min(r["paths"], r["cc"]) for r in rows)
         before = sum(min(r["base_paths"], r["cc"]) for r in rows)
         stm = sum(r["stm"] for r in rows)
-        w(f"| **{k}** | {len(rows)} | {cc_sum} | {pct(before, cc_sum)} | **{pct(now, cc_sum)}** ({now} von {cc_sum}) | "
+        w(f"| **{k}** | {len(rows)} | {cc_sum} | {pct(before, cc_sum)} | **{pct(now, cc_sum)}** ({now} of {cc_sum}) | "
           f"{pct(sum(r['covered_lines'] for r in rows), stm)} | {pct(sum(r['cov_branches'] for r in rows), sum(r['br'] for r in rows))} | "
           f"{sum(1 for r in rows if r['calls'] == 0)} |")
     w("""
-Lesehilfe: „Pfade jetzt“ ist die obere Schranke der Basispfadabdeckung (Abschnitt 2). Die Spalten „Zeilen“ und „Zweige“ stehen für dieselben Funktionen und liegen viel höher; der Unterschied zeigt, wie viel strenger die Pfadabdeckung ist.
+How to read it: "Paths now" is the upper bound of the base path coverage (section 2). The columns "Lines" and "Branches" are for the same functions and are much higher; the difference shows how much stricter path coverage is.
 
-### 5.1 Offene Lücken in K1 und K2
+### 5.1 Open gaps in K1 and K2
 
-Funktionen, bei denen **sicher** Basispfade fehlen (beobachtete Pfade unter der CC), geordnet nach Klasse und Zahl der fehlenden Pfade. „Fehlerpfad“ markiert nicht genommene Zweige, deren Zeile nach einem Fehlerfall aussieht (Schlüsselwörter wie `except`, `raise`, `error`, `warning`); das ist eine Heuristik.
+Functions where base paths are **certainly** missing (observed paths below the CC), ordered by class and number of missing paths. "Error path" marks branches that were not taken and whose line looks like an error case (keywords such as `except`, `raise`, `error`, `warning`); this is a heuristic.
 """)
     for k in names[:2]:
         rows = sorted((r for r in funcs if r["klass"] == k and r["paths"] < r["cc"]),
                       key=lambda r: -(r["cc"] - r["paths"]))
-        w(f"**{k}**\n\n| Funktion | CC | Pfade | fehlen mind. | Aufrufe | Warum kritisch | Nicht genommene Zweige |\n|---|---|---|---|---|---|---|")
+        w(f"**{k}**\n\n| Function | CC | Paths | at least missing | Calls | Why critical | Branches not taken |\n|---|---|---|---|---|---|---|")
         for r in rows[:14]:
             src = sources[r["file"]]
             parts = []
             for frm, to in sorted({(m[0], m[1]) for m in r["missing"] if m[0] > 0})[:4]:
                 text = src[frm - 1].strip()
                 target = src[to - 1].strip() if to > 0 else ""
-                kind = "Fehlerpfad" if any(wd in (text + " " + target).lower() for wd in ERROR_WORDS) else "Normalpfad"
-                parts.append(f"Z.{frm} `{text[:46]}` ({kind})")
-            how = "nie ausgeführt" if r["calls"] == 0 else str(r["calls"])
+                kind = "error path" if any(wd in (text + " " + target).lower() for wd in ERROR_WORDS) else "normal path"
+                parts.append(f"l.{frm} `{text[:46]}` ({kind})")
+            how = "never executed" if r["calls"] == 0 else str(r["calls"])
             w(f"| `{r['name']}` | {r['cc']} | {r['paths']} | {r['cc'] - r['paths']} | {how} | {r['why']} | {'<br>'.join(parts) if parts else '–'} |")
         w("")
-w(f"""# Testreport und Testabdeckung: `ha-goecharger-api2`
+w(f"""# Test report and test coverage: `ha-goecharger-api2`
 
 | | |
 |---|---|
-| **Datum** | {date.today().isoformat()} |
-| **Geprüfter Code** | `marq24/ha-goecharger-api2` `{os.environ.get('SOURCE_REF', 'main')}`, Commit `{src_commit}` |
-| **Tests** | Fork `OliEder/ha-goecharger-api2`, Branch `tests/regression-suite`, Commit `{tests_commit}` |
-| **Umgebung** | Python 3.14.3, Home Assistant 2026.10.4, coverage {cov['meta']['version']}, radon 6.0.1 |
-| **Rohdaten** | `coverage-all.json`, `coverage-blocking.json`, `junit-all.xml`, `pathtrace-all.json`, HTML-Bericht in `html-all/index.html` |
+| **Date** | {date.today().isoformat()} |
+| **Code checked** | `marq24/ha-goecharger-api2` `{os.environ.get('SOURCE_REF', 'main')}`, commit `{src_commit}` |
+| **Tests** | `tests/integration` in the repository `marq24/ha-goecharger-api2`, commit `{tests_commit}` |
+| **Environment** | Python 3.14.3, Home Assistant 2026.10.4, coverage {cov['meta']['version']}, radon 6.0.1 |
+| **Raw data** | `coverage-all.json`, `coverage-blocking.json`, `junit-all.xml`, `pathtrace-all.json`, HTML report in `html-all/index.html` |
 
-## 1. Zusammenfassung
+## 1. Summary
 
-| Kennzahl | Wert |
+| Figure | Value |
 |---|---|
-| Tests gesammelt / bestanden / fehlgeschlagen | {suite.get('tests')} / {passed} / {failures} (alle beabsichtigt: {failures - 14} `known_bug`, 14 `needs_decision`) |
-| Blockierende Menge (ohne die beiden Marker) | {passed} von {passed} bestanden |
-| **Zeilenabdeckung** (alle Tests) | **{t['percent_statements_covered']:.1f} %** ({t['covered_lines']} von {t['num_statements']} Anweisungen) |
-| **Zweigabdeckung** (alle Tests) | **{t['percent_branches_covered']:.1f} %** ({t['covered_branches']} von {t['num_branches']} Zweigen) |
-| **Pfadabdeckung** (obere Schranke der Basispfade, alle Funktionen) | **{pct(all_cov, all_cc)}** ({all_cov} von {all_cc}) |
-| **Pfadabdeckung** (obere Schranke, nur die vier Kernmodule) | **{pct(core_cov, core_cc)}** ({core_cov} von {core_cc}) |
-| Funktionen: nie ausgeführt / mit zu wenigen Pfaden / Pfadzahl nicht widerlegt | {len(never)} / {len(short)} / {len(enough)} (von {len(funcs)}) |
+| Tests collected / passed / failed | {suite.get('tests')} / {passed} / {failures} (all intentional: markers `known_bug` or `needs_decision`) |
+| Blocking set (without the two markers) | {passed} of {passed} passed |
+| **Line coverage** (all tests) | **{t['percent_statements_covered']:.1f} %** ({t['covered_lines']} of {t['num_statements']} statements) |
+| **Branch coverage** (all tests) | **{t['percent_branches_covered']:.1f} %** ({t['covered_branches']} of {t['num_branches']} branches) |
+| **Path coverage** (upper bound of the base paths, all functions) | **{pct(all_cov, all_cc)}** ({all_cov} of {all_cc}) |
+| **Path coverage** (upper bound, the four core modules only) | **{pct(core_cov, core_cc)}** ({core_cov} of {core_cc}) |
+| Functions: never executed / too few paths / path count not refuted | {len(never)} / {len(short)} / {len(enough)} (of {len(funcs)}) |
 
-**Entwicklung gegenüber dem ersten Report (gleicher Tag, Stand vor dem Ausbau der Tests)**
+**Development compared with the baseline** (the baseline is the first measurement; without a stored baseline the current data is used, so both columns are equal)
 
-| Kennzahl | Vorher | Jetzt |
+| Figure | Before | Now |
 |---|---|---|
-| Verhaltens- und Fehlertests (ohne Vertragsprüfungen je Schlüssel) | 125 | {NEW_BEHAVIOUR} |
-| Zeilenabdeckung | {base_cov['percent_statements_covered']:.1f} % | {t['percent_statements_covered']:.1f} % |
-| Zweigabdeckung | {base_cov['percent_branches_covered']:.1f} % | {t['percent_branches_covered']:.1f} % |
-| Pfadabdeckung (obere Schranke), alle Funktionen | {BASE_ALL} | {pct(all_cov, all_cc)} |
-| Pfadabdeckung (obere Schranke), Kernmodule | {BASE_CORE} | {pct(core_cov, core_cc)} |
+| Behaviour and error tests (without per-key contract checks) | 125 | {NEW_BEHAVIOUR} |
+| Line coverage | {base_cov['percent_statements_covered']:.1f} % | {t['percent_statements_covered']:.1f} % |
+| Branch coverage | {base_cov['percent_branches_covered']:.1f} % | {t['percent_branches_covered']:.1f} % |
+| Path coverage (upper bound), all functions | {BASE_ALL} | {pct(all_cov, all_cc)} |
+| Path coverage (upper bound), core modules | {BASE_CORE} | {pct(core_cov, core_cc)} |
 
-**Was das bedeutet:** Die Tests prüfen jetzt auch die Plattformen (Wertdarstellung, Schreiben) und die Laufzeitpfade des Koordinators. Zeilen- und Zweigabdeckung sind hoch, die Pfadabdeckung ist deutlich niedriger, weil sie verlangt, dass jede Funktion **viele verschiedene Kombinationen** von Entscheidungen durchläuft. Die Pfadzahl ist eine obere Schranke und kein Beleg für Vollständigkeit (Abschnitt 2).
+**What this means:** The tests now also cover the platforms (value display, writing) and the runtime paths of the coordinator. Line and branch coverage are high, path coverage is clearly lower because it requires every function to run through **many different combinations** of decisions. The path count is an upper bound and no proof of completeness (section 2).
 
-## 2. Begriffe und Messverfahren (wichtig für die Einordnung)
+## 2. Terms and measurement method (important for the interpretation)
 
-| Kennzahl | Bedeutung | Gemessen mit |
+| Figure | Meaning | Measured with |
 |---|---|---|
-| Zeilenabdeckung | Anteil der ausgeführten Anweisungen | `coverage.py` |
-| Zweigabdeckung | Anteil der genommenen Verzweigungsausgänge (`if`/`else`, Schleife betreten/übersprungen, `try`/`except`). Entspricht der Entscheidungsabdeckung. | `coverage.py --cov-branch` |
-| Pfadabdeckung | Anteil der möglichen Ausführungswege durch eine Funktion. **Wird von `coverage.py` nicht gemessen** und ist bei Schleifen und vielen Entscheidungen praktisch nicht vollständig erreichbar (Zahl der Pfade wächst exponentiell). | siehe unten |
+| Line coverage | Share of the statements that were executed | `coverage.py` |
+| Branch coverage | Share of the branch outcomes that were taken (`if`/`else`, loop entered/skipped, `try`/`except`). Corresponds to decision coverage. | `coverage.py --cov-branch` |
+| Path coverage | Share of the possible execution paths through a function. **Is not measured by `coverage.py`** and with loops and many decisions it is practically not fully reachable (the number of paths grows exponentially). | see below |
 
-**Wie die Pfadzahlen entstehen.** Ein eigenes Test-Plugin (`tests/tools/pathtracer.py`, nutzt `sys.monitoring`) zeichnet für **jeden Aufruf** einer Funktion die Folge der ausgeführten Zeilen auf. Schleifen werden verkürzt: eine Zeile zählt je Aufruf höchstens zweimal. Danach zählt es, wie viele **verschiedene** Pfade je Funktion im Testlauf vorkamen.
+**How the path numbers come about.** A test plugin of its own (`tests/tools/pathtracer.py`, uses `sys.monitoring`) records the sequence of executed lines for **every call** of a function. Loops are shortened: a line counts at most twice per call. Then it counts how many **distinct** paths per function occurred in the test run.
 
-Diese Zahl wird mit der **zyklomatischen Komplexität** (CC, `radon`) verglichen. Die CC ist die Zahl der linear unabhängigen Basispfade einer Funktion. Daraus folgt eine **sichere Aussage in eine Richtung**:
-- Wurden weniger verschiedene Pfade beobachtet als CC, sind **sicher nicht** alle Basispfade getestet.
-- Wurden mindestens CC Pfade beobachtet, ist das **kein Beleg** für vollständige Abdeckung. Die Pfade können sich in denselben Entscheidungen ähneln.
-- Die Kennzahl „Pfadabdeckung (obere Schranke)“ summiert je Funktion `min(beobachtete Pfade, CC)` und teilt durch die Summe der CC. Die tatsächliche Basispfadabdeckung ist **höchstens so hoch**.
+This number is compared with the **cyclomatic complexity** (CC, `radon`). The CC is the number of linearly independent base paths of a function. This gives a **safe statement in one direction**:
+- If fewer distinct paths were observed than the CC, **certainly not** all base paths are tested.
+- If at least the CC paths were observed, that is **no proof** of complete coverage. The paths may resemble each other in the same decisions.
+- The figure "path coverage (upper bound)" adds up `min(observed paths, CC)` per function and divides by the sum of the CC. The actual base path coverage is **at most that high**.
 
-Grenzen: Die Messung ist empirisch und heuristisch. Verschachtelte Funktionen werden der umgebenden Funktion zugerechnet oder nicht erfasst. Nur eine Tracing-Variante (Zeilenfolgen) wurde verwendet.
+Limits: The measurement is empirical and heuristic. Nested functions are attributed to the enclosing function or not recorded. Only one tracing variant (line sequences) was used.
 
-## 3. Testergebnisse
+## 3. Test results
 
-| Datei | Tests | fehlgeschlagen | Zeit |
+| File | Tests | failed | Time |
 |---|---|---|---|""")
 for name, (n, fail, tm) in sorted(by_file.items()):
     w(f"| `{name}.py` | {n} | {fail} | {tm:.2f} s |")
 w(f"""
-Hinweis: `test_api_contract.py` enthält 420 parametrisierte Vertragsprüfungen (je Schlüssel). Verhaltens- und Fehlerpfadtests insgesamt: {int(suite.get('tests')) - by_file['test_api_contract'][0]}.
+Note: `test_api_contract.py` contains 420 parametrised contract checks (one per key). Behaviour and error path tests in total: {int(suite.get('tests')) - by_file['test_api_contract'][0]}.
 
-**Gesamtdauer** {suite.get('time')} s.
+**Total duration** {suite.get('time')} s.
 
-## 4. Abdeckung je Datei
+## 4. Coverage per file
 
-| Datei | Anweisungen | Zeilenabdeckung | Zweige | Zweigabdeckung | CC (Summe) | Pfade (obere Schranke) |
+| File | Statements | Line coverage | Branches | Branch coverage | CC (sum) | Paths (upper bound) |
 |---|---|---|---|---|---|---|""")
 for path, data in sorted(cov["files"].items(), key=lambda kv: rel(kv[0])):
     f = rel(path)
@@ -222,44 +222,44 @@ for path, data in sorted(cov["files"].items(), key=lambda kv: rel(kv[0])):
     w(f"| `{f}` | {s['num_statements']} | {s['percent_statements_covered']:.0f} % | {s['num_branches']} | "
       f"{pct(s['covered_branches'], s['num_branches'])} | {total} | {pct(c, total)} |")
 w(f"""
-**Vergleich:** Nur die blockierenden Tests: Zeilen {cov_block['percent_statements_covered']:.1f} %, Zweige {cov_block['percent_branches_covered']:.1f} %. Die beabsichtigt roten Tests (bekannte Fehler und Abweichungen) verändern die Abdeckung kaum ({t['percent_statements_covered'] - cov_block['percent_statements_covered']:.1f} Prozentpunkte bei den Zeilen).
+**Comparison:** Blocking tests only: lines {cov_block['percent_statements_covered']:.1f} %, branches {cov_block['percent_branches_covered']:.1f} %. The intentionally red tests (known defects and deviations) hardly change the coverage ({t['percent_statements_covered'] - cov_block['percent_statements_covered']:.1f} percentage points for the lines).
 
 """)
 crit_section()
 w(f"""
-## 6. Kritische Funktionen (nach Komplexität)
+## 6. Critical functions (by complexity)
 
-Kernmodule (`__init__.py` mit Koordinator, `pygoecharger_ha/__init__.py` mit Bridge, `service.py`, `config_flow.py`), sortiert nach Komplexität, gezeigt ab CC 4. „Pfade“ = beobachtete verschiedene Pfade, „CC“ = Basispfade.
+Core modules (`__init__.py` with the coordinator, `pygoecharger_ha/__init__.py` with the bridge, `service.py`, `config_flow.py`), sorted by complexity, shown from CC 4. "Paths" = observed distinct paths, "CC" = base paths.
 
-| Funktion | CC | Aufrufe | Pfade | Zeilen | Zweige | Bewertung |
+| Function | CC | Calls | Paths | Lines | Branches | Assessment |
 |---|---|---|---|---|---|---|""")
 for r in sorted(core_rows, key=lambda r: -r["cc"]):
     if r["cc"] < 4:
         continue
-    verdict = "nie ausgeführt" if r["calls"] == 0 else (f"es fehlen mindestens {r['cc'] - r['paths']} Basispfade" if r["paths"] < r["cc"] else "Pfadzahl nicht widerlegt")
+    verdict = "never executed" if r["calls"] == 0 else (f"at least {r['cc'] - r['paths']} base paths are missing" if r["paths"] < r["cc"] else "path count not refuted")
     if r["file"] == "__init__.py":
-        short_name = ("Entität" if r["name"].startswith("GoeChargerBaseEntity") else
-                      "Koordinator" if r["name"].startswith("GoeChargerDataUpdateCoordinator") else "Setup")
+        short_name = ("entity" if r["name"].startswith("GoeChargerBaseEntity") else
+                      "coordinator" if r["name"].startswith("GoeChargerDataUpdateCoordinator") else "setup")
     else:
-        short_name = {"pygoecharger_ha/__init__.py": "Bridge", "service.py": "Dienst", "config_flow.py": "Flow"}[r["file"]]
+        short_name = {"pygoecharger_ha/__init__.py": "bridge", "service.py": "service", "config_flow.py": "flow"}[r["file"]]
     w(f"| `{r['name']}` ({short_name}) | {r['cc']} | {r['calls']} | {r['paths']} | {r['line']:.0f} % | {pct(r['brc'], r['br'])} | {verdict} |")
 w("""
-### 6.1 Nicht genommene Zweige in den wichtigsten Pfaden
-Je Funktion die Zeilen, an denen mindestens ein Ausgang nie genommen wurde (bis zu sechs, Auswahl der Funktionen mit CC ab 8).
+### 6.1 Branches not taken in the most important paths
+Per function the lines where at least one outcome was never taken (up to six, selection of the functions with CC 8 or more).
 """)
 for r in sorted(core_rows, key=lambda r: -r["cc"]):
     if r["cc"] < 8 or not r["missing"] or r["calls"] == 0:
         continue
     lines = sorted({m[0] for m in r["missing"] if m[0] > 0})[:6]
     src = sources[r["file"]]
-    w(f"**`{r['name']}`** ({r['file']}): " + "; ".join(f"Z. {n} `{src[n - 1].strip()[:70]}`" for n in lines) + "\n")
+    w(f"**`{r['name']}`** ({r['file']}): " + "; ".join(f"l. {n} `{src[n - 1].strip()[:70]}`" for n in lines) + "\n")
 
-w("""## 7. Nicht ausgeführte Funktionen im Kern
+w("""## 7. Functions not executed in the core
 
-Funktionen der Kernmodule, die kein Test erreicht.
+Functions of the core modules that no test reaches.
 """)
 rows = [r for r in core_rows if r["calls"] == 0]
-w("| Funktion | CC |\n|---|---|")
+w("| Function | CC |\n|---|---|")
 for r in sorted(rows, key=lambda r: -r["cc"]):
     w(f"| `{r['name']}` ({r['file']}) | {r['cc']} |")
 WS = ("pygoecharger_ha/__init__.py", "GoeChargerApiV2Bridge.ws_connect")
@@ -269,25 +269,25 @@ WS_N, RV_N = trace.get(WS, {}).get("distinct_paths", 0), trace.get(RV, {}).get("
 BIG2 = WS_CC + RV_CC
 BIG2_PCT = round(100 * BIG2 / core_cc)
 ALL_PCT, CORE_PCT = pct(all_cov, all_cc), pct(core_cov, core_cc)
-PLATFORM_GAPS = ", ".join(f"`{r['file']}: {r['name']}`" for r in funcs if r['file'] in PLATFORMS and r['calls'] == 0) or "keine"
+PLATFORM_GAPS = ", ".join(f"`{r['file']}: {r['name']}`" for r in funcs if r['file'] in PLATFORMS and r['calls'] == 0) or "none"
 w(f"""
-## 8. Plattformen und Hilfsdateien
+## 8. Platforms and helper files
 
-Die Plattformen sind jetzt getestet (Wertdarstellung und Schreiben der Entitäten). Nicht ausgeführt bleiben das Anlegen der Entitäten (`async_setup_entry` je Plattform) und der Anzeigename in `entity.py`: {PLATFORM_GAPS}.
+The platforms are now tested (value display and writing of the entities). Not executed are the creation of the entities (`async_setup_entry` per platform) and the display name in `entity.py`: {PLATFORM_GAPS}.
 
-## 9. Einordnung
+## 9. Interpretation
 
-- **Pfadabdeckung:** Vollständige Pfadabdeckung ist hier weder erreichbar noch ein sinnvolles Ziel. Mit {BIG2} von {core_cc} Basispfaden der Kernmodule ({BIG2_PCT} %) bestimmen `ws_connect` (CC {WS_CC}) und `read_versions` des Koordinators (CC {RV_CC}) die Kennzahl; für sie wurden {WS_N} und {RV_N} verschiedene Pfade beobachtet. Funktionen mit sehr hoher CC sind in dieser Form schwer vollständig zu testen. Das ist ein Hinweis auf die Struktur des Codes, kein Vorwurf an die Tests.
-- **Das Ziel von 60 % ist erreicht** (alle Funktionen {ALL_PCT}, Kernmodule {CORE_PCT}), aber die Zahl ist eine **obere Schranke** und lässt sich durch Tests mit nur leicht verschiedenen Eingaben steigern, ohne dass die Prüfung besser wird. Deshalb gelten die Mutationsprüfungen als Gegenprobe: 33 gezielte Code-Änderungen, alle wurden von den Tests erkannt (eine Lücke wurde erst nach einem zusätzlichen Test geschlossen).
-- **Zeilen- und Zweigabdeckung sagen nichts über die Qualität der Prüfungen.** Alle Tests laufen mit Attrappen und sagen nichts darüber, ob der echte Charger sich so verhält.
+- **Path coverage:** Complete path coverage is neither reachable here nor a sensible goal. With {BIG2} of {core_cc} base paths of the core modules ({BIG2_PCT} %), `ws_connect` (CC {WS_CC}) and `read_versions` of the coordinator (CC {RV_CC}) determine the figure; {WS_N} and {RV_N} distinct paths were observed for them. Functions with a very high CC are hard to test completely in this form. That is a hint about the structure of the code, not a reproach to the tests.
+- **The goal of 60 % is reached** (all functions {ALL_PCT}, core modules {CORE_PCT}), but the figure is an **upper bound** and can be raised by tests with only slightly different inputs without making the check better. This is why the mutation checks serve as a counter-check: 33 deliberate code changes, all were detected by the tests (one gap was closed only after an additional test).
+- **Line and branch coverage say nothing about the quality of the checks.** All tests run with fakes and say nothing about whether the real charger behaves this way.
 
-## 10. Empfehlungen (nach Wirkung)
+## 10. Recommendations (by effect)
 
-1. K1 und K2 zuerst: die Tabellen in Abschnitt 5.1 listen, wo noch Basispfade sicher fehlen. Dort stehen auch nicht genommene Fehlerpfade.
-2. Fehlende Tests für bekannte Risiken: R20 (alte Werte nach fehlgeschlagenem Lesen, Cloud-Betrieb) und R7 (Konfigurationsintervall).
-3. Lesenden Abgleich am echten Charger durchführen; erst er belegt, dass die Attrappen dem Gerät entsprechen.
-4. Eine Untergrenze für die Abdeckung in den Lauf einbauen (zum Beispiel Zweigabdeckung der Kernmodule), damit sie nicht unbemerkt sinkt.
-5. `ws_connect` und `read_versions` zerlegen, wenn sie später geändert werden; erst dann lassen sich ihre Pfade sinnvoll einzeln prüfen.
+1. K1 and K2 first: the tables in section 5.1 list where base paths are certainly still missing. They also show error paths that were not taken.
+2. Missing tests for known risks: see the risk register in `docs/architecture/risks/` (for example R007, the configuration interval).
+3. Carry out a reading comparison on a real charger; only that proves that the fakes correspond to the device.
+4. Build a lower bound for the coverage into the run (for example the branch coverage of the core modules) so that it does not drop unnoticed.
+5. Split `ws_connect` and `read_versions` when they are changed later; only then can their paths be checked individually in a sensible way.
 """)
 (report_dir / "testreport.md").write_text("\n".join(out))
 print("written", report_dir / "testreport.md", len("\n".join(out).splitlines()), "lines")
