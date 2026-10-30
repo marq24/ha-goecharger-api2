@@ -36,7 +36,7 @@ Risk strategy: **Mitigate**. Scale: W 1 (very unlikely) to 5 (very likely), A 1 
 
 ## Countermeasure
 
-The maintainer changed the detection in `4c7207c` ("alternate handling of `cableCurrentLimit`"): with `cll` content but without `cableCurrentLimit` the limit to 16 A is no longer set. That change is the cause of [R029](R029-without-cablecurrentlimit-there-is-no-limit-to-16-a-any.md). A test that restarts with a 32 A charger and keeps the value is still missing.
+The maintainer changed the detection in `98af3e0` ("alternate handling of `cableCurrentLimit`"): with `cll` content but without `cableCurrentLimit` the limit to 16 A is no longer set. That change is the cause of [R029](R029-without-cablecurrentlimit-there-is-no-limit-to-16-a-any.md). A test that restarts with a 32 A charger and keeps the value is still missing.
 
 **Residual risk (W 1, A 3, as assessed from the start).** The limiter stays on for chargers that really are limited to 16 A. If the detection is wrong ([R029](R029-without-cablecurrentlimit-there-is-no-limit-to-16-a-any.md), [R033](R033-16-a-limiter-reads-over-http-also-in-websocket-mode.md)), the user charges slower than possible. This is accepted for the case of a really limited charger; the other cases are tracked in [R029](R029-without-cablecurrentlimit-there-is-no-limit-to-16-a-any.md) and [R033](R033-16-a-limiter-reads-over-http-also-in-websocket-mode.md).
 
@@ -46,7 +46,7 @@ The maintainer changed the detection in `4c7207c` ("alternate handling of `cable
 Closed (fixed)
 <!-- /risk:status -->
 
-Fixed for the reporter in `4c7207c` (2026-10-28); the reporter wrote "Working ;)" on 2026-10-29. Issue #176 is still open. The original assessment (W 3, A 3) is kept. Not reproduced by us and not checked on a real device.
+Fixed for the reporter in `98af3e0` (2026-10-28); the reporter wrote "Working ;)" on 2026-10-29. Issue #176 is still open. The original assessment (W 3, A 3) is kept. Not reproduced by us and not checked on a real device.
 
 ## Evidence
 
