@@ -30,9 +30,9 @@ for case in ET.parse(junit).getroot().iter("testcase"):
     elif case.find("skipped") is not None:
         entry[2] += 1
 
-lines = ["# Testfälle", "",
-         "Eine Zeile je Testfunktion. Der Text ist die erste Zeile der Beschreibung im Code oder der Funktionsname als Satz. "
-         "„Rot“ bedeutet: das Ergebnis ist absichtlich rot (bekannter Fehler oder offene Entscheidung), nicht blockierend für die Freigabe.", ""]
+lines = ["# Test cases", "",
+         "One line per test function. The text is the first line of its docstring in the code, or the function name written as a sentence. "
+         "\"Red\" means the result is intentionally red (known defect or open decision) and does not block a release.", ""]
 total = red = skipped = 0
 for path in sorted(tests_dir.glob("test_*.py")):
     tree = ast.parse(path.read_text())
@@ -45,11 +45,11 @@ for path in sorted(tests_dir.glob("test_*.py")):
                 continue
             doc = (ast.get_docstring(node) or "").splitlines()
             text = (doc[0] if doc else sentence(node.name)).replace("|", "\\|")
-            status = "rot" if r == n else (f"{r} rot" if r else ("übersprungen" if s == n else "grün"))
+            status = "red" if r == n else (f"{r} red" if r else ("skipped" if s == n else "green"))
             rows.append(f"| {text} | {n} | {status} |")
             total, red, skipped = total + n, red + r, skipped + s
     if rows:
-        lines += [f"## `{path.name}`", "", module_doc, "", "| Prüft | Fälle | Ergebnis |", "|---|---|---|", *rows, ""]
-lines.insert(3, f"**{total} Fälle**, davon {red} absichtlich rot und {skipped} übersprungen.\n")
+        lines += [f"## `{path.name}`", "", module_doc, "", "| Checks | Cases | Result |", "|---|---|---|", *rows, ""]
+lines.insert(3, f"**{total} cases**, of which {red} intentionally red and {skipped} skipped.\n")
 output.write_text("\n".join(lines) + "\n")
 print(f"{total} cases in {output}")

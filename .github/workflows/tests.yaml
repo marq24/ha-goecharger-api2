@@ -11,12 +11,16 @@ on:
       - "custom_components/**"
       - "tests/**"
       - "requirements_dev.txt"
+      - "docs/architecture/**"
+      - "docs/quality/**"
       - ".github/workflows/tests.yaml"
   pull_request:
     paths:
       - "custom_components/**"
       - "tests/**"
       - "requirements_dev.txt"
+      - "docs/architecture/**"
+      - "docs/quality/**"
       - ".github/workflows/tests.yaml"
   workflow_dispatch:
 
@@ -39,6 +43,9 @@ jobs:
         run: |
           python -m pip install -r requirements_dev.txt msgpack
           python -m pip show homeassistant pytest-homeassistant-custom-component | grep -E "^(Name|Version)"
+
+      - name: Risk documents match their front matter
+        run: python tests/tools/build_risk_register.py --check
 
       - name: Blocking tests
         run: python -m pytest tests/integration -p no:cacheprovider -q -m "not known_bug and not needs_decision"
