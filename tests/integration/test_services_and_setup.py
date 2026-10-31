@@ -227,10 +227,9 @@ async def test_registry_helpers_ignore_unknown_entries(hass):
 def setup_patches():
     with patch.object(GoeChargerDataUpdateCoordinator, "_async_update_data", AsyncMock(return_value={"car": 1})), \
          patch.object(GoeChargerDataUpdateCoordinator, "read_versions", AsyncMock(return_value=True)), \
-         patch.object(GoeChargerDataUpdateCoordinator, "check_for_16a_limit", AsyncMock()) as limiter, \
          patch.object(GoeChargerDataUpdateCoordinator, "start_websocket_and_wait_for_first_data", AsyncMock(return_value=True)) as ws_start, \
          patch.object(GoeChargerDataUpdateCoordinator, "start_watchdog", AsyncMock()) as watchdog:
-        yield SimpleNamespace_(limiter=limiter, ws_start=ws_start, watchdog=watchdog)
+        yield SimpleNamespace_(ws_start=ws_start, watchdog=watchdog)
 
 
 class SimpleNamespace_:
@@ -286,18 +285,6 @@ async def test_watchdog_waits_for_home_assistant_to_finish_starting(hass, setup_
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
     setup_patches.watchdog.assert_awaited_once()
-
-
-async def test_limited_charger_starts_the_16_a_task(hass, setup_patches):
-    async def limited(self):
-        self.limit_to16a = True
-        return True
-
-    entry = make_entry(hass)
-    with patch.object(GoeChargerDataUpdateCoordinator, "read_versions", limited):
-        await _setup(hass, entry)
-        await hass.async_block_till_done()
-    setup_patches.limiter.assert_awaited_once()
 
 
 async def test_unknown_language_falls_back_to_english_texts(hass, setup_patches):

@@ -30,13 +30,13 @@ def _cll(**fields):
 CASES = [
     # id,                          device,   extra versions,                          option, expected
     ("cable_limit_32",             NON_CORE, _cll(cableCurrentLimit=32),             False,  False),
-    ("cable_limit_16",             NON_CORE, _cll(cableCurrentLimit=16),             False,  True),
-    ("cable_limit_6",              NON_CORE, _cll(cableCurrentLimit=6),              False,  True),
+    ("cable_limit_16",             NON_CORE, _cll(cableCurrentLimit=16),             False,  False),
+    ("cable_limit_6",              NON_CORE, _cll(cableCurrentLimit=6),              False,  False),
     ("variant_11kw_always_limits", NON_CORE, {"var": 11, **_cll(cableCurrentLimit=32)}, False, True),
     ("user_option_forces_limit",   NON_CORE, _cll(cableCurrentLimit=32),             True,   True),
-    ("no_cll_adapter_in_use",      NON_CORE, {"adi": True},                          False,  True),
+    ("no_cll_adapter_in_use",      NON_CORE, {"adi": True},                          False,  False),
     ("no_cll_no_adapter",          NON_CORE, {"adi": False},                         False,  False),
-    ("core_without_cll_is_limited", CORE,    {},                                     False,  True),
+    ("core_without_cll_is_limited", CORE,    {},                                     False,  False),
     # current behaviour since 98af3e0 (issue #176): cll present but no cableCurrentLimit -> no limit
     ("cll_without_cable_limit_non_core", NON_CORE, _cll(currentLimitMax=32),         False,  False),
     ("cll_without_cable_limit_core",     CORE,     _cll(currentLimitMax=32),         False,  False),

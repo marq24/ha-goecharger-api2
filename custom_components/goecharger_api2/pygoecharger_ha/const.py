@@ -20,7 +20,7 @@ FILTER_CARDS_ALL_FWV60: Final = f"{FILTER_CARDS_ID_FWV60},{FILTER_CARDS_NAME_FWV
 
 
 FILTER_SYSTEMS: Final = "oem,sse,typ,var,hai,cae"
-FILTER_VERSIONS_NOCARDS: Final = f"ccrv,typ,log,fwc,fwv,var,cll,adi"
+FILTER_VERSIONS_NOCARDS: Final = f"ccrv,typ,log,fwc,fwv,var"
 FILTER_VERSIONS: Final = f"{FILTER_VERSIONS_NOCARDS},{FILTER_CARDS_ID_CLASSIC},{FILTER_CARDS_ID_FWV60}"
 FILTER_MIN_STATES: Final = "car,modelStatus,err,nrg,tcl,tma,trx"
 FILTER_IDS_ADDON: Final = ",pakku,ppv,pgrid"

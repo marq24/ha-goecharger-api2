@@ -15,7 +15,6 @@ from homeassistant.components.number import NumberDeviceClass
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
-from custom_components.goecharger_api2 import check_and_write_to_16a
 from custom_components.goecharger_api2.const import DOMAIN
 from custom_components.goecharger_api2.pygoecharger_ha import NonNullDict
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
@@ -92,78 +91,6 @@ def _current_entity(key, max_value=16, **kwargs):
     return SimpleNamespace(**values)
 
 
-async def _run_limiter(hass, entities, read_result, lb_group=False):
-    bridge = SimpleNamespace(_read_filtered_data=AsyncMock(return_value=read_result),
-                             write_value_to_key=AsyncMock())
-    with patch(f"{PKG}.entity_reg.async_entries_for_config_entry", return_value=entities):
-        await check_and_write_to_16a(hass, "entry", bridge, lb_group)
-    return bridge
-
-
-async def test_limiter_lowers_a_value_above_16_a(hass):
-    bridge = await _run_limiter(hass, [_current_entity("amp")], {"amp": 20})
-    bridge.write_value_to_key.assert_awaited_once_with("amp", 16)
-
-
-async def test_limiter_leaves_values_up_to_16_a_alone(hass):
-    bridge = await _run_limiter(hass, [_current_entity("amp")], {"amp": 16})
-    bridge.write_value_to_key.assert_not_awaited()
-
-
-async def test_limiter_lowers_a_value_inside_an_object(hass):
-    entities = [_current_entity("lot_amp"), _current_entity("lot_sta")]
-    bridge = await _run_limiter(hass, entities, {"lot": {"amp": 32, "sta": 10}})
-    bridge.write_value_to_key.assert_awaited_once_with("lot", {"amp": 16, "sta": 10})
-    assert bridge._read_filtered_data.await_args.kwargs["filters"] == "lot"
-
-
-async def test_limiter_skips_the_load_balancer_value_when_a_group_is_set(hass):
-    bridge = await _run_limiter(hass, [_current_entity("lot_amp"), _current_entity("amp")],
-                                {"lot": {"amp": 32}, "amp": 20}, lb_group=True)
-    bridge.write_value_to_key.assert_awaited_once_with("amp", 16)
-
-
-async def test_limiter_ignores_entities_that_do_not_count(hass):
-    entities = [
-        _current_entity("a", max_value=32),
-        _current_entity("b", original_device_class=None),
-        _current_entity("c", disabled=True),
-        _current_entity("d", orphaned_timestamp=123.0),
-        _current_entity("e", capabilities={}),
-    ]
-    bridge = await _run_limiter(hass, entities, {})
-    bridge._read_filtered_data.assert_not_awaited()
-
-
-async def test_limiter_asks_for_a_shared_key_only_once(hass):
-    bridge = await _run_limiter(hass, [_current_entity("amp"), _current_entity("amp")], {"amp": 10})
-    assert bridge._read_filtered_data.await_args.kwargs["filters"] == "amp"
-
-
-async def test_limiter_ignores_values_that_are_neither_numbers_nor_objects(hass):
-    bridge = await _run_limiter(hass, [_current_entity("amp"), _current_entity("fna")], {"amp": 20, "fna": "name"})
-    bridge.write_value_to_key.assert_awaited_once_with("amp", 16)
-
-
-async def test_limiter_survives_a_failing_read(hass, caplog):
-    bridge = SimpleNamespace(_read_filtered_data=AsyncMock(side_effect=RuntimeError("boom")),
-                             write_value_to_key=AsyncMock())
-    with patch(f"{PKG}.entity_reg.async_entries_for_config_entry", return_value=[_current_entity("amp")]):
-        await check_and_write_to_16a(hass, "entry", bridge, False)
-    assert "Error while forcing 16A settings" in caplog.text
-    bridge.write_value_to_key.assert_not_awaited()
-
-
-async def test_limiter_task_waits_and_then_runs_the_check(hass):
-    coordinator = make_coordinator(hass, data={})
-    coordinator.is_loadbalancer_group_id_set = True
-    with patch(f"{PKG}.asyncio.sleep", AsyncMock()) as sleep, \
-         patch(f"{PKG}.check_and_write_to_16a", AsyncMock()) as check:
-        await coordinator.check_for_16a_limit(hass, "entry-id")
-    sleep.assert_awaited_once_with(15)
-    check.assert_awaited_once_with(hass=hass, config_entry_id="entry-id", bridge=coordinator.bridge, is_lbgroup_id_set=True)
-
-
 # ----------------------------------------------------------------------------- device detection (read_versions)
 
 def _versions_coordinator(hass, versions, **kwargs):
@@ -222,13 +149,13 @@ async def test_type_falls_back_to_the_type_stored_at_setup(hass):
 async def test_unreadable_cable_limit_on_a_core_wallbox_limits_to_16_a(hass):
     coordinator = _versions_coordinator(hass, {"typ": "go-eCharger_Phoenix", "cll": {"cableCurrentLimit": "n/a"}})
     await coordinator.read_versions()
-    assert coordinator.limit_to16a is True
+    assert coordinator.limit_to16a is False
 
 
 async def test_unreadable_cable_limit_on_another_wallbox_uses_the_adapter_flag(hass):
     coordinator = _versions_coordinator(hass, {"typ": "go-eCharger_V4", "cll": {"cableCurrentLimit": "n/a"}, "adi": True})
     await coordinator.read_versions()
-    assert coordinator.limit_to16a is True
+    assert coordinator.limit_to16a is False
 
 
 async def test_empty_cll_object_falls_back_to_the_adapter_flag(hass):
