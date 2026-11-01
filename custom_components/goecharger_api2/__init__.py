@@ -20,11 +20,11 @@ from homeassistant.const import (
     CONF_DELAY,
     EVENT_HOMEASSISTANT_STARTED
 )
+from homeassistant.components import persistent_notification
 from homeassistant.core import HomeAssistant, Event, SupportsResponse, CoreState
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as config_val,
-    entity_registry as entity_reg,
     device_registry as device_reg
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -70,6 +70,7 @@ WEBSOCKET_WATCHDOG_INTERVAL: Final = timedelta(minutes=5, seconds=1)
 COMMUNICATION_MODE_WEBSOCKET: Final = "WEBSOCKET"
 COMMUNICATION_MODE_HTTPGET: Final = "HTTPGET"
 ACTIVE_CHARGER_COUNTER: Final = "active_charger_counter"
+IGNORE_CONFIG_ENTRY_UPDATES = False
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     if config_entry.version == 1:
@@ -106,19 +107,73 @@ async def async_setup(hass: HomeAssistant, config: dict):  # pylint: disable=unu
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
-    if DOMAIN not in hass.data:
-        the_integration = await async_get_integration(hass, DOMAIN)
-        intg_version = the_integration.version if the_integration is not None else "UNKNOWN"
-        _LOGGER.info(STARTUP_MESSAGE % intg_version)
-        hass.data.setdefault(DOMAIN, {"manifest_version": intg_version})
+def handle_heavy_user(hass: HomeAssistant, lang_map):
+    async def check_count_of_running_integrations(hass: HomeAssistant):
+        try:
+            _LOGGER.debug(f"check_count_of_running_integrations(): init")
+            await asyncio.sleep(120)
+            _LOGGER.debug(f"check_count_of_running_integrations(): ready to start")
+            loaded_entries = hass.config_entries.async_loaded_entries(DOMAIN)
+            if len(loaded_entries) > 8:
+                last_notify_ts = int(loaded_entries[0].data.get("heavy_usage_notification", 0))
+                elapsed = time.time() - last_notify_ts
+                if elapsed > (60 * 24 * 60 * 60):
+                    try:
+                        notify_id = f"{DOMAIN}_heavy_user_notification"
+                        persistent_notification.async_create(hass,
+                                                             title=lang_map["heavy_user_title"],
+                                                             message=lang_map["heavy_user_msg"],
+                                                             notification_id=notify_id)
 
+                        all_entries = hass.config_entries.async_entries(DOMAIN)
+                        global IGNORE_CONFIG_ENTRY_UPDATES
+                        IGNORE_CONFIG_ENTRY_UPDATES = True
+                        ts = int(time.time())
+                        for a_entry in all_entries:
+                            new_data = {**a_entry.data}
+                            new_data["heavy_usage_notification"] = ts
+                            hass.config_entries.async_update_entry(a_entry, data=new_data)
+                        IGNORE_CONFIG_ENTRY_UPDATES = False
+                        async def auto_dismiss(delay_seconds: int):
+                            try:
+                                await asyncio.sleep(delay_seconds)
+                            except asyncio.CancelledError:
+                                _LOGGER.debug(f"auto_dismiss() will be cancelled...")
+                            await hass.services.async_call("persistent_notification", "dismiss", {"notification_id": notify_id})
+
+                        # show the message for 4h ater the start - then auto cancel it
+                        a_task = hass.async_create_task(auto_dismiss(4*60*60))
+                        hass.data[DOMAIN]["checker_task"] = a_task
+
+                    except BaseException as e:
+                        _LOGGER.debug(f"persistent_notification() caused {type(e).__name__} - {e}", stack_info=True)
+
+                else:
+                    _LOGGER.debug(f"persistent_notification() just notified less then 30 days ago")
+            else:
+                _LOGGER.debug(f"persistent_notification() loaded entries is: {loaded_entries}")
+
+        except asyncio.CancelledError:
+            _LOGGER.debug(f"check_count_of_running_integrations() will be cancelled...")
+
+    task = hass.async_create_task(check_count_of_running_integrations(hass))
+    hass.data[DOMAIN]["checker_task"] = task
+
+
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     # ok starting the init sequence...
     lang = hass.config.language.lower()
     if lang in TRANSLATIONS:
         lang_map = TRANSLATIONS[lang]
     else:
         lang_map = TRANSLATIONS["en"]
+
+    if DOMAIN not in hass.data:
+        the_integration = await async_get_integration(hass, DOMAIN)
+        intg_version = the_integration.version if the_integration is not None else "UNKNOWN"
+        _LOGGER.info(STARTUP_MESSAGE % intg_version)
+        hass.data.setdefault(DOMAIN, {"manifest_version": intg_version})
+        handle_heavy_user(hass, lang_map)
 
     coordinator = GoeChargerDataUpdateCoordinator(hass, config_entry)
     a_pwd = config_entry.data.get(CONF_PASSWORD, None)
@@ -185,30 +240,43 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     unload_ok = await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
     if unload_ok:
-        if DOMAIN in hass.data and config_entry.entry_id in hass.data[DOMAIN]:
-            coordinator = hass.data[DOMAIN][config_entry.entry_id]
-            coordinator.cancel_existing_debouncer()
-            coordinator.stop_watchdog()
-            coordinator.clear_data()
-            hass.data[DOMAIN].pop(config_entry.entry_id)
-            if coordinator.intg_type == INTG_TYPE.CHARGER.value:
-                hass.data[DOMAIN][ACTIVE_CHARGER_COUNTER] = hass.data[DOMAIN][ACTIVE_CHARGER_COUNTER] - 1
-                remove_config_entry_from_service(config_entry)
+        if DOMAIN in hass.data:
+            if config_entry.entry_id in hass.data[DOMAIN]:
+                coordinator = hass.data[DOMAIN][config_entry.entry_id]
+                coordinator.cancel_existing_debouncer()
+                coordinator.stop_watchdog()
+                coordinator.clear_data()
+                hass.data[DOMAIN].pop(config_entry.entry_id)
+                if coordinator.intg_type == INTG_TYPE.CHARGER.value:
+                    hass.data[DOMAIN][ACTIVE_CHARGER_COUNTER] = hass.data[DOMAIN][ACTIVE_CHARGER_COUNTER] - 1
+                    remove_config_entry_from_service(config_entry)
 
-                # ONLY remove the SERVICES if this is the LAST ACTIVE config_entry that will be unloaded!
-                if hass.data[DOMAIN][ACTIVE_CHARGER_COUNTER] == 0:
-                    _LOGGER.info(f"async_unload_entry(): Unloading last active go-eCharger - will remove SERVICES")
-                    hass.services.async_remove(DOMAIN, SERVICE_SET_PV_DATA)
-                    hass.services.async_remove(DOMAIN, SERVICE_STOP_CHARGING)
-                    hass.services.async_remove(DOMAIN, SERVICE_SET_TEMPORARY_CURRENT)
+                    # ONLY remove the SERVICES if this is the LAST ACTIVE config_entry that will be unloaded!
+                    if hass.data[DOMAIN][ACTIVE_CHARGER_COUNTER] == 0:
+                        _LOGGER.info(f"async_unload_entry(): Unloading last active go-eCharger - will remove SERVICES")
+                        hass.services.async_remove(DOMAIN, SERVICE_SET_PV_DATA)
+                        hass.services.async_remove(DOMAIN, SERVICE_STOP_CHARGING)
+                        hass.services.async_remove(DOMAIN, SERVICE_SET_TEMPORARY_CURRENT)
+
+            # if there is a 'active checker task', we cancel it... (and do not care that
+            # this task will be "killed" when the first integration entry will be
+            # unloaded)
+            if "checker_task" in hass.data[DOMAIN]:
+                task = hass.data[DOMAIN]["checker_task"]
+                if not task.done():
+                    task.cancel()
+                hass.data[DOMAIN].pop("checker_task")
 
     return unload_ok
 
 
 async def entry_update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-    _LOGGER.debug(f"entry_update_listener(): called for entry: {config_entry.entry_id}")
-    await hass.config_entries.async_reload(config_entry.entry_id)
-
+    global IGNORE_CONFIG_ENTRY_UPDATES
+    if not IGNORE_CONFIG_ENTRY_UPDATES:
+        _LOGGER.debug(f"entry_update_listener(): called for entry: {config_entry.entry_id}")
+        await hass.config_entries.async_reload(config_entry.entry_id)
+    else:
+        _LOGGER.debug(f"entry_update_listener(): IGNORE for entry: {config_entry.entry_id} (IGNORE_CONFIG_ENTRY_UPDATES=True)")
 
 class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
 
@@ -396,8 +464,11 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
 
         _LOGGER.debug(f"start_websocket_and_wait_for_first_data(): task created {self._ws_start_task.get_coro()}")
         async_call_later(self.hass, 10, self.call_later_update_device_registry)
-
-        _LOGGER.info(f"Essential device data is available after WebSocket connection has been established - that's just so GREAT! Available keys: {list(self.data.keys())} so let's move on...")
+        if self.data is not None and hasattr(self.data, "keys"):
+            l_data = list(self.data.keys())
+        else:
+            l_data = "[self.data is NONE?! - or no 'keys()']"
+        _LOGGER.info(f"Essential device data is available after WebSocket connection has been established - that's just so GREAT! Available keys: {l_data} so let's move on...")
         return True
 
     async def start_watchdog(self, event=None):

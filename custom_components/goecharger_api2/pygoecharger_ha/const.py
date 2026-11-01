@@ -110,6 +110,8 @@ CT_VALUES_MAP: Final = {
 
 TRANSLATIONS: Final = {
     "de": {
+        "heavy_user_title": "Möchtest Du nicht die Entwicklung unterstützen?",
+        "heavy_user_msg": "Du hast mehr als 8 aktive 'go-e APIv2 Connect' Integrationseinträge. Als intensiver Nutzer solltest Du Dir überlegen, ob Du die Weiterentwicklung und Pflege nicht unterstützen möchtest?\n\nBitte besuche das [Projekt go-e APIv2 Connect auf GitHub](https://github.com/marq24/ha-goecharger-api2/blob/main/docs/SUPPORT.md), um mehr zu erfahren.\n\nDanke für Deine Aufmerksamkeit @marq24",
         "coord_null_data": "Es konnten keine Daten abgerufen werden. Bitte prüfe Dein Home Assistant System Protokoll auf mögliche Fehlermeldungen der Integration.",
         "coord_no_device_data": "Es konnten keine Daten zu Deinem konfigurierten Gerät abgerufen werden. Bitte prüfe Dein Home Assistant System Protokoll auf mögliche Fehlermeldungen der Integration.",
         "websocket_start_failed": "Der Websocket konnte innerhalb von einer Minute nicht gestartet werden. Bitte prüfe Dein Home Assistant System Protokoll auf mögliche Fehlermeldungen der Integration.",
@@ -284,6 +286,8 @@ TRANSLATIONS: Final = {
         "cll_unsymetrycurrentlimit": "Stromlimit Asymmetrie"
     },
     "en": {
+        "heavy_user_title": "Wouldn't you like to support the development ?",
+        "heavy_user_msg": "You have more than 8 active 'go-e APIv2 Connect' integration entries. As a heavy user, you should consider supporting its further development and maintenance.\n\nPlease visit the [project go-e APIv2 Connect at GitHub](https://github.com/marq24/ha-goecharger-api2/blob/main/docs/SUPPORT.md) to learn more.\n\nThanks for your attention @marq24",
         "coord_null_data": "Coordinator could not provided any data. Please check your Home Assistant system log for possible error messages.",
         "coord_no_device_data": "Coordinator could not fetch essential information from your configured device. Please check your Home Assistant system log for possible error messages.",
         "websocket_start_failed": "The Websocket could not be started within one minute. Please check your Home Assistant system log for possible error messages.",
