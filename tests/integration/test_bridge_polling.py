@@ -5,6 +5,7 @@ is controlled by setting the bridge's "last update" timestamps.
 """
 import asyncio
 import time
+from collections import ChainMap
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
@@ -201,6 +202,33 @@ async def test_force_config_update_over_websocket_still_works(hass, aioclient_mo
 
 
 # ----------------------------------------------------------------------------- read_all
+
+@pytest.mark.parametrize("car", [1, 4])
+@pytest.mark.parametrize("reported", [None, 8])
+async def test_poll_replaces_cached_tcl_write_with_reported_value(hass, aioclient_mock, car, reported):
+    coordinator = make_coordinator(hass)
+    bridge = coordinator.bridge
+    bridge._states = NonNullDict({"car": car, "tcl": 6})
+    bridge._config = NonNullDict({"amp": 16, "ama": 16})
+    bridge._LAST_CONFIG_UPDATE_TS = bridge._LAST_FULL_STATE_UPDATE_TS = time.time()
+    coordinator.data = ChainMap(bridge._ws_states, bridge._config, bridge._states, bridge._versions)
+    coordinator.handle_write_result("single", 6, "tcl", {"tcl": 6}, None)
+    assert bridge._ws_states["tcl"] == 6
+    aioclient_mock.get(STATUS, json={"car": car, "tcl": reported})
+    data = await bridge.read_all()
+    assert data["tcl"] == reported and "tcl" not in bridge._ws_states
+    assert data["amp"] == data["ama"] == 16
+
+
+async def test_failed_poll_keeps_cached_tcl_write(hass, aioclient_mock):
+    bridge = make_bridge(hass)
+    bridge._states = NonNullDict({"car": 4, "tcl": 6})
+    bridge._ws_states["tcl"] = 6
+    bridge._LAST_CONFIG_UPDATE_TS = time.time()
+    aioclient_mock.get(STATUS, status=503)
+    assert (await bridge.read_all())["tcl"] == 6
+    assert bridge._ws_states["tcl"] == 6
+
 
 async def test_read_all_returns_a_merged_view_with_websocket_values_first(hass, aioclient_mock):
     aioclient_mock.get(STATUS, json={"car": 1, "amp": 6})

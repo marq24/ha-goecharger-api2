@@ -332,6 +332,7 @@ class GoeChargerApiV2Bridge:
 
     async def read_all_states(self):
         do_minimal_status_update: bool = False
+        updated_states = {}
         if self.isCharger:
             # ok we are in idle state - so we do not need all states... [but 5 minutes (=300sec) do a full update]
             if Tag.CAR.key in self._states and self._states[Tag.CAR.key] == CAR_VALUES.IDLE.value:
@@ -353,6 +354,7 @@ class GoeChargerApiV2Bridge:
                 idle_states = self._read_filtered_data_from_ws_source(filters=filter, log_info="read_idle_states")
             else:
                 idle_states = await self._read_filtered_data(filters=filter, log_info="read_idle_states")
+                updated_states = idle_states
 
             if len(idle_states) > 0:
                 # copy all fields from 'idle_states' to self._states
@@ -370,14 +372,22 @@ class GoeChargerApiV2Bridge:
                     await self.read_all_states()
 
         else:
+            filter = self._FILTER_ALL_STATES
             if self.ws_connected:
-                self._states = self._read_filtered_data_from_ws_source(filters=self._FILTER_ALL_STATES, log_info="read_all_states")
+                self._states = self._read_filtered_data_from_ws_source(filters=filter, log_info="read_all_states")
             else:
-                ret = await self._read_filtered_data(filters=self._FILTER_ALL_STATES, log_info="read_all_states")
+                ret = await self._read_filtered_data(filters=filter, log_info="read_all_states")
                 if ret is not None and len(ret) > 0 and isinstance(ret, NonNullDict):
                     self._states = ret
+                    updated_states = ret
             if len(self._states) > 0:
                 self._LAST_FULL_STATE_UPDATE_TS = time.time()
+
+        if not self.ws_connected and updated_states:
+            # Fresh polled states replace cached write results, including expiry to null.
+            for a_key in filter.split(","):
+                if a_key in updated_states:
+                    self._ws_states.pop(a_key, None)
 
     async def force_config_update(self):
         self._LAST_CONFIG_UPDATE_TS = 0
