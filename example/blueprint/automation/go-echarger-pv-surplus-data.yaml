@@ -14,7 +14,7 @@ blueprint:
     Daylight updates are skipped if any used power source is missing, non-numeric
     or non-finite. Disabled battery inputs are ignored. Skipping an update does
     not command the charger to stop and does not clear its previous averages.
-    This blueprint does not verify the age of otherwise numeric measurements.
+    Optional age checks skip stale measurements; they do not stop charging.
 
     The zero values keep the go-eCharger from working with stale `pvopt_*` averages. The
     charger calculates these averages from the last values it has received, no matter how
@@ -75,6 +75,25 @@ blueprint:
           max: 1000000
           step: any
           mode: box
+
+    freshness:
+      name: Measurement freshness (optional)
+      collapsed: true
+      input:
+        maximum_age_seconds:
+          name: Maximum measurement age
+          description: Zero disables age checking. HA report time is not necessarily the source measurement time.
+          default: 0
+          selector:
+            number: {min: 0, max: 3600, step: 1, unit_of_measurement: s, mode: box}
+        source_timestamp_entities:
+          name: Source timestamp sensors
+          description: Optional additional clocks. Every selected source clock must be valid and fresh when age checking is enabled.
+          default: []
+          selector:
+            entity:
+              multiple: true
+              filter: [{domain: sensor, device_class: timestamp}]
 
     grid_single:
       name: Grid Power - Single Entity
@@ -223,6 +242,9 @@ variables:
   # Preserve method precedence; an incomplete selected method must not fall back.
   # No grid method sends pgrid 0; phase lists use the first three, as before.
   # An empty entity ID marks an invalid selected phase method, not PV-only mode.
+  max_age: !input maximum_age_seconds
+  source_clocks: !input source_timestamp_entities
+  sampled_at: '{{ as_timestamp(now()) }}'
   grid_sources: >
     {% if grid_single_entity %}
       {{ [grid_single_entity] }}
@@ -236,12 +258,46 @@ variables:
       {{ [] }}
     {% endif %}
   # Capture each used state once, so validation and arithmetic use the same sample.
-  power_samples: >
+  power_snapshots: >
     {% set ns = namespace(samples={}) %}
     {% for entity in (grid_sources + pv_list + (battery_list if battery_enable else [])) | unique %}
-      {% set ns.samples = dict(ns.samples, **{entity: states(entity)}) if entity else ns.samples %}
+      {% set sample = states[entity] if entity else none %}
+      {% if sample is not none %}
+        {% set ns.samples = dict(ns.samples, **{entity: dict(value=sample.state,
+          reported=as_timestamp(sample.last_reported, none))}) %}
+      {% endif %}
     {% endfor %}
     {{ ns.samples }}
+  power_samples: >
+    {% set ns = namespace(samples={}) %}
+    {% for entity, sample in power_snapshots.items() %}
+      {% set ns.samples = dict(ns.samples, **{entity: sample.value}) %}
+    {% endfor %}
+    {{ ns.samples }}
+  source_times: >
+    {% set ns = namespace(times=[]) %}
+    {% if max_age | float(0) > 0 %}
+      {% for entity in source_clocks %}
+        {% set ns.times = ns.times + [as_timestamp(states(entity), none)] %}
+      {% endfor %}
+    {% endif %}
+    {{ ns.times }}
+  measurements_fresh: >
+    {% set ns = namespace(ok=is_number(max_age) and max_age | float(-1) >= 0) %}
+    {% if max_age | float(0) > 0 %}
+      {% for entity in grid_sources + pv_list + (battery_list if battery_enable else []) %}
+        {% set stamp = power_snapshots.get(entity, {}).get('reported') %}
+        {% if not is_number(stamp) or not 0 <= sampled_at | float - stamp | float(0) <= max_age | float %}
+          {% set ns.ok = false %}
+        {% endif %}
+      {% endfor %}
+      {% for stamp in source_times %}
+        {% if not is_number(stamp) or not 0 <= sampled_at | float - stamp | float(0) <= max_age | float %}
+          {% set ns.ok = false %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+    {{ ns.ok }}
   measurements_valid: >
     {% set ns = namespace(valid=pv_list | length > 0
       and is_number(multiplier) and multiplier | float(0) > 0) %}
@@ -322,7 +378,7 @@ actions:
           - condition: template
             alias: "Skip daylight update when a used measurement is invalid"
             value_template: >
-              {{ measurements_valid and is_number(pgrid_watts)
+              {{ measurements_valid and measurements_fresh and is_number(pgrid_watts)
                 and is_number(ppv_watts) and is_number(pakku_watts) }}
           - action: goecharger_api2.set_pv_data
             data: >
