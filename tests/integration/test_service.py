@@ -15,7 +15,7 @@ def svc(hass):
     service_module._COORDINATOR_PER_CONFIG_ENTRY_ID_MAP.clear()
     coordinator = SimpleNamespace(
         intg_type="charger", mode="lan", name="test charger", _serial="123456", data={},
-        async_write_key=AsyncMock(return_value={Tag.IDS.key: True}))
+        async_write_key=AsyncMock(side_effect=lambda key, value, **kwargs: {key: value}))
     service = GoeChargerApiV2Service(hass, SimpleNamespace(entry_id="entry"), coordinator)
     yield service, coordinator
     service_module._COORDINATOR_PER_CONFIG_ENTRY_ID_MAP.clear()
@@ -30,7 +30,7 @@ async def test_valid_values_are_written(svc):
     result = await service.set_pv_data(_call(pgrid=-500, ppv=1500, pakku=200))
     assert result["success"] == "true"
     coordinator.async_write_key.assert_awaited_once_with(
-        Tag.IDS.key, {"pGrid": -500.0, "pPv": 1500.0, "pAkku": 200.0})
+        Tag.IDS.key, {"pGrid": -500.0, "pPv": 1500.0, "pAkku": 200.0}, require_ack=True)
 
 
 @pytest.mark.parametrize("bad", [math.nan, math.inf, -math.inf])
@@ -46,4 +46,13 @@ async def test_non_finite_pv_and_battery_value_become_zero(svc, bad):
     service, coordinator = svc
     await service.set_pv_data(_call(pgrid=100, ppv=bad, pakku=bad))
     coordinator.async_write_key.assert_awaited_once_with(
-        Tag.IDS.key, {"pGrid": 100.0, "pPv": 0.0, "pAkku": 0.0})
+        Tag.IDS.key, {"pGrid": 100.0, "pPv": 0.0, "pAkku": 0.0}, require_ack=True)
+
+
+@pytest.mark.parametrize("reply", [{}, None, {"err": "rejected"}, {"ids": True}, {"ids": {"pGrid": 1}}])
+async def test_pv_response_requires_matching_acknowledgement(svc, reply):
+    service, coordinator = svc
+    coordinator.async_write_key = AsyncMock(return_value=reply)
+    result = await service.set_pv_data(_call(pgrid=-500, ppv=1500, pakku=200))
+    assert "error" in result and "success" not in result
+    assert coordinator.async_write_key.call_args.kwargs == {"require_ack": True}
