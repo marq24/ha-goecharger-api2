@@ -196,6 +196,44 @@ async def test_number_set_value_swallows_write_errors(hass):
     assert await number.async_set_native_value(10) == "unavailable"
 
 
+@pytest.mark.parametrize("reply", [{}, {"err": "rejected"}, {"tcl": True}, {"tcl": 8}, None])
+async def test_confirmed_number_rejects_missing_or_invalid_acknowledgement(hass, reply):
+    from unittest.mock import AsyncMock
+    from homeassistant.exceptions import ServiceValidationError
+    from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
+
+    number, coordinator = _number(hass, {"tcl": 9, "var": 22, "ama": 32, "mca": 6}, key="tcl", tag=Tag.TCL)
+    coordinator.async_write_key = AsyncMock(return_value=reply)
+    with pytest.raises(ServiceValidationError):
+        await number.async_set_native_value(9)
+    coordinator.async_write_key.assert_awaited_once_with("tcl", 9, number, require_ack=True)
+
+
+async def test_confirmed_number_propagates_write_failure(hass):
+    from unittest.mock import AsyncMock
+    from homeassistant.exceptions import ServiceValidationError
+    from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
+
+    number, coordinator = _number(hass, {"tcl": 9, "var": 22, "ama": 32, "mca": 6}, key="tcl", tag=Tag.TCL)
+    coordinator.async_write_key = AsyncMock(side_effect=ValueError("disconnected"))
+    with pytest.raises(ServiceValidationError, match="disconnected"):
+        await number.async_set_native_value(9)
+
+
+async def test_confirmed_number_renews_identical_limit_without_changing_user_settings(hass):
+    from unittest.mock import AsyncMock
+    from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
+
+    data = {"tcl": 9, "var": 22, "ama": 32, "mca": 6, "amp": 12}
+    number, coordinator = _number(hass, data, key="tcl", tag=Tag.TCL)
+    coordinator.async_write_key = AsyncMock(return_value={"tcl": 9})
+    for _ in range(2):
+        await number.async_set_native_value(9)
+    assert coordinator.async_write_key.await_count == 2
+    assert all(call.kwargs == {"require_ack": True} for call in coordinator.async_write_key.await_args_list)
+    assert data["amp"] == 12 and data["ama"] == 32
+
+
 # ----------------------------------------------------------------------------- number: limits of amp
 
 def _amp(value):

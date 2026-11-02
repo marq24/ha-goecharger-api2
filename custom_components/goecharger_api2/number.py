@@ -10,6 +10,7 @@ from homeassistant.components.number import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from custom_components.goecharger_api2.pygoecharger_ha import INTG_TYPE
@@ -152,10 +153,12 @@ class GoeChargerNumber(GoeChargerBaseEntity, NumberEntity):
             result = await self.coordinator.async_write_key(self.data_key, final_object_to_write, self, require_ack=validate_write_success)
 
             # must we verify that the setting of the value was successful?
-            if validate_write_success and result:
+            if validate_write_success:
                 self.tag.tag_func_validate_output(result, value)
 
-        except ValueError:
+        except ValueError as exc:
+            if validate_write_success:
+                raise ServiceValidationError(str(exc)) from exc
             return "unavailable"
 
     def check_amp_min_max(self, value):
