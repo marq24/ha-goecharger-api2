@@ -31,7 +31,7 @@ def _entry(hass, password=None):
 async def coordinator(hass):
     coordinator = GoeChargerDataUpdateCoordinator(hass, _entry(hass))
     bridge = coordinator.bridge
-    coordinator.data = ChainMap(bridge._ws_states, bridge._config, bridge._states, bridge._versions)
+    coordinator.data = ChainMap({}, bridge._ws_states, bridge._config, bridge._states, bridge._versions)
     coordinator.trigger_restart_delayed = AsyncMock()
     return coordinator
 

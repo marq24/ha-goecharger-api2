@@ -36,7 +36,6 @@ If you have any issues with this you need to open an issue here:
 
 SERVICE_SET_PV_DATA: Final = "set_pv_data"
 SERVICE_STOP_CHARGING: Final = "stop_charging"
-SERVICE_SET_TEMPORARY_CURRENT: Final = "set_temporary_current_limit"
 CONF_11KWLIMIT: Final = "limit_to_11kw"
 CONF_INTEGRATION_TYPE = "integration_type"
 
@@ -703,7 +702,7 @@ NUMBER_SENSORS = [
         native_min_value=6,
         native_max_value=32,
         native_step=1,
-        mode=NumberMode.BOX,
+        mode=NumberMode.SLIDER,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=NumberDeviceClass.CURRENT,
         icon="mdi:current-ac",

@@ -30,49 +30,6 @@ class CAT(Enum):
 # at least that's what was introduced with PR #177
 class _TCLTagLogic:
     @staticmethod
-    def tcl_get_min_max_bounds(self, data: Mapping, limit_to_16a: bool = False) -> tuple[int, int]:
-        """Require known hardware/user bounds rather than guessing an upper limit."""
-        #_LOGGER.debug("_TCLTagLogic.tag_func_get_min_max_bounds() called")
-        if not isinstance(data, Mapping):
-            raise ValueError("Charger data is unavailable")
-
-        variant = data.get(Tag.VAR.key)
-        if isinstance(variant, bool) or variant not in (11, 22):
-            raise ValueError("The charger current rating is unknown")
-
-        lower, upper = data.get(Tag.MCA.key), data.get(Tag.AMA.key)
-        for value in (lower, upper):
-            if not is_finite_number(value):
-                raise ValueError("The charger current bounds are unavailable")
-
-        reported = data.get(self.key)
-        if reported is not None and (
-                not is_finite_number(reported) or reported < 0 or reported != int(reported)
-        ):
-            raise ValueError("The temporary current limit is not a valid reported value")
-        maximum = min(16 if variant == 11 or limit_to_16a else 32, math.floor(upper))
-        minimum = max(6, math.ceil(lower))
-        if minimum > maximum:
-            raise ValueError("The charger current bounds are inconsistent")
-        return minimum, maximum
-
-    @staticmethod
-    def tcl_validate_input(self, value, data: Mapping, limit_to_16a: bool = False) -> int:
-        """Only accept whole amperes in range; zero/null reset semantics are not assumed."""
-        #_LOGGER.debug("_TCLTagLogic.tcl_validate_input() called")
-        if not isinstance(data, Mapping) or self.key not in data:
-            raise ValueError("This charger has not reported temporary-current-limit support")
-
-        minimum, maximum = self.tag_func_get_min_max_bounds(data, limit_to_16a)
-        if not is_finite_number(value):
-            raise ValueError("Current must be a finite number of whole amperes")
-
-        if value != int(value) or not minimum <= value <= maximum:
-            raise ValueError(f"Current must be between {minimum} and {maximum} whole amperes")
-
-        return int(value)
-
-    @staticmethod
     def tcl_validate_output(self, result, current: int) -> None:
         """The existing bridge returns the submitted value only after a successful write."""
         #_LOGGER.debug("_TCLTagLogic.tcl_validate_output() called")
@@ -80,8 +37,6 @@ class _TCLTagLogic:
             raise ValueError("The charger did not acknowledge the temporary current limit")
 
 _TCL_METHODS: Final = {
-    "tag_func_get_min_max_bounds":  _TCLTagLogic.tcl_get_min_max_bounds,
-    "tag_func_validate_input":      _TCLTagLogic.tcl_validate_input,
     "tag_func_validate_output":     _TCLTagLogic.tcl_validate_output,
 }
 

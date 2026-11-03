@@ -14,7 +14,6 @@ from typing import Any, Dict, Optional
 import aiohttp
 import bcrypt
 import msgpack
-from packaging.version import Version
 
 from custom_components.goecharger_api2.pygoecharger_ha.const import (
     TRANSLATIONS,
@@ -39,7 +38,7 @@ from custom_components.goecharger_api2.pygoecharger_ha.const import (
     FILTER_CARDS_ID_FWV60,
     FILTER_CARDS_ENGY_CLASSIC,
     FILTER_CARDS_ENGY_FWV60,
-    API_KEYS_TO_IGNORE_FROM_WS,
+    API_KEYS_TO_IGNORE_FROM_WS
 )
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag, IS_TRIGGER
 
@@ -245,6 +244,9 @@ class GoeChargerApiV2Bridge:
         self._versions = {}
         self._states = {}
         self._config = {}
+        self.clear_data_ws()
+
+    def clear_data_ws(self) -> str:
         self._ws_LAST_UPDATE = 0
         self._ws_LAST_NEW_DATA_NOTIFY = 0
         self._ws_device_info = {}
@@ -328,7 +330,7 @@ class GoeChargerApiV2Bridge:
         if self.ws_connected:
             return self._ws_states
         else:
-            return ChainMap(self._ws_states, self._config, self._states, self._versions)
+            return ChainMap({}, self._ws_states, self._config, self._states, self._versions)
 
     async def read_all_states(self):
         do_minimal_status_update: bool = False
@@ -515,6 +517,8 @@ class GoeChargerApiV2Bridge:
                     self._ws_LAST_NEW_DATA_NOTIFY = 0
                     return {key: value}
                 else:
+                    # either the command was not acknowledged (require_ack) or the WebSocket
+                    # connection is not working properly
                     return {}
         else:
             if is_button_press:
@@ -544,11 +548,15 @@ class GoeChargerApiV2Bridge:
 
     async def write_multiple_values_to_keys(self, args, key, value) -> dict:
         if self.ws_connected and self._ws_connection is not None:
+            send_is_ok = True
             for a_key, a_value in args.items():
-                await self._ws_send_command(a_key, a_value)
-                await asyncio.sleep(0.75)
-
-            self._ws_LAST_NEW_DATA_NOTIFY = 0
+                if send_is_ok:
+                    send_is_ok = await self._ws_send_command(a_key, a_value)
+                    if send_is_ok:
+                        await asyncio.sleep(0.75)
+            if send_is_ok:
+                self._ws_LAST_NEW_DATA_NOTIFY = 0
+                return {key: value}
             return {}
         else:
             params = {}
@@ -662,7 +670,7 @@ class GoeChargerApiV2Bridge:
 
                 # we must check, that after the sleep, the coordinator is still not None...
                 if self.coordinator is not None:
-                    self.coordinator.async_set_updated_data(ChainMap(self._ws_states, self._config, self._states, self._versions))
+                    self.coordinator.async_set_updated_data(ChainMap({}, self._ws_states, self._config, self._states, self._versions))
                     self._ws_LAST_NEW_DATA_NOTIFY = time.time()
 
         self._ws_debounced_update_task = asyncio.create_task(_ws_debounce_coordinator_update())

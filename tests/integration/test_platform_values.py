@@ -8,6 +8,7 @@ from datetime import datetime, time
 
 import pytest
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.exceptions import HomeAssistantError
 
 from custom_components.goecharger_api2.binary_sensor import GoeChargerApiV2BinarySensor
 from custom_components.goecharger_api2.const import (
@@ -193,7 +194,8 @@ async def test_number_set_value_swallows_write_errors(hass):
     from unittest.mock import AsyncMock
     number, coordinator = _number(hass, {"amp": 6}, key="amp")
     coordinator.async_write_key = AsyncMock(side_effect=ValueError("down"))
-    assert await number.async_set_native_value(10) == "unavailable"
+    with pytest.raises(HomeAssistantError):
+        await number.async_set_native_value(10)
 
 
 # ----------------------------------------------------------------------------- number: limits of amp
@@ -220,14 +222,14 @@ async def test_number_amp_limits_adjust_amp_entity(hass, key, value, amp_value, 
     number, coordinator = _number(hass, {key: value}, key=key)
     number.hass = hass
     coordinator.entities["amp"] = _amp(amp_value)
-    number.check_amp_min_max(value)
+    number.check_entity_min_max_bounds(value)
     await hass.async_block_till_done()
     assert [c.data["value"] for c in calls] == ([] if expected is None else [expected])
 
 
 async def test_number_without_amp_entity_ignores_limits(hass):
     number, _ = _number(hass, {"ama": 10}, key="ama")
-    number.check_amp_min_max(10)  # no amp entity registered: must not raise
+    number.check_entity_min_max_bounds(10)  # no amp entity registered: must not raise
 
 
 # ----------------------------------------------------------------------------- select

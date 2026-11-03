@@ -27,7 +27,7 @@ def make_coordinator(hass, data=None, websocket=False, **entry_kwargs):
     coordinator = GoeChargerDataUpdateCoordinator(hass, make_entry(hass, **entry_kwargs))
     bridge = coordinator.bridge
     coordinator.data = data if data is not None else ChainMap(
-        bridge._ws_states, bridge._config, bridge._states, bridge._versions)
+        {}, bridge._ws_states, bridge._config, bridge._states, bridge._versions)
     if websocket:
         bridge.ws_connected = True
         bridge._ws_connection = SimpleNamespace(send_json=AsyncMock())

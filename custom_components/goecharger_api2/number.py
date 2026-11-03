@@ -1,5 +1,6 @@
 import logging
 from dataclasses import replace
+from typing import Final
 
 from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
@@ -10,13 +11,17 @@ from homeassistant.components.number import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from custom_components.goecharger_api2.pygoecharger_ha import INTG_TYPE
-from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity, Tag
+from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity, Tag, WAN, LAN
 from .const import DOMAIN, NUMBER_SENSORS, CONTROLLER_NUMBER_SENSORS, ExtNumberEntityDescription
+from .pygoecharger_ha.keys import is_finite_number
 
 _LOGGER = logging.getLogger(__name__)
+
+KEYS_THAT_NEED_TO_BE_CHECKED_FOR_MIN_MAX: Final = [Tag.AMP.key, Tag.TCL.key]
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_entity_cb: AddEntitiesCallback):
     _LOGGER.debug("NUMBER async_setup_entry")
@@ -51,44 +56,11 @@ class GoeChargerNumber(GoeChargerBaseEntity, NumberEntity):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
 
-        # currently only the 'Tag.AMP.key' entity needs to be modified
-        # based on MIN and MAX AMP settings... [have in mind that
-        # 'data_key' is not unique !!!]
-        if self.data_key == Tag.AMP.key:
+        # currently only the 'Tag.AMP.key' and 'Tag.TCL.key' entities need to be modified
+        # based on MIN and MAX AMP settings... [have in mind that 'data_key' is not unique !!!]
+        if self.data_key in KEYS_THAT_NEED_TO_BE_CHECKED_FOR_MIN_MAX:
             self.coordinator.entities[self.data_key] = self
 
-    @property
-    def available(self):
-        super_val = super().available
-        if self.tag is not None and hasattr(self.tag, "tag_func_get_min_max_bounds"):
-            try:
-                self.tag.tag_func_get_min_max_bounds(self.coordinator.data, self.coordinator.limit_to16a)
-                return super_val and self.data_key in self.coordinator.data
-            except (ValueError, TypeError):
-                return False
-        return super_val
-
-    @property
-    def native_min_value(self):
-        super_val = super().native_min_value
-        if self.tag is not None and hasattr(self.tag, "tag_func_get_min_max_bounds"):
-            try:
-                return self.tag.tag_func_get_min_max_bounds(self.coordinator.data, self.coordinator.limit_to16a)[0]
-            except (ValueError, TypeError):
-                pass
-
-        return super_val
-
-    @property
-    def native_max_value(self):
-        super_val = super().native_max_value
-        if self.tag is not None and hasattr(self.tag, "tag_func_get_min_max_bounds"):
-            try:
-                return self.tag.tag_func_get_min_max_bounds(self.coordinator.data, self.coordinator.limit_to16a)[1]
-            except (ValueError, TypeError):
-                pass
-
-        return super_val
 
     @property
     def native_value(self):
@@ -118,17 +90,13 @@ class GoeChargerNumber(GoeChargerBaseEntity, NumberEntity):
             return None
 
         # we must we check min/max of AMP (based on AMA and MCA)
-        self.check_amp_min_max(value)
-
+        self.check_entity_min_max_bounds(value)
         return value
+
 
     async def async_set_native_value(self, value) -> None:
         validate_write_success = False
         if self.tag is not None:
-            if hasattr(self.tag, "tag_func_validate_input"):
-                # ok let's verify the value that we should set...
-                value = self.tag.tag_func_validate_input(value, self.coordinator.data, self.coordinator.limit_to16a)
-
             validate_write_success =  hasattr(self.tag, "tag_func_validate_output")
 
         # _LOGGER.info(f"set_native {self.data_key} {value} idx? {self.entity_description.idx}) factor: {self.entity_description.factor} float? {self.entity_description.handle_as_float}")
@@ -152,40 +120,48 @@ class GoeChargerNumber(GoeChargerBaseEntity, NumberEntity):
             result = await self.coordinator.async_write_key(self.data_key, final_object_to_write, self, require_ack=validate_write_success)
 
             # must we verify that the setting of the value was successful?
-            if validate_write_success and result:
-                self.tag.tag_func_validate_output(result, value)
+            if validate_write_success:
+                if result:
+                    self.tag.tag_func_validate_output(result, value)
+                else:
+                    raise ValueError(f"No 'result' returned from write operation for key {self.data_key} - cannot validate output value {value}")
 
-        except ValueError:
-            return "unavailable"
+        except ValueError as ve:
+            raise HomeAssistantError(f"ValueError when set value {value}: for {self.data_key}") from ve
 
-    def check_amp_min_max(self, value):
+    def check_entity_min_max_bounds(self, value):
+        # the bth entities that restrict the min/max bounds are AMA and MCA (max & min charging current)
         if self.data_key in [Tag.AMA.key, Tag.MCA.key]:
-            amp_entity = self.coordinator.entities.get(Tag.AMP.key)
-            if amp_entity:
+            if not is_finite_number(value):
+                _LOGGER.debug(f"check_entity_min_max_bounds(): '{value}' is not a number")
+                return
 
-                set_new_amp_value = None
-                is_max_mode = self.data_key == Tag.AMA.key
-                attr_name = "_attr_native_max_value" if is_max_mode else "_attr_native_min_value"
+            filtered_entities = {k: self.coordinator.entities[k] for k in KEYS_THAT_NEED_TO_BE_CHECKED_FOR_MIN_MAX if k in self.coordinator.entities}
+            for a_entity in filtered_entities.values():
+                if a_entity:
+                    set_new_value = None
+                    is_max_mode = self.data_key == Tag.AMA.key
+                    attr_name = "_attr_native_max_value" if is_max_mode else "_attr_native_min_value"
 
-                current_attr_val = getattr(amp_entity, attr_name, None)
-                if current_attr_val != value:
-                    _LOGGER.debug(f"native_value(): {amp_entity} setting {("max" if is_max_mode else "min")} -> {value}")
-                    setattr(amp_entity, attr_name, value)
+                    current_attr_val = getattr(a_entity, attr_name, None)
+                    if current_attr_val != value:
+                        _LOGGER.debug(f"native_value(): {a_entity} setting {("max" if is_max_mode else "min")} -> {value}")
+                        setattr(a_entity, attr_name, value)
 
-                    amp_value_exceeds_limit = (amp_entity.native_value > value) if is_max_mode else (amp_entity.native_value < value)
-                    if amp_value_exceeds_limit:
-                        set_new_amp_value = value
+                        if is_finite_number(a_entity.native_value):
+                            if (a_entity.native_value > value) if is_max_mode else (a_entity.native_value < value):
+                                set_new_value = value
 
-                if set_new_amp_value:
-                    _LOGGER.debug(f"native_value(): {amp_entity} setting value -> {set_new_amp_value}")
-                    self.hass.async_create_task(
-                        self.hass.services.async_call(
-                            domain=NUMBER_DOMAIN,
-                            service=SERVICE_SET_VALUE,
-                            service_data= {
-                                ATTR_ENTITY_ID: amp_entity.entity_id,
-                                ATTR_VALUE: set_new_amp_value,
-                            },
-                            blocking=False,
+                    if set_new_value:
+                        _LOGGER.debug(f"native_value(): {a_entity} setting value -> {set_new_value}")
+                        self.hass.async_create_task(
+                            self.hass.services.async_call(
+                                domain=NUMBER_DOMAIN,
+                                service=SERVICE_SET_VALUE,
+                                service_data= {
+                                    ATTR_ENTITY_ID: a_entity.entity_id,
+                                    ATTR_VALUE: set_new_value,
+                                },
+                                blocking=False,
+                            )
                         )
-                    )

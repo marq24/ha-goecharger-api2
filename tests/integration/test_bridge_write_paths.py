@@ -67,7 +67,7 @@ async def test_multiple_keys_over_websocket_are_sent_one_after_the_other(hass):
     with patch(SLEEP, AsyncMock()) as sleep:
         result = await bridge.write_multiple_values_to_keys({"ct": "x", "mca": 6}, "ct", "default")
     sent = [(c.args[0]["key"], c.args[0]["value"]) for c in bridge._ws_connection.send_json.await_args_list]
-    assert sent == [("ct", "x"), ("mca", 6)] and sleep.await_count == 2 and result == {}
+    assert sent == [("ct", "x"), ("mca", 6)] and sleep.await_count == 2 and result == {"ct": "default"}
     assert bridge._ws_LAST_NEW_DATA_NOTIFY == 0
 
 

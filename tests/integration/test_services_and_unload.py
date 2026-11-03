@@ -41,7 +41,7 @@ def _entry(hass, serial="123456", intg_type="charger"):
 def _coordinator(hass, entry, websocket):
     coordinator = GoeChargerDataUpdateCoordinator(hass, entry)
     bridge = coordinator.bridge
-    coordinator.data = ChainMap(bridge._ws_states, bridge._config, bridge._states, bridge._versions)
+    coordinator.data = ChainMap({}, bridge._ws_states, bridge._config, bridge._states, bridge._versions)
     if websocket:
         bridge.ws_connected = True
         bridge._ws_connection = SimpleNamespace(send_json=AsyncMock())
@@ -118,8 +118,8 @@ async def test_websocket_single_write_stores_requested_value_before_confirmation
     """Characterisation: the requested value is stored at once, not after the device's answer.
     If the charger rejects the command, this value stays until the device reports the key again."""
     coordinator = _coordinator(hass, _entry(hass), websocket=True)
-    await coordinator.async_write_key("amp", 10)
-    assert coordinator.data["amp"] == 10
+    result = await coordinator.async_write_key("amp", 10)
+    assert result["amp"] == 10
 
 
 # --------------------------------------------------------------------------- multi-charger registry

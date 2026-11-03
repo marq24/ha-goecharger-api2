@@ -89,20 +89,6 @@ class GoeChargerApiV2Service():
         if call.return_response:
             return {"error": "No Grid Power provided (or false data)", "date": str(datetime.datetime.now().time())}
 
-    async def set_temporary_current_limit(self, call: ServiceCall):
-        config_id, coordinator = self.get_coordinator(call)
-        _LOGGER.debug(f"Service-set_temporary_current_limit(): Provided config_id: {config_id} -> using {coordinator.name} serial: {coordinator._serial}")
-        try:
-            validated_input_current = Tag.TCL.tag_func_validate_input(call.data.get("current"), coordinator.data, coordinator.limit_to16a)
-            result_current = await coordinator.async_write_key(Tag.TCL.key, validated_input_current, require_ack=True)
-            Tag.TCL.tag_func_validate_output(result_current, validated_input_current)
-        except ValueError as exc:
-            _LOGGER.debug(f"Service-set_temporary_current_limit(): ValueError: {exc}")
-            raise ServiceValidationError(str(exc)) from exc
-
-        if call.return_response:
-            return {"success": True, "current": result_current, "acknowledged": True}
-
     async def stop_charging(self, call: ServiceCall):
         if not self._stop_in_progress:
             _LOGGER.debug(f"Service-stop_charging(): Force STOP_CHARGING")

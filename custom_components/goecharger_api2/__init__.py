@@ -53,7 +53,6 @@ from .const import (
     STARTUP_MESSAGE,
     SERVICE_SET_PV_DATA,
     SERVICE_STOP_CHARGING,
-    SERVICE_SET_TEMPORARY_CURRENT,
     CONF_11KWLIMIT,
     CONF_INTEGRATION_TYPE,
     CONFIG_VERSION, CONFIG_MINOR_VERSION
@@ -213,8 +212,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             service = GoeChargerApiV2Service(hass, config_entry, coordinator)
             hass.services.async_register(DOMAIN, SERVICE_SET_PV_DATA, service.set_pv_data,
                                          supports_response=SupportsResponse.OPTIONAL)
-            hass.services.async_register(DOMAIN, SERVICE_SET_TEMPORARY_CURRENT, service.set_temporary_current_limit,
-                                         supports_response=SupportsResponse.OPTIONAL)
             hass.services.async_register(DOMAIN, SERVICE_STOP_CHARGING, service.stop_charging,
                                          supports_response=SupportsResponse.OPTIONAL)
         else:
@@ -256,7 +253,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
                         _LOGGER.info(f"async_unload_entry(): Unloading last active go-eCharger - will remove SERVICES")
                         hass.services.async_remove(DOMAIN, SERVICE_SET_PV_DATA)
                         hass.services.async_remove(DOMAIN, SERVICE_STOP_CHARGING)
-                        hass.services.async_remove(DOMAIN, SERVICE_SET_TEMPORARY_CURRENT)
 
             # if there is a 'active checker task', we cancel it... (and do not care that
             # this task will be "killed" when the first integration entry will be
@@ -549,7 +545,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         await self.async_refresh()
 
     def handle_write_result(self, a_type, value, key, result, entity):
-        if self.bridge.ws_connected and (result is None or len(result) == 0):
+        if self.bridge.ws_connected:
             # when using websocket - the writing result will be handled
             # already in the ws-response processor...
             return
@@ -565,7 +561,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         if self.intg_type == INTG_TYPE.CHARGER.value:
             # since we do not force an update when setting PV surplus data, we 'patch' internally our values
             if key == Tag.IDS.key:
-                self.data = ChainMap(self.bridge._ws_states, self.bridge._config, self.bridge._states, self.bridge._versions)
+                self.data = ChainMap({}, self.bridge._ws_states, self.bridge._config, self.bridge._states, self.bridge._versions)
                 self.async_update_listeners()
                 do_refresh = False
 
@@ -640,15 +636,21 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
 
         try:
             result = await self.bridge.write_value_to_key(key, value, require_ack=require_ack)
-            self.handle_write_result("single", value, key, result, entity)
-            return result
+            if result is not None and len(result) > 0:
+                self.handle_write_result("single", value, key, result, entity)
+                return result
 
         except ClientConnectionError as cc_err:
             self._handle_client_connection_error("async_write_key()", cc_err)
             raise ValueError(f"ClientConnectionError while writing {key} to wallbox: {type(cc_err).__name__} - {cc_err}") from cc_err
         except Exception as e:
-            _LOGGER.error(f"Error while writing single {key} to wallbox: {type(e).__name__} - {e}")
+            _LOGGER.warning(f"Error while writing single {key} to wallbox: {type(e).__name__} - {e}")
             raise ValueError(f"Exception while writing {key} to wallbox: {type(e).__name__} - {e}") from e
+
+        # if we reach this point, the 'result' was None or empty - so we raise an exception...
+        _LOGGER.warning(f"async_write_key(): could not write single value: '{value}' to: {key} result was: {result}")
+        raise ValueError(f"async_write_key(): could not write single value: '{value}' to: {key} result was: {result}")
+
 
     async def async_write_multiple_keys(self, attr:dict, key: str, value, entity: Entity = None) -> dict:
         if self._CLIENT_COMMUNICATION_ERROR_TS + CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS > time.time():
@@ -661,15 +663,21 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
 
         try:
             result = await self.bridge.write_multiple_values_to_keys(attr, key, value)
-            self.handle_write_result("multiple", value, key, result, entity)
-            return result
+            if result is not None and len(result) > 0:
+                self.handle_write_result("multiple", value, key, result, entity)
+                return result
 
         except ClientConnectionError as cce:
             self._handle_client_connection_error(f"async_write_multiple_keys(): {type(cce).__name__} - {cce}", cce)
             raise ValueError(f"ClientConnectionError while writing multiple {key} to wallbox: {type(cce).__name__} - {cce}") from cce
         except Exception as e:
-            _LOGGER.error(f"Error while writing multiple {key} to wallbox: {type(e).__name__} - {e}")
+            _LOGGER.warning(f"Error while writing multiple {key} to wallbox: {type(e).__name__} - {e}")
             raise ValueError(f"Exception while writing multiple {key} to wallbox: {type(e).__name__} - {e}") from e
+
+        # if we reach this point, the 'result' was None or empty - so we raise an exception...
+        _LOGGER.warning(f"async_write_multiple_keys(): could not write multiple values: '{value}' to: {key} result was: {result}")
+        raise ValueError(f"async_write_multiple_keys(): could not write multiple values: '{value}' to: {key} result was: {result}")
+
 
     async def read_versions(self):
         if not await self.bridge.read_versions() or not isinstance(self.bridge._versions, NonNullDict):

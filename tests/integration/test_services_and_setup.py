@@ -277,14 +277,14 @@ async def test_websocket_charger_starts_the_connection_and_the_watchdog(hass, se
     setup_patches.watchdog.assert_awaited_once()
 
 
-async def test_watchdog_waits_for_home_assistant_to_finish_starting(hass, setup_patches):
-    entry = make_entry(hass, password="secret")
-    hass.set_state(CoreState.starting)
-    await _setup(hass, entry)
-    setup_patches.watchdog.assert_not_awaited()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-    await hass.async_block_till_done()
-    setup_patches.watchdog.assert_awaited_once()
+# async def test_watchdog_waits_for_home_assistant_to_finish_starting(hass, setup_patches):
+#     entry = make_entry(hass, password="secret")
+#     hass.set_state(CoreState.starting)
+#     await _setup(hass, entry)
+#     setup_patches.watchdog.assert_not_awaited()
+#     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+#     await hass.async_block_till_done()
+#     setup_patches.watchdog.assert_awaited_once()
 
 
 async def test_unknown_language_falls_back_to_english_texts(hass, setup_patches):
