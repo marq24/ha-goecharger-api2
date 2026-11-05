@@ -73,8 +73,10 @@ class GoeChargerApiV2Service():
             }
             _LOGGER.debug(f"Service-set_pv_data(): set PV data: {payload}")
             try:
-                resp = await coordinator.async_write_key(Tag.IDS.key, payload)
+                resp = await coordinator.async_write_key(Tag.IDS.key, payload, require_ack=call.return_response)
                 if call.return_response:
+                    if not isinstance(resp, dict) or resp.get(Tag.IDS.key) != payload:
+                        return {"error": "The charger did not acknowledge PV data", "date": str(datetime.datetime.now().time())}
                     return {
                         "success": "true",
                         "date": str(datetime.datetime.now().time()),
