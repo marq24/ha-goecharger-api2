@@ -217,7 +217,7 @@ LIMIT_CASES = [
 
 @pytest.mark.parametrize("key, value, amp_value, expected", [c[1:] for c in LIMIT_CASES], ids=[c[0] for c in LIMIT_CASES])
 async def test_number_amp_limits_adjust_amp_entity(hass, key, value, amp_value, expected):
-    from pytest_homeassistant_custom_component.common import async_mock_service
+    from pytest_homeassistant.common import async_mock_service
     calls = async_mock_service(hass, "number", "set_value")
     number, coordinator = _number(hass, {key: value}, key=key)
     number.hass = hass

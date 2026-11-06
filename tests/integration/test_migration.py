@@ -5,7 +5,7 @@ device as well (assumed, not tested here), so user settings on those entities ar
 test pins that the purge happens exactly once.
 """
 from homeassistant.helpers import device_registry as dr
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.goecharger_api2 import async_migrate_entry
 from custom_components.goecharger_api2.const import DOMAIN

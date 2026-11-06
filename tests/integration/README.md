@@ -10,7 +10,7 @@ python -m pip install -r requirements_dev.txt
 python -m pytest tests/integration -q
 ```
 
-Python 3.14 is required by the current `pytest-homeassistant-custom-component`, which also pins the
+Python 3.14 is required by the current `pytest-homeassistant`, which also pins the
 Home Assistant release it was built for. `msgpack` is listed in the manifest, but the test framework
 does not install manifest requirements, so it is part of `requirements_dev.txt`.
 

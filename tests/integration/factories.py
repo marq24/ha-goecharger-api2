@@ -3,7 +3,7 @@ from collections import ChainMap
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.goecharger_api2 import GoeChargerDataUpdateCoordinator
 from custom_components.goecharger_api2.const import DOMAIN

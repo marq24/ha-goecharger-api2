@@ -11,7 +11,7 @@ import pytest
 from aiohttp import ClientConnectionError
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.goecharger_api2 import GoeChargerDataUpdateCoordinator, async_setup_entry
 from custom_components.goecharger_api2.const import DOMAIN
