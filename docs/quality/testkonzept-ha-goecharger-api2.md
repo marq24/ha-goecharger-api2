@@ -1,250 +1,256 @@
-# Testkonzept: `ha-goecharger-api2`
+# Test concept: `ha-goecharger-api2`
 
 | | |
 |---|---|
-| **Gegenstand** | Automatisierte Tests der Home-Assistant-Integration `goecharger_api2` (go-eCharger, go-eController) |
-| **Stand** | 2026-10-29, `main` bei `9e7d62a` (die Tests entstanden im Fork `OliEder/ha-goecharger-api2`, Branch `tests/regression-suite`) |
-| **Bezug** | Architektur und Risiken: `arc42-ha-goecharger-api2.md` (Risiken R1 bis R30). Regeln: `CLAUDE.md` / `AGENTS.md` der Arbeitsumgebung. |
-| **Status der Tests** | Die Tests liegen seit PR #178 (`738c3c6`) in diesem Repository, `.github/workflows/tests.yaml` führt sie seit PR #179 bei Push auf `main` und bei Pull Requests aus. Das Dokument wurde mit KI-Unterstützung (Claude Code) erstellt und von Oliver geprüft. |
+| **Subject** | Automated tests of the Home Assistant integration `goecharger_api2` (go-eCharger, go-eController) |
+| **State** | 2026-10-30, `main` at `e6ee0c3` |
+| **Reference** | Architecture: [`arc42-ha-goecharger-api2.md`](../architecture/arc42-ha-goecharger-api2.md); risk register: [`risks/`](../architecture/risks/README.md) ([R001](../architecture/risks/R001-stop-charging-locks-the-charger-after-a-write-error.md) to [R030](../architecture/risks/R030-max-ampere-is-reset-at-every-restart.md)); decisions: [`adr/`](../architecture/adr/README.md). Test strategy and rules: section 5. |
+| **Status of the tests** | The tests have been in this repository since PR #178 (`738c3c6`); `.github/workflows/tests.yaml` has run them on pushes to `main` and on pull requests since PR #179. The document was written with AI assistance (Claude Code) and reviewed by a human. |
 
-**Lesehinweis.** Alle Tests laufen mit Attrappen. Sie belegen, was der Code tut und was die Doku sagt, **nicht**, was ein echter Charger tut. Wo das für eine Aussage wichtig ist, steht es dabei.
-
----
-
-## 1. Zweck und Geltungsbereich
-
-**Zweck.** Die Tests sollen Regressionen in der Integration früh melden, bekannte Fehler sichtbar halten und die Übereinstimmung mit der offiziellen go-e-API-Dokumentation prüfen. Sie sind auch die Grundlage für spätere Änderungen und für Gespräche mit dem Maintainer.
-
-**Im Geltungsbereich**
-- Bridge (`pygoecharger_ha`): HTTP lokal und Cloud, WebSocket (Anmeldung, Nachrichten, Befehle).
-- Koordinator: Lesen, Schreiben, Fehlerzähler, Pause, Neustart, Start (`ConfigEntryNotReady`).
-- Dienste (`set_pv_data`, `stop_charging`), Multi-Charger-Register, Entladen von Entries.
-- Config-Flow (Anlegen, Fehlerfälle), Migration der Config-Entries.
-- Stabilität der Entity-IDs.
-- Vertrag zwischen offizieller Schlüsseltabelle und `keys.py`.
-- Das PV-Blueprint hat eigene Tests (240 Fälle, Branch `proposal/invalid-data-policy`). Sie sind **nicht** Teil dieses Konzepts.
-
-**Nicht im Geltungsbereich (bewusst)**
-- Prüfung gegen einen echten Charger im Dauerbetrieb, Last- und Leistungstests.
-- Oberfläche von Home Assistant (Dashboards, Übersetzungen).
-- MQTT, Modbus, OCPP-Protokolle und Grid-API (nutzt die Integration nicht).
-- go-eController: Seine Schlüssel stehen nicht in der Charger-Doku, es fehlt eine Quelle für einen Vertrag.
+**Note.** All tests run with fakes. They show what the code does and what the documentation says, **not** what a real charger does. Where this matters for a statement, it is noted there.
 
 ---
 
-## 2. Qualitätsziele, die geprüft werden
+## 1. Purpose and scope
 
-Aus den Qualitätsszenarien des arc42-Dokuments (Abschnitt 10.2):
+**Purpose.** The tests should report regressions in the integration early, keep known defects visible and check the agreement with the official go-e API documentation. They are also the basis for later changes and for discussions with the maintainer.
 
-| arc42 | Szenario | Wie geprüft |
+**In scope**
+- Bridge (`pygoecharger_ha`): HTTP local and cloud, WebSocket (login, messages, commands).
+- Coordinator: reading, writing, error counter, pause, restart, start (`ConfigEntryNotReady`).
+- Services (`set_pv_data`, `stop_charging`; `set_temporary_current_limit` not yet, see section 10), multi-charger registry, unloading entries.
+- Config flow (create, error cases), migration of config entries.
+- Stability of the entity IDs.
+- Contract between the official key table and `keys.py`.
+- The PV blueprint is **not** tested by this suite.
+
+**Not in scope (deliberately)**
+- Checks against a real charger in continuous operation, load and performance tests.
+- User interface of Home Assistant (dashboards, translations).
+- MQTT, Modbus, OCPP protocols and grid API (the integration does not use them).
+- go-eController: its keys are not in the charger documentation, there is no source for a contract.
+
+---
+
+## 2. Quality goals that are checked
+
+From the quality scenarios of the arc42 document (section 10.2):
+
+| arc42 | Scenario | How checked |
 |---|---|---|
-| Q1 | Charger ist nicht erreichbar: keine Dauerlast, Erholung | `test_coordinator_failures.py` (Fehlerzähler, Pause, einmaliger Neustart) |
-| Q2 | Firmware ändert Schlüssel | `test_versions_16a.py`, `test_api_contract.py` (nur Namen und Flags, nicht Inhalte) |
-| Q3 | PV-Automation fällt aus: kein ungewolltes Netzladen | **nicht Teil dieser Suite** (liegt im Blueprint), nur `set_pv_data`-Eingaben in `test_service.py` |
-| Q4 | `stop_charging` im WebSocket-Modus | `test_services_and_unload.py` |
-| Q5 | Zwei Charger in einer Instanz | `test_services_and_unload.py` |
-| Q6 | Zugangsdaten nicht lesbar | **nicht geprüft** |
+| Q1 | Charger is not reachable: no permanent load, recovery | `test_coordinator_failures.py` (error counter, pause, single restart) |
+| Q2 | Firmware changes keys | `test_versions_16a.py`, `test_api_contract.py` (names and flags only, not contents) |
+| Q3 | PV automation fails: no unwanted grid charging | **not part of this suite** (lies in the blueprint), only `set_pv_data` inputs in `test_service.py` |
+| Q4 | `stop_charging` in WebSocket mode | `test_services_and_unload.py` |
+| Q5 | Two chargers in one instance | `test_services_and_unload.py` |
+| Q6 | Credentials not readable | **not checked** |
 
 ---
 
-## 3. Risikobasierte Priorisierung
+## 3. Risk-based prioritisation
 
-Reihenfolge der Testtiefe nach Auswirkung auf den Betrieb (steuert ein physisches Gerät) und nach Eintrittswahrscheinlichkeit.
+Order of test depth by impact on operation (controls a physical device) and by probability of occurrence.
 
-| Priorität | Bereich | Begründung |
+| Priority | Area | Reason |
 |---|---|---|
-| 1 | Steuerpfade: `stop_charging`, `set_pv_data`, Schreiben von Einstellungen | Wirken auf Stromfluss und Fahrzeug |
-| 2 | Verbindungsverlust und Erholung (HTTP und WebSocket) | Häufigster Fehler im Alltag (WLAN, Router, Firmware-Update) |
-| 3 | Anmeldung per WebSocket | Nachgebaut, nicht offiziell dokumentiert, bricht bei Firmware-Änderungen |
-| 4 | Stabilität der Entity-IDs und Migration | Ein Fehler trifft alle Bestandsnutzer auf einmal |
-| 5 | Vertrag zur offiziellen API | Früherkennung von Doku- und Code-Drift |
-| 6 | Eingabevalidierung der Entitäten | Geringe Wirkung, Gerät begrenzt selbst |
+| 1 | Control paths: `stop_charging`, `set_pv_data`, writing settings | Act on current flow and vehicle |
+| 2 | Connection loss and recovery (HTTP and WebSocket) | Most frequent error in daily use (WLAN, router, firmware update) |
+| 3 | Login via WebSocket | Reverse engineered, not officially documented, breaks with firmware changes |
+| 4 | Stability of the entity IDs and migration | A defect hits all existing users at once |
+| 5 | Contract with the official API | Early detection of documentation and code drift |
+| 6 | Input validation of the entities | Low impact, the device limits itself |
 
-**Abdeckung der Risiken aus arc42 (Abschnitt 11)**
+**Coverage of the risks from the [risk register](../architecture/risks/README.md)**
 
-| Risiko | Test | Stand |
+| Risk | Test | State |
 |---|---|---|
-| R1 `stop_charging` WebSocket (`TypeError`) | `test_stop_charging_in_websocket_mode_sends_lock_and_unlock` | behoben, Test grün |
-| R1 Flag `_stop_in_progress` bleibt hängen | `test_failed_lock_write_...`, `test_failed_unlock_write_...` | `known_bug`, rot |
-| R2 Multi-Charger-Register | `test_second_charger_is_reachable_...`, `test_reloaded_charger_...` | behoben, grün |
-| R2 Standard-Charger wechselt nach Reload | `test_default_charger_does_not_change_after_reload` | `known_bug`, rot |
-| R3 Zähler `ACTIVE_CHARGER_COUNTER` | zwei Tests in `test_services_and_unload.py` | `known_bug`, rot |
-| R4 `__init__.py:674` | `test_write_multiple_keys_connection_error_is_counted` | behoben, grün |
-| R5 `pgrid` ohne Endlichkeitsprüfung | `test_non_finite_grid_value_is_rejected` | `known_bug`, rot |
-| R6 keine `unique_id` im Config-Flow (kein Schutz vor Doppelanlage) | – | **nicht abgedeckt** |
-| R7 README „24 h“, Code „1 h“ | `test_read_all_reads_the_configuration_only_every_hour` | Code-Verhalten festgehalten (Abweichung zum README bleibt) |
-| R8 Zugangsdaten | – | bewusst nicht Teil der Tests |
-| R15 Cloud-Antwort | `test_cloud_write_succeeds_with_http_200` | grün; Doku nennt 202, Maintainer bestätigt 200 |
-| R16 WebSocket nicht dokumentiert | `test_ws_protocol.py`, `test_ws_login_failures.py` | Verhalten festgehalten |
-| R17 Cloud `age` nicht gesetzt | – | **nicht abgedeckt** |
-| R18 `ppv` negativ (Standby) | – | **nicht abgedeckt** |
-| R20 alte Werte nach fehlgeschlagenem Lesen | `test_failed_full_read_keeps_the_previous_states` | Verhalten festgehalten, Absicht ungeklärt |
-| R21 Migration löscht Geräte | `test_version_2_0_deletes_the_devices_and_moves_to_2_1` | Verhalten festgehalten |
-| Fehlermeldung bei `ConfigEntryNotReady` wird überdeckt (neu) | `test_missing_device_data_is_reported_with_its_own_message` | `known_bug`, rot |
-| Fehlertext des Chargers gilt als Erfolg (neu) | `test_write_rejected_by_charger_returns_err` | `known_bug`, rot |
+| [R001](../architecture/risks/R001-stop-charging-locks-the-charger-after-a-write-error.md) `stop_charging` WebSocket (`TypeError`) | `test_stop_charging_in_websocket_mode_sends_lock_and_unlock` | fixed, test green |
+| [R001](../architecture/risks/R001-stop-charging-locks-the-charger-after-a-write-error.md) flag `_stop_in_progress` stays stuck | `test_failed_lock_write_...`, `test_failed_unlock_write_...` | fixed since `9e7d62a`, green |
+| [R002](../architecture/risks/R002-multi-charger-registry-incomplete.md) multi-charger registry | `test_second_charger_is_reachable_...`, `test_reloaded_charger_...` | fixed, green |
+| [R002](../architecture/risks/R002-multi-charger-registry-incomplete.md) / ADR-0010 no silent default charger | `test_without_configid_and_with_two_chargers_no_charger_is_guessed`, `test_with_an_empty_registry_no_charger_can_be_chosen` | decision ADR-0010, green (skipped on versions before `4702213`) |
+| [R003](../architecture/risks/R003-active-charger-counter-with-controller-entries.md) counter `ACTIVE_CHARGER_COUNTER` | two tests in `test_services_and_unload.py` | fixed since `eb5da46`, green |
+| [R004](../architecture/risks/R004-error-handling-for-multiple-writes-calls-the-wrong-sign.md) wrong signature in the error handling of multiple writes (`__init__.py:674`) | `test_write_multiple_keys_connection_error_is_counted` | fixed, green |
+| [R005](../architecture/risks/R005-pgrid-without-a-finiteness-check.md) `pgrid` without finiteness check | `test_non_finite_grid_value_is_rejected` | fixed since `eb5da46`, green |
+| [R006](../architecture/risks/R006-no-unique-id-in-the-config-flow.md) no `unique_id` in the config flow (no protection against creating twice) | – | **not covered** |
+| [R007](../architecture/risks/R007-readme-and-code-state-different-read-intervals-for-the.md) README "24 h", code "1 h" | `test_read_all_reads_the_configuration_only_every_hour` | code behaviour recorded (deviation from the README remains) |
+| [R008](../architecture/risks/R008-credentials-are-stored-in-plain-text-in-the-config-entr.md) credentials | – | deliberately not part of the tests |
+| [R015](../architecture/risks/R015-cloud-documentation-names-http-202-for-api-set.md) cloud answer | `test_cloud_write_succeeds_with_http_200` | green; documentation says 202, the maintainer confirms 200 |
+| [R016](../architecture/risks/R016-websocket-interface-is-not-officially-documented.md) WebSocket not documented | `test_ws_protocol.py`, `test_ws_login_failures.py` | behaviour recorded |
+| [R017](../architecture/risks/R017-cloud-data-can-be-up-to-30-seconds-old.md) cloud `age` not set | – | **not covered** |
+| [R018](../architecture/risks/R018-negative-ppv-standby-cannot-be-set.md) `ppv` negative (standby) | – | **not covered** |
+| [R020](../architecture/risks/R020-old-values-stay-after-a-failed-read.md) old values after a failed read | `test_failed_full_read_keeps_the_previous_states` | behaviour recorded; intended according to the maintainer (#173) |
+| [R021](../architecture/risks/R021-migration-from-2-0-to-2-1-deletes-all-devices.md) migration deletes devices | `test_version_2_0_deletes_the_devices_and_moves_to_2_1` | behaviour recorded |
+| [R025](../architecture/risks/R025-specific-start-error-message-is-covered-up.md) message of `ConfigEntryNotReady` is covered up | `test_missing_device_data_is_reported_with_its_own_message` | fixed since `eb5da46`, green |
+| [R024](../architecture/risks/R024-error-text-of-the-charger-counts-as-success.md) error text of the charger counts as success | `test_write_rejected_by_charger_returns_err` | green on `9e7d62a` |
+| [R027](../architecture/risks/R027-false-error-after-a-successful-multiple-write.md) false `ERROR` after multiple write in WebSocket mode | `test_websocket_multi_write_logs_no_error_on_success` | fixed since `9e7d62a`, green |
+| [R031](../architecture/risks/R031-stop-charging-does-not-check-the-unlock-and-may-report.md) `stop_charging` does not check the unlock | – | **not covered** |
+| `set_temporary_current_limit`, `tcl`, acknowledged writing (PR #177) | – | **not covered** (section 10, item 11) |
 
 ---
 
-## 4. Teststufen und Testarten
+## 4. Test levels and kinds
 
-| Stufe / Art | Zweck | Dateien |
+| Level / kind | Purpose | Files |
 |---|---|---|
-| **Vertrag (Schema)** | Offizielle Schlüsseltabelle gegen `keys.py`, Filter und Entitäten | `test_api_contract.py`, `contract/` |
-| **Komponente** | Bridge gegen gemockte HTTP-Schicht oder Attrappe der WebSocket-Verbindung | `test_bridge_http.py`, `test_ws_protocol.py`, `test_bridge.py` |
-| **Nahtstelle (Seam)** | Koordinator, Bridge und Dienste im Zusammenspiel; Dienste gegen Register | `test_coordinator_failures.py`, `test_services_and_unload.py`, `test_coordinator_errors.py` |
-| **Ablauf** | Config-Flow über die Home-Assistant-Flow-Verwaltung; Migration | `test_config_flow_failures.py`, `test_migration.py` |
-| **Regression (Snapshot)** | Entity-IDs bleiben stabil | `test_entity_ids.py`, `snapshots/entity_ids.json` |
-| **Entscheidungstabelle** | 16-A-Limit | `test_versions_16a.py` |
-| **Negativ / Fehlerpfade** | Fehlschläge enden sauber | in allen Dateien, Schwerpunkt `test_ws_login_failures.py`, `test_coordinator_failures.py`, `test_config_flow_failures.py` |
+| **Contract (schema)** | Official key table against `keys.py`, filters and entities | `test_api_contract.py`, `contract/` |
+| **Component** | Bridge against a mocked HTTP layer or a fake of the WebSocket connection | `test_bridge_http.py`, `test_ws_protocol.py`, `test_bridge.py` |
+| **Interface (seam)** | Coordinator, bridge and services together; services against the registry | `test_coordinator_failures.py`, `test_services_and_unload.py`, `test_coordinator_errors.py` |
+| **Flow** | Config flow through the Home Assistant flow manager; migration | `test_config_flow_failures.py`, `test_migration.py` |
+| **Regression (snapshot)** | Entity IDs stay stable | `test_entity_ids.py`, `snapshots/entity_ids.json` |
+| **Decision table** | 16 A limit | `test_versions_16a.py` |
+| **Negative / error paths** | Failures end cleanly | in all files, focus on `test_ws_login_failures.py`, `test_coordinator_failures.py`, `test_config_flow_failures.py` |
 
-Nicht vorhanden: Ende-zu-Ende gegen ein echtes Gerät, Komponententests der Entitäten (Wertdarstellung), Last- und Dauertests.
+Not present: end-to-end against a real device, component tests of the entities (value display), load and endurance tests.
 
 ---
 
-## 5. Teststrategie und Regeln
+## 5. Test strategy and rules
 
-Verbindlich nach `CLAUDE.md` / `AGENTS.md`. Der Stand wird hier ehrlich festgehalten:
+The basis is five test rules (Arrange-Act-Assert, two failure cases per external access, explicit boundary values, seam tests, formal API schemas). The state is recorded here honestly:
 
-| Regel | Stand | Maßnahme |
+| Rule | State | Measure |
 |---|---|---|
-| **Arrange-Act-Assert** für jeden Funktionstest | **Teilweise.** Der Aufbau ist meist erkennbar, aber nicht überall mit Leerzeilen oder Kommentaren getrennt. Es gibt keine Prüfung. | Neue Tests strikt so schreiben; vorhandene bei Gelegenheit umstellen |
-| **Mindestens zwei Fehlerfälle** je Netzwerk- oder Dateizugriff | **Erfüllt** für HTTP-Lesen (3 Status plus ungültiges JSON), WebSocket-Anmeldung (über 10 Fälle), Config-Flow (6). **Knapp** für HTTP-Schreiben (Fehlertext, 500 ohne Inhalt, Zeitüberschreitung fehlen teilweise). Dateizugriffe gibt es nicht. | HTTP-Schreiben und Cloud-Statuscodes ergänzen |
-| **Grenzwerte** (Null, negativ, maximale Länge) | **Nicht erfüllt.** Nur NaN/inf bei `set_pv_data`. | Siehe Abschnitt 10, soweit die Doku Bereiche nennt |
-| **Seam-Tests** an neuen Nahtstellen | **Erfüllt** für Koordinator mit Bridge und Dienste mit Register. **Offen:** Entität mit Koordinator (Schreibpfad). | Entitäten-Tests ergänzen |
-| **Formale API-Schemas** einbetten | **Teilweise.** Schlüsseltabelle als `api_keys.json`. **Offen:** Schema der HTTP-Endpunkte (lokal, Cloud). | Endpunkt-Schema aus `http-en.md` und `cloudapi-en.md` ableiten |
+| **Arrange-Act-Assert** for every functional test | **Partly.** The structure is mostly recognisable but not everywhere separated by blank lines or comments. There is no check. | Write new tests strictly this way; convert existing ones when the occasion arises |
+| **At least two failure cases** per network or file access | **Met** for HTTP reading (3 statuses plus invalid JSON), WebSocket login (more than 10 cases), config flow (6). **Tight** for HTTP writing (error text, 500 without content and timeout partly missing). There are no file accesses. | Add HTTP writing and cloud status codes |
+| **Boundary values** (zero, negative, maximum length) | **Not met.** Only NaN/inf for `set_pv_data`. | See section 10, as far as the documentation names ranges |
+| **Seam tests** at new interfaces | **Met** for coordinator with bridge and services with registry. **Open:** entity with coordinator (write path). | Add entity tests |
+| **Embed formal API schemas** | **Partly.** Key table as `api_keys.json`. **Open:** schema of the HTTP endpoints (local, cloud). | Derive an endpoint schema from `http-en.md` and `cloudapi-en.md` |
 
-**Weitere Regeln dieses Konzepts**
-1. Ein bekannter Fehler bekommt einen Test, der **rot** läuft (Marker `known_bug`). Kein `xfail`, damit der Fehler im Lauf sichtbar bleibt.
-2. Jede Aussage über das Verhalten des Chargers braucht eine Quelle: offizielle Doku, Beobachtung am Gerät oder ausdrücklich „Vermutung“. Tests, die eine Vermutung festhalten, sagen das im Docstring.
-3. Positivkontrolle: Jede Attrappe, die Fehler simuliert, hat einen Test, der zeigt, dass gültige Eingaben durchgehen.
-4. Keine Tests gegen das Netzwerk. Das Test-Framework blockiert echte Sockets.
-
----
-
-## 6. Testumgebung
-
-- **Software:** Python 3.14.3, Home Assistant 2026.10.4 (festgelegt durch `pytest-homeassistant-custom-component`), `pytest`, `pytest-asyncio` (Modus `auto`). `msgpack` muss zusätzlich installiert werden, weil das Test-Framework die Anforderungen aus dem Manifest nicht installiert.
-- **Ort:** lokale virtuelle Umgebung (Python 3.14, `pip install -r requirements_dev.txt`); Werkzeuge: `tests/tools/`; der Messbericht entsteht von Hand über `.github/workflows/test-report.yaml` (die abgelegten Berichte unter `tests/reports/` wurden entfernt).
-- **Aufruf:**
-  - alles: `python -m pytest tests/integration`
-  - blockierende Menge: `python -m pytest tests/integration -m "not known_bug and not needs_decision"`
-- **Dauer:** rund 10 Sekunden für alle Tests.
-- **Voraussetzungen:** kein Charger, kein Netzwerk, keine Zugangsdaten.
+**Further rules of this concept**
+1. A known defect gets a test that runs **red** (marker `known_bug`). No `xfail`, so that the defect stays visible in the run.
+2. Every statement about the behaviour of the charger needs a source: official documentation, observation on the device or explicitly "assumption". Tests that record an assumption say so in the docstring.
+3. Positive control: every fake that simulates errors has a test that shows valid inputs go through.
+4. No tests against the network. The test framework blocks real sockets.
 
 ---
 
-## 7. Testdaten und Attrappen
+## 6. Test environment
 
-| Attrappe | Wofür | Grenze |
+- **Software:** Python 3.14.3, Home Assistant 2026.10.4 (fixed by `pytest-homeassistant-custom-component`), `pytest`, `pytest-asyncio` (mode `auto`). `msgpack` must be installed in addition because the test framework does not install the requirements from the manifest.
+- **Place:** local virtual environment (Python 3.14, `pip install -r requirements_dev.txt`); tools: `tests/tools/`; the measurement report is created by hand with `.github/workflows/test-report.yaml` (the stored reports under `tests/reports/` were removed).
+- **Call:**
+  - everything: `python -m pytest tests/integration`
+  - blocking set: `python -m pytest tests/integration -m "not known_bug and not needs_decision"`
+- **Duration:** about 10 seconds for all tests.
+- **Prerequisites:** no charger, no network, no credentials.
+
+---
+
+## 7. Test data and fakes
+
+| Fake | Used for | Limit |
 |---|---|---|
-| `aioclient_mock` (Home Assistant) | HTTP-Antworten lokal und Cloud | Die Attrappe liefert kein `content_length`; Fälle mit `500` ohne/mit Inhalt stehen in `test_bridge.py` mit einer eigenen Antwort-Klasse |
-| `FakeSocket`, `FakeSession` (`test_ws_login_failures.py`) | Skript der Anmeldung und der Nachrichten | Das Skript bildet die **nachgebaute** Anmeldung ab. Eine Änderung durch go-e erkennt sie nicht. |
-| Fake-WebSocket-Objekt (`send_json`) | Ausgehende Befehle | wie oben |
-| `MockConfigEntry` | Config-Entries für Koordinator, Migration, Flow | – |
-| `api_keys.json` | Offizielle Schlüsseltabelle (Namen, R/W, Typ, Kategorie) | Bei 98 von 272 Zeilen steht als Typ nur `TYPE`; keine Beschreibungen gespeichert (kein Lizenztext im offiziellen Repo) |
-| Beispieldaten | `123456`, `192.0.2.10` (reservierter Bereich), erfundene Tokens | enthalten keine echten Daten |
+| `aioclient_mock` (Home Assistant) | HTTP answers local and cloud | The fake provides no `content_length`; cases with `500` without/with content are in `test_bridge.py` with an own response class |
+| `FakeSocket`, `FakeSession` (`test_ws_login_failures.py`) | Script of the login and the messages | The script reproduces the **reverse engineered** login. It does not detect a change by go-e. |
+| Fake WebSocket object (`send_json`) | Outgoing commands | as above |
+| `MockConfigEntry` | Config entries for coordinator, migration, flow | – |
+| `api_keys.json` | Official key table (names, R/W, type, category) | For 98 of 272 rows the type is only `TYPE`; no descriptions are stored (no licence text in the official repo) |
+| Sample data | `123456`, `192.0.2.10` (reserved range), invented tokens | contain no real data |
 
-**Grenze aller Attrappen:** Sie kodieren unsere Annahmen. Dass der Charger sich so verhält, belegt erst der lesende Abgleich am echten Gerät (Abschnitt 10, Punkt 4).
+**Limit of all fakes:** they encode the assumptions of the tests. That the charger behaves this way is only proven by the reading comparison on a real device (section 10, item 4).
 
 ---
 
-## 8. Marker und Blockier-Regeln
+## 8. Markers and blocking rules
 
-| Marker | Bedeutung | Blockiert? |
+| Marker | Meaning | Blocks? |
 |---|---|---|
-| `known_bug` | Der Code hat einen nicht behobenen Fehler; der Test beschreibt das richtige Verhalten | Ja: der Gesamtlauf ist rot, bis der Fehler behoben ist |
-| `needs_decision` | Doku und Code weichen ab; unklar, ob gewollt oder Doku-Lücke | Nein: rot, aber nicht blockierend, bis entschieden ist |
-| (kein Marker) | Verhalten, das funktionieren muss | Ja |
+| `known_bug` | The code has an unfixed defect; the test describes the correct behaviour | Yes: the full run is red until the defect is fixed |
+| `needs_decision` | Documentation and code differ; unclear whether intended or a documentation gap | No: red, but not blocking until decided |
+| (no marker) | Behaviour that must work | Yes |
 
-- Eine **neue** Abweichung zur Doku hat keinen Marker und blockiert sofort.
-- Wird ein Fehler behoben, schlägt das Entfernen des Markers nicht automatisch an. Der Test wird **grün**, der Marker bleibt stehen und muss von Hand entfernt werden. Das ist ein Nachteil gegenüber `xfail(strict)`. Mitigation: nach jedem Update von `main` die Marker prüfen (`-m known_bug -q`).
-- Blockierende Menge heute: grün (972 bestanden, mit PR #180). Offene Funde: 17, alle `needs_decision` (14 Abweichungen in `test_api_contract`, 3 Controller-Schlüssel). Alle `known_bug` sind behoben und ihre Marker entfernt.
+- A **new** deviation from the documentation has no marker and blocks at once.
+- When a defect is fixed, removing the marker does not trigger automatically. The test turns **green**, the marker stays and must be removed by hand. This is a disadvantage compared with `xfail(strict)`. Mitigation: check the markers after every update of `main` (`-m known_bug -q`).
+- Blocking set today: green (972 passed, with PR #180). Open findings: 17, all `needs_decision` (14 deviations in `test_api_contract`, 3 controller keys). All `known_bug` are fixed and their markers removed.
 
 ---
 
-## 9. Aktueller Stand
+## 9. Current state
 
-Stand 2026-10-29 (Messung nach dem Ausbau um Controller-Vertrag, Wertebereiche und Transportvergleich), `main` bei `9e7d62a`. Die Abdeckung wurde vor den letzten Fehlerbehebungen gemessen; einen neuen Bericht liefert `test-report.yaml`.
+State 2026-10-29 (measured after extending with controller contract, value ranges and transport comparison), `main` at `9e7d62a`. The coverage was measured before the latest bug fixes; `test-report.yaml` delivers a new report.
 
-| Kennzahl | Wert |
+| Figure | Value |
 |---|---|
-| Tests gesammelt | 989, davon 420 parametrisierte Vertragsprüfungen je Schlüssel; **567 Verhaltens- und Fehlertests** |
-| Ergebnis | 972 bestanden, 17 beabsichtigt rot (alle `needs_decision`); blockierende Menge 972 von 972 grün (mit PR #180, sonst 961 blockierend und 28 rot) |
-| Zeilenabdeckung | 92,9 % (vorher 55,2 %) |
-| Zweigabdeckung | 84,9 % (vorher 31,8 %) |
-| **Pfadabdeckung** (obere Schranke der Basispfade) | **61 %** alle Funktionen, **62 %** Kernmodule (vorher 20 % und 27 %) |
-| Pfadabdeckung nach Kritikalität | K1 kritisch 66 %, K2 hoch 60 %, K3 mittel 64 %, K4 niedrig 48 % |
+| Tests collected | 989, of which 420 parametrised per-key contract checks; **569 behaviour and error tests** |
+| Result | 972 passed, 17 intentionally red (all `needs_decision`); blocking set 972 of 972 green (with PR #180, otherwise 961 blocking and 28 red) |
+| Line coverage | 92.9 % (before 55.2 %) |
+| Branch coverage | 84.9 % (before 31.8 %) |
+| **Path coverage** (upper bound of base paths) | **61 %** all functions, **62 %** core modules (before 20 % and 27 %) |
+| Path coverage by criticality | K1 critical 66 %, K2 high 60 %, K3 medium 64 %, K4 low 48 % |
 
-**Hinweis zur Pfadabdeckung:** `coverage.py` misst keine Pfade. Die Zahl stammt aus einem eigenen Plugin (`tests/tools/pathtracer.py`) und ist eine obere Schranke: Je Funktion zählt `min(beobachtete verschiedene Pfade, zyklomatische Komplexität)`. Sie lässt sich durch viele leicht verschiedene Eingaben steigern, ohne dass die Prüfung besser wird. Als Gegenprobe dienen die Mutationsprüfungen (Abschnitt 11).
+**Note on path coverage:** `coverage.py` does not measure paths. The figure comes from an own plugin (`tests/tools/pathtracer.py`) and is an upper bound: per function `min(observed distinct paths, cyclomatic complexity)` counts. It can be raised by many slightly different inputs without making the check better. The mutation checks serve as a counter-check (section 11).
 
-| Datei | Inhalt |
+| File | Content |
 |---|---|
-| `test_api_contract.py` | Schlüsseltabelle gegen Code (420 Prüfungen) |
-| `test_platform_values.py`, `test_platform_actions.py` | Wertdarstellung und Schreiben der Entitäten |
-| `test_bridge_http.py`, `test_bridge_write_paths.py`, `test_bridge_polling.py` | HTTP-Anfragen, Schreibpfade, Lesezyklus |
-| `test_ws_protocol.py`, `test_ws_login_failures.py`, `test_ws_connect_paths.py` | WebSocket: Nachrichten, Anmeldefehler, erfolgreiche Anmeldung und Schleife |
-| `test_coordinator_failures.py`, `test_coordinator_runtime.py`, `test_coordinator_errors.py` | Fehlerzähler und Pause, Laufzeitpfade, Schreibfehler |
-| `test_services_and_unload.py`, `test_services_and_setup.py`, `test_service.py` | Dienste, Register, Start und Ende eines Entries |
-| `test_config_flow_failures.py`, `test_config_flow_paths.py`, `test_migration.py` | Config-Flow, Migration |
-| `test_versions_16a.py`, `test_versions_transport_parity.py`, `test_entity_ids.py`, `test_bridge.py` | 16-A-Entscheidung (je nach Code-Stand), gleiches Ergebnis über HTTP und WebSocket, Entity-IDs, Schreibfehler der Bridge |
-| `test_controller_contract.py` | Controller-Schlüssel gegen die Tabelle der go-eController-API (59 Prüfungen, 3 davon beabsichtigt rot) |
-| `test_value_ranges.py` | Wertebereiche und Optionslisten aus dem Modbus-Profil (`amp`, `ama`, `lbr`, `frc`, `psm` u. a.) |
+| `test_api_contract.py` | Key table against code (420 checks) |
+| `test_platform_values.py`, `test_platform_actions.py` | Value display and writing of the entities |
+| `test_bridge_http.py`, `test_bridge_write_paths.py`, `test_bridge_polling.py` | HTTP requests, write paths, read cycle |
+| `test_ws_protocol.py`, `test_ws_login_failures.py`, `test_ws_connect_paths.py` | WebSocket: messages, login failures, successful login and loop |
+| `test_coordinator_failures.py`, `test_coordinator_runtime.py`, `test_coordinator_errors.py` | Error counter and pause, runtime paths, write errors |
+| `test_services_and_unload.py`, `test_services_and_setup.py`, `test_service.py` | Services, registry, start and end of an entry |
+| `test_config_flow_failures.py`, `test_config_flow_paths.py`, `test_migration.py` | Config flow, migration |
+| `test_versions_16a.py`, `test_versions_transport_parity.py`, `test_entity_ids.py`, `test_bridge.py` | 16 A decision (depending on the code state), same result over HTTP and WebSocket, entity IDs, write errors of the bridge |
+| `test_controller_contract.py` | Controller keys against the table of the go-eController API (59 checks, 3 of them intentionally red) |
+| `test_value_ranges.py` | Value ranges and option lists from the Modbus profile (`amp`, `ama`, `lbr`, `frc`, `psm` and others) |
 
-**Kritikalität der Pfade.** Jede Funktion ist einer Klasse zugeordnet (K1 ändert den Charger oder die Konfiguration, K2 Verbindung, Anmeldung, Start, K3 Anzeige, K4 Hilfsfunktionen). Die Zuordnung mit Begründung steht in `tests/tools/criticality.py`; der Report listet je Klasse die offenen Lücken (Abschnitt 5.1).
-
----
-
-## 10. Lücken und Reihenfolge der nächsten Schritte
-
-Erledigt seit der ersten Fassung: Plattformen, Lesezyklus im Polling, Schreibpfade, Koordinator-Laufzeit (16-A-Begrenzer, Wiederverbindung, Watchdog), Start und Ende eines Entries, erfolgreiche Anmeldung per WebSocket, Config-Flow-Pfade.
-
-1. **K1 und K2 zuerst:** Der Report (Abschnitt 5.1) nennt je Funktion, wo sicher noch Basispfade fehlen, zum Beispiel in `check_and_write_to_16a`, `async_migrate_entry`, `ws_connect`, `read_versions` des Koordinators und `read_all_states`.
-2. **R20 (alte Werte nach fehlgeschlagenem Lesen, Cloud) und R7 (Konfigurationsintervall):** Das Verhalten wird jetzt als Charakterisierung festgehalten (`test_failed_full_read_keeps_the_previous_states`); ein Test auf das gewünschte Verhalten fehlt, weil der Maintainer die Absicht nicht geklärt hat.
-3. **Endpunkt-Verträge:** Cloud 403, 404, 422, 202, `age`, `last-modified`, `token` als GET-Parameter, mehrere Schlüssel in einem `set`; dazu ein Schema der Endpunkte aus `http-en.md` und `cloudapi-en.md`.
-4. **Schreib-Kodierung je Schlüsseltyp** und **Grenzwerte** (Regel „explizite Grenzen“): nur dort, wo die Doku Typ oder Bereich nennt. Bei 98 Schlüsseln mit Platzhalter-Typ geht das nicht.
-5. **Lesender Abgleich am echten Charger:** die Vertragsdaten (Statuscodes, Schlüssel, Typen) gegen `GET /api/status` prüfen. Nur lesend, kein `frc`, kein `ids`. Erst das belegt, dass die Attrappen dem Gerät entsprechen.
-6. **Lese-Seite je Firmware:** Beispiel-Antworten aus den Listen für 59.4, 60.2, 60.3 und 60.4.
-7. **Entity-Anlage:** `async_setup_entry` je Plattform und `entity.py` (Anzeigename) sind noch nicht ausgeführt.
-8. **Verbindungsverlust im laufenden WebSocket-Betrieb:** Verfügbarkeit der Entitäten.
-9. **R6 (`unique_id`):** Doppelanlage verhindern.
-10. **Struktur:** Arrange-Act-Assert konsequent anwenden (die neuen Tests folgen dem Muster weitgehend, ohne dass es geprüft wird); Abdeckungs-Untergrenze und Marker-Warnung automatisieren.
+**Criticality of the paths.** Every function is assigned to a class (K1 changes the charger or the configuration, K2 connection, login, start, K3 display, K4 helper functions). The assignment with reasons is in `tests/tools/criticality.py`; the report lists the open gaps per class (section 5.1).
 
 ---
 
-## 11. Qualität der Tests selbst
+## 10. Gaps and order of the next steps
 
-- **Mutationsprüfung von Hand:** An verschiedenen Stellen wurden gezielt Fehler in den Code eingebaut und geprüft, ob ein Test rot wird. Bisher **33 Änderungen, alle erkannt**: 19 für die erste Suite (Wertkodierung, Präfixe, HMAC, Löschen der Geräte, 16-A-Grenze, Token, Anmeldeprüfungen, Neustart-Schwelle, Pausen, Flow-Abbruchgrund, Start-Prüfung, Schlüsselzuordnung) und 14 für die erweiterte Suite (Sensorfaktor, Fahrzeugprofil, Schalter-Regeln, Hibernation-Grenze, Konfigurations-Wiederholung, 16-A-Grenze im Begrenzer, Cloud-Fahrzeugprüfung, Zähler, Mindestintervall, Standard-Hash, Temperatur-Sensoren des Core, `ids`-Flag, Null-als-Null). **Eine** Änderung (Temperatur-Sensoren des Core) wurde zuerst nicht erkannt; ein zusätzlicher Testfall schloss die Lücke. Die Prüfung ist **nicht automatisiert** und deckt nicht den gesamten Code ab.
-- **Positivkontrollen** für die Attrappen (Anmeldung, Config-Flow).
-- **Stabilität:** Die blockierende Menge lief dreimal hintereinander grün (kein flackerndes Verhalten festgestellt).
-- **Unabhängige Zweitprüfung:** für die Tests selbst nicht durchgeführt.
-- **Bekannte Schwächen:** Die Zahl 420 in der Vertragsdatei verzerrt die Gesamtzahl; die Pfadzahl ist eine obere Schranke und steigerbar; die Attrappen kodieren unsere Annahmen.
+Done since the first version: platforms, read cycle in polling, write paths, coordinator runtime (16 A limiter, reconnect, watchdog), start and end of an entry, successful login via WebSocket, config flow paths.
+
+1. **K1 and K2 first:** the report (section 5.1) names per function where base paths are certainly still missing, for example in `check_and_write_to_16a`, `async_migrate_entry`, `ws_connect`, `read_versions` of the coordinator and `read_all_states`.
+2. **[R020](../architecture/risks/R020-old-values-stay-after-a-failed-read.md) (old values after a failed read, cloud):** the behaviour is recorded as a characterisation (`test_failed_full_read_keeps_the_previous_states`); the maintainer confirmed in #173 that keeping the old values is intended, so no test for a different behaviour is planned. **[R007](../architecture/risks/R007-readme-and-code-state-different-read-intervals-for-the.md) (configuration interval):** the code behaviour is recorded; the README statement still differs.
+3. **Endpoint contracts:** cloud 403, 404, 422, `age`, `last-modified`, `token` as a GET parameter, several keys in one `set`; plus a schema of the endpoints from `http-en.md` and `cloudapi-en.md`.
+4. **Write encoding per key type** and **boundary values** (rule "explicit limits"): only where the documentation names type or range. For 98 keys with a placeholder type this is not possible.
+5. **Reading comparison on a real charger:** check the contract data (status codes, keys, types) against `GET /api/status`. Reading only, no `frc`, no `ids`. Only this proves that the fakes correspond to the device.
+6. **Read side per firmware:** sample answers from the lists for 59.4, 60.2, 60.3 and 60.4.
+7. **Entity creation:** `async_setup_entry` per platform and `entity.py` (display name) are not yet exercised.
+8. **Connection loss during running WebSocket operation:** availability of the entities.
+9. **[R006](../architecture/risks/R006-no-unique-id-in-the-config-flow.md) (`unique_id`):** prevent creating a device twice.
+10. **Structure:** apply Arrange-Act-Assert consistently (the new tests mostly follow the pattern without it being checked); automate a coverage lower bound and a marker warning.
+11. **Temporary current limit and acknowledged writing (PR #177):** there are no tests of their own for `set_temporary_current_limit`, the `tcl` entity, the input check (`_TCLTagLogic`) and the acknowledged writing with a 3 second timeout (`require_ack`, `_ws_pending_ack`) (checked with `grep` in `tests/integration`). The test for `stop_charging` replaces `async_write_key` with a fake and therefore does not check the acknowledgement.
+
+12. **Tests that assert the exact wording of messages ([R032](../architecture/risks/R032-tests-assert-the-exact-wording-of-messages.md)):** nine of the eleven uses of `match=` in `tests/integration` match a message text (two match an exception class name). A rewording by the maintainer breaks them without a change in behaviour (it did twice, see issue #172). Where the text is not the contract, assert the exception type and a stable part instead. To be discussed with the maintainer before anything is changed.
 
 ---
 
-## 12. Pflege und Änderungsprozess
+## 11. Quality of the tests themselves
 
-| Anlass | Vorgehen |
+- **Mutation check by hand:** faults were deliberately built into the code at various places and it was checked whether a test turns red. So far **33 changes, all detected**: 19 for the first suite (value encoding, prefixes, HMAC, deleting the devices, 16 A limit, token, login checks, restart threshold, pauses, flow abort reason, start check, key assignment) and 14 for the extended suite (sensor factor, vehicle profile, switch rules, hibernation limit, configuration retry, 16 A limit in the limiter, cloud vehicle check, counter, minimum interval, default hash, temperature sensors of the Core, `ids` flag, null as null). **One** change (temperature sensors of the Core) was not detected at first; an additional test case closed the gap. The check is **not automated** and does not cover the whole code.
+- **Positive controls** for the fakes (login, config flow).
+- **Stability:** the blocking set ran green three times in a row (no flaky behaviour observed).
+- **Independent second check:** not carried out for the tests themselves.
+- **Known weaknesses:** the number 420 in the contract file distorts the total; the path figure is an upper bound and can be raised; the fakes encode the assumptions of the tests.
+
+---
+
+## 12. Maintenance and change process
+
+| Occasion | Procedure |
 |---|---|
-| go-e veröffentlicht neue Doku | `generate_api_keys.py` mit neuem Commit ausführen, Diff prüfen, `classification.json` und `deviations.json` anpassen |
-| Upstream behebt einen Fehler | Marker `known_bug` entfernen, Test muss grün sein; ggf. Eintrag in `deviations.json` oder `classification.json` streichen |
-| Upstream ändert Entity-IDs absichtlich | Snapshot mit `UPDATE_SNAPSHOT=1` neu erzeugen und den Diff prüfen; ein Änderungsvorschlag an Nutzer wäre ein Bruch für Bestandsnutzer |
-| Neue Entität oder neuer Schlüssel | Vertragstest schlägt an; Schlüssel zuordnen oder in die Klassifikation aufnehmen |
-| Abweichung `needs_decision` geklärt | Eintrag entfernen oder Doku-Lücke vermerken und Marker entfernen |
+| go-e publishes new documentation | Run `generate_api_keys.py` with the new commit, check the diff, adjust `classification.json` and `deviations.json` |
+| Upstream fixes a defect | Remove the marker `known_bug`, the test must be green; if applicable delete the entry in `deviations.json` or `classification.json` |
+| Upstream changes entity IDs deliberately | Regenerate the snapshot with `UPDATE_SNAPSHOT=1` and check the diff; a change proposal to users would be a break for existing users |
+| New entity or new key | The contract test fails; assign the key or add it to the classification |
+| Deviation `needs_decision` clarified | Remove the entry or note the documentation gap and remove the marker |
 
-**Zuständig:** Oliver (Tests und Doku). Änderungen am Code macht der Maintainer; Oliver schlägt sie höchstens vor.
-
----
-
-## 13. Eintritts- und Abschlusskriterien
-
-- **Vor jedem Push und jedem Pull Request:** blockierende Menge grün (`-m "not known_bug and not needs_decision"`).
-- **Vor jedem Update auf einen neuen Upstream-Stand:** `main` holen, Gesamtlauf starten, neue Rotfälle einordnen (neuer Fehler oder behobener bekannter Fehler).
-- **Abschluss des Testkonzepts „offizielle API“:** Punkte 1 bis 3 aus Abschnitt 10 umgesetzt, Punkt 4 mindestens einmal durchgeführt und dokumentiert.
+**Responsible:** @OliEder (tests and documentation). Changes to the code are made by the maintainer.
 
 ---
 
-## 14. Annahmen, Grenzen, offene Entscheidungen
+## 13. Entry and exit criteria
 
-- Die Tests prüfen den Code gegen Doku und gegen unsere Annahmen, nicht gegen das Gerät.
-- Ob die 11 `known_bug`- und 14 `needs_decision`-Fälle Fehler sind, ist teils offen (siehe `tests/integration/contract/deviations.json`).
-- Offen: Soll es Mutationstests automatisiert geben (zum Beispiel `mutmut`)? Das wäre ein Aufwand von einem halben bis einem Tag, ohne Gewähr für Nutzen bei einer Codebasis dieser Struktur.
+- **Before every push and every pull request:** blocking set green (`-m "not known_bug and not needs_decision"`).
+- **Before every update to a new upstream state:** fetch `main`, start the full run, classify new red cases (new defect or fixed known defect).
+- **Completion of the test concept "official API":** items 1 to 3 from section 10 implemented, item 4 carried out and documented at least once.
+
+---
+
+## 14. Assumptions, limits, open decisions
+
+- The tests check the code against documentation and against the assumptions of the tests, not against the device.
+- Whether the 17 `needs_decision` cases (14 deviations from the key table, 3 controller keys) are defects is open (see `tests/integration/contract/deviations.json`).
+- Open: should there be automated mutation tests (for example `mutmut`)? That would be an effort of half a day to one day, with no guarantee of benefit for a code base of this structure.
