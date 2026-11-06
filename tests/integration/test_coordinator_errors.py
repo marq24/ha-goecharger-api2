@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 from aiohttp import ClientConnectionError
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.goecharger_api2 import GoeChargerDataUpdateCoordinator
 

@@ -38,7 +38,7 @@ jobs:
       - name: Install test dependencies
         run: |
           python -m pip install -r requirements_dev.txt msgpack
-          python -m pip show homeassistant pytest-homeassistant-custom-component | grep -E "^(Name|Version)"
+          python -m pip show homeassistant pytest-homeassistant | grep -E "^(Name|Version)"
 
       - name: Blocking tests
         run: python -m pytest tests/integration -p no:cacheprovider -q -m "not known_bug and not needs_decision"

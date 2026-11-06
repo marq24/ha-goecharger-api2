@@ -1,7 +1,7 @@
 """Fixtures for the integration tests.
 
 The tests need the packages from requirements_dev.txt and run with Python 3.14 (the version
-required by pytest-homeassistant-custom-component for the current Home Assistant release).
+required by pytest-homeassistant for the current Home Assistant release).
 """
 import pytest
 

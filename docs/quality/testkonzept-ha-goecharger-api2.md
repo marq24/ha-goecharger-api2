@@ -123,7 +123,7 @@ Verbindlich nach `CLAUDE.md` / `AGENTS.md`. Der Stand wird hier ehrlich festgeha
 
 ## 6. Testumgebung
 
-- **Software:** Python 3.14.3, Home Assistant 2026.10.4 (festgelegt durch `pytest-homeassistant-custom-component`), `pytest`, `pytest-asyncio` (Modus `auto`). `msgpack` muss zusätzlich installiert werden, weil das Test-Framework die Anforderungen aus dem Manifest nicht installiert.
+- **Software:** Python 3.14.3, Home Assistant 2026.11.0 (festgelegt durch `pytest-homeassistant`), `pytest`, `pytest-asyncio` (Modus `auto`). `msgpack` muss zusätzlich installiert werden, weil das Test-Framework die Anforderungen aus dem Manifest nicht installiert.
 - **Ort:** lokale virtuelle Umgebung (Python 3.14, `pip install -r requirements_dev.txt`); Werkzeuge: `tests/tools/`; der Messbericht entsteht von Hand über `.github/workflows/test-report.yaml` (die abgelegten Berichte unter `tests/reports/` wurden entfernt).
 - **Aufruf:**
   - alles: `python -m pytest tests/integration`
