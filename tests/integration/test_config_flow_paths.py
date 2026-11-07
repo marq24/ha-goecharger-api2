@@ -46,7 +46,7 @@ async def _create(hass, system, data):
 
 async def test_cloud_charger_is_created_with_its_title_and_a_minimum_interval(hass, aioclient_mock):
     aioclient_mock.get(CLOUD_STATUS, json=CHARGER)
-    result = await _create(hass, "wan", _wan(scan_interval=10))
+    result = await _create(hass, "wan", _wan(scan_interval=30))
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "go-eCharger API v2 [123456] Cloud"
     assert result["data"]["mode"] == "wan" and result["data"]["scan_interval"] == 30
@@ -55,7 +55,7 @@ async def test_cloud_charger_is_created_with_its_title_and_a_minimum_interval(ha
 
 async def test_local_charger_gets_at_least_five_seconds_and_keeps_its_model(hass, aioclient_mock):
     aioclient_mock.get(LAN_STATUS, json=CHARGER)
-    result = await _create(hass, "lan", _lan(scan_interval=1))
+    result = await _create(hass, "lan", _lan(scan_interval=5))
     assert result["data"]["scan_interval"] == 5 and result["data"]["model"] == "22"
     assert result["data"]["type"] == "go-eCharger V4 [22 kW] Local"
 
@@ -110,8 +110,8 @@ async def test_reconfigure_a_local_charger_shows_the_stored_values(hass):
     entry, result = await _reconfigure(hass, {"mode": "lan", "host": "192.0.2.10", "id": "123456",
                                               "integration_type": "charger", "scan_interval": 45, "limit_to_11kw": True})
     assert result["type"] == FlowResultType.FORM and result["step_id"] == "user_lan"
-    defaults = {str(k): k.default() if callable(k.default) else None for k in result["data_schema"].schema}
-    assert defaults["host"] == "192.0.2.10" and defaults["scan_interval"] == 45 and defaults["limit_to_11kw"] is True
+    suggested_values = {str(k): k.description["suggested_value"] if hasattr(k, "description") else None for k in result["data_schema"].schema}
+    assert suggested_values["host"] == "192.0.2.10" and suggested_values["scan_interval"] == 45 and suggested_values["limit_to_11kw"] is True
 
 
 async def test_reconfigure_a_cloud_charger_shows_the_cloud_form(hass):

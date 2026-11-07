@@ -1,1 +1,1 @@
-homeassistant>=2024.8.2
+homeassistant>=2026.9.0
