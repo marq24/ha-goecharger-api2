@@ -45,7 +45,7 @@ def _call(return_response=True, **data):
 
 def _service(hass, mode="lan", car=2, **kwargs):
     coordinator = make_coordinator(hass, data={Tag.CAR_CONNECTED.key: car}, mode=mode, **kwargs)
-    coordinator.async_write_key = AsyncMock(return_value={Tag.IDS.key: True})
+    coordinator.async_write_key = AsyncMock(return_value={Tag.IDS.key: {"pGrid": -500.0, "pPv": 0.0, "pAkku": 0.0}})
     return GoeChargerApiV2Service(hass, coordinator._config_entry, coordinator), coordinator
 
 
@@ -100,7 +100,7 @@ async def test_missing_grid_power_without_wanted_answer_returns_nothing(hass):
 async def test_successful_pv_data_returns_nothing_when_no_answer_is_wanted(hass):
     service, coordinator = _service(hass)
     assert await service.set_pv_data(_call(return_response=False, pgrid=-1, ppv=2, pakku=3)) is None
-    coordinator.async_write_key.assert_awaited_once_with(Tag.IDS.key, {"pGrid": -1.0, "pPv": 2.0, "pAkku": 3.0})
+    coordinator.async_write_key.assert_awaited_once_with(Tag.IDS.key, {"pGrid": -1.0, "pPv": 2.0, "pAkku": 3.0}, require_ack=False)
 
 
 @pytest.mark.parametrize("error", [ValueError("down"), TypeError("odd")])
