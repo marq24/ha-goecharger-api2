@@ -110,8 +110,8 @@ async def test_reconfigure_a_local_charger_shows_the_stored_values(hass):
     entry, result = await _reconfigure(hass, {"mode": "lan", "host": "192.0.2.10", "id": "123456",
                                               "integration_type": "charger", "scan_interval": 45, "limit_to_11kw": True})
     assert result["type"] == FlowResultType.FORM and result["step_id"] == "user_lan"
-    defaults = {str(k): k.default() if callable(k.default) else None for k in result["data_schema"].schema}
-    assert defaults["host"] == "192.0.2.10" and defaults["scan_interval"] == 45 and defaults["limit_to_11kw"] is True
+    suggested_values = {str(k): k.description["suggested_value"] if hasattr(k, "description") else None for k in result["data_schema"].schema}
+    assert suggested_values["host"] == "192.0.2.10" and suggested_values["scan_interval"] == 45 and suggested_values["limit_to_11kw"] is True
 
 
 async def test_reconfigure_a_cloud_charger_shows_the_cloud_form(hass):
