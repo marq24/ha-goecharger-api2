@@ -63,7 +63,6 @@ from .service import GoeChargerApiV2Service, add_config_entry_to_service, remove
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
-CONFIG_SCHEMA = config_val.removed(DOMAIN, raise_if_present=False)
 CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS: Final = 120 # 2min
 WEBSOCKET_WATCHDOG_INTERVAL: Final = timedelta(minutes=5, seconds=1)
 COMMUNICATION_MODE_WEBSOCKET: Final = "WEBSOCKET"
