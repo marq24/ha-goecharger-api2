@@ -197,7 +197,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             if not await coordinator.read_versions():
                 raise ConfigEntryNotReady("Could not read versions from charger/controller! - please enable debug logging to see more details!")
 
-    # register outr platforms (sensor, switch, number, etc.)
+    # register our platforms (sensor, switch, number, etc.)
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -230,6 +230,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     config_entry.async_on_unload(config_entry.add_update_listener(entry_update_listener))
     # ok we are done...
+    _LOGGER.info(f"async_setup_entry(): integration setup complete for {config_entry.entry_id}")
     return True
 
 
