@@ -6,7 +6,7 @@
 
 Either you just found this page manually (quite unlikely) or you have been directed from your Home Assistant to this page.
 
-When you are **directed from your Home Assistant**, then you have currently **more than 6 active running configurations** for this integration running. This makes you a heavy user of this integration and I would kindly ask you **to support the maintenance and development**. 
+When you are **directed from your Home Assistant**, then you have currently **more than 8 active running configurations** for this integration running. This makes you a heavy user of this integration and I would kindly ask you **to support the maintenance and development**. 
 
 You have different options to do that:
 
@@ -16,7 +16,7 @@ You have different options to do that:
 
 ### or a one time support via:
 - <sub>[![Wero][werobadge]][wero]</sub>
-- <sub>[![Revolut][revolutbadge]][revolut]</sub>
+- <sub>[![Revolut][revolutbadge]][revolut]</sub>&nbsp;&nbsp;also accepting credit cards & ApplePay
 - <sub>[![BuyMeCoffee][buymecoffeebadge]][buymecoffee]</sub>
 - <sub>[![wise][wisebadge]][wise]</sub>
 - <sub>[![PayPal][paypalbadge]][paypal]</sub>
@@ -60,3 +60,6 @@ If you have already supported the development in the past - never mind - THANKS 
 
 [wise]: https://wise.com/pay/me/matthiasm1046
 [wisebadge]: https://img.shields.io/badge/_wise-me_-blue.svg?style=for-the-badge&logo=wise&logoColor=ccc&link=https%3A%2F%2Fwise.com%2Fpay%2Fme%2Fmatthiasm1046
+
+[applepay]: https://revolut.me/marq24
+[applepaybadge]: https://img.shields.io/badge/_&-me_-blue.svg?style=for-the-badge&logo=googlepay&logoColor=ccc&link=https%3A%2F%2Frevolut.me%2Fmarq24
