@@ -160,18 +160,19 @@ def handle_heavy_user(hass: HomeAssistant, lang_map):
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     # ok starting the init sequence...
-    lang = hass.config.language.lower()
-    if lang in TRANSLATIONS:
-        lang_map = TRANSLATIONS[lang]
-    else:
-        lang_map = TRANSLATIONS["en"]
-
+    run_heavy_user_check = False
     if DOMAIN not in hass.data:
         the_integration = await async_get_integration(hass, DOMAIN)
         intg_version = the_integration.version if the_integration is not None else "UNKNOWN"
         _LOGGER.info(STARTUP_MESSAGE % intg_version)
         hass.data.setdefault(DOMAIN, {"manifest_version": intg_version})
-        handle_heavy_user(hass, lang_map)
+        run_heavy_user_check = True
+
+    lang = hass.config.language.lower()
+    if lang in TRANSLATIONS:
+        lang_map = TRANSLATIONS[lang]
+    else:
+        lang_map = TRANSLATIONS["en"]
 
     coordinator = GoeChargerDataUpdateCoordinator(hass, config_entry)
     a_pwd = config_entry.data.get(CONF_PASSWORD, None)
@@ -228,6 +229,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, coordinator.start_watchdog)
 
     config_entry.async_on_unload(config_entry.add_update_listener(entry_update_listener))
+
+    if run_heavy_user_check:
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, handle_heavy_user(hass, lang_map))
+
     # ok we are done...
     _LOGGER.info(f"async_setup_entry(): integration setup complete for {config_entry.entry_id}")
     return True
