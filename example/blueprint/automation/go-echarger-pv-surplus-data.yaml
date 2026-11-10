@@ -82,13 +82,18 @@ blueprint:
       input:
         maximum_age_seconds:
           name: Maximum measurement age
-          description: Zero disables age checking. HA report time is not necessarily the source measurement time.
+          description: >-
+            Zero disables age checking. HA report time is not necessarily the source
+            measurement time. Future timestamps are rejected.
           default: 0
           selector:
             number: {min: 0, max: 3600, step: 1, unit_of_measurement: s, mode: box}
         source_timestamp_entities:
           name: Source timestamp sensors
-          description: Optional additional clocks. Every selected source clock must be valid and fresh when age checking is enabled.
+          description: >-
+            Optional source timestamps, checked only when Maximum measurement age
+            is greater than zero. Every selected timestamp must be valid, within the
+            age limit and not in the future.
           default: []
           selector:
             entity:
@@ -271,7 +276,7 @@ variables:
   power_samples: >
     {% set ns = namespace(samples={}) %}
     {% for entity, sample in power_snapshots.items() %}
-      {% set ns.samples = dict(ns.samples, **{entity: sample.value}) %}
+      {% set ns.samples = dict(ns.samples, **{entity: sample['value']}) %}
     {% endfor %}
     {{ ns.samples }}
   source_times: >
@@ -376,7 +381,7 @@ actions:
             before: sunset
         sequence:
           - condition: template
-            alias: "Skip daylight update when a used measurement is invalid"
+            alias: "Skip daylight update when a used measurement is invalid or stale"
             value_template: >
               {{ measurements_valid and measurements_fresh and is_number(pgrid_watts)
                 and is_number(ppv_watts) and is_number(pakku_watts) }}
