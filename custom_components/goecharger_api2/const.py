@@ -190,8 +190,8 @@ BINARY_SENSORS = [
     ),
     ExtBinarySensorEntityDescription(
         key=Tag.CTRLS.key,
+        tuple_idx=[0, 2], # when using the 'tuple_idx', a 'translation_key' must be also present!
         translation_key="ctrls_0_paired", # important! 'translation_key' must be allways lower case!!!
-        tuple_idx=[0, 2],
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=None,
         icon="mdi:gamepad-square-outline",
@@ -199,8 +199,8 @@ BINARY_SENSORS = [
     ),
     ExtBinarySensorEntityDescription(
         key=Tag.CTRLS.key,
+        tuple_idx=[0, 3], # when using the 'tuple_idx', a 'translation_key' must be also present!
         translation_key="ctrls_0_connected",  # important! 'translation_key' must be allways lower case!!!
-        tuple_idx=[0, 3],
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=None,
         icon="mdi:gamepad-square",
@@ -1429,14 +1429,13 @@ SENSOR_SENSORS = [
     ),
     ExtSensorEntityDescription(
         key=Tag.LBP.key,
+        translation_key="lbp_delta_millis",
         differential_base_key=Tag.RBT.key,
-        translation_key="lbp_delta_seconds",
-        factor=1000,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=None,
         icon="mdi:button-pointer",
-        entity_registry_enabled_default=True
+        entity_registry_enabled_default=False
     ),
     ExtSensorEntityDescription(
         key=Tag.LBP.key,

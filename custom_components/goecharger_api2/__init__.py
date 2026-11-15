@@ -871,11 +871,11 @@ class GoeChargerBaseEntity(CustomFriendlyNameEntity):
         if hasattr(description, "tag"):
             self.tag:Tag = description.tag
 
-        # tuple_idx must have description.translation_key !
-        if hasattr(description, "tuple_idx") and description.tuple_idx is not None:
-            if description.translation_key is not None:
-                self._attr_translation_key = description.translation_key.lower()
-            else:
+        if description.translation_key is not None:
+            self._attr_translation_key = description.translation_key.lower()
+        else:
+            # tuple_idx must have description.translation_key !
+            if hasattr(description, "tuple_idx") and description.tuple_idx is not None:
                 if len(description.tuple_idx) > 1:
                     subKey1 = description.tuple_idx[0]
                     subKey2 = description.tuple_idx[1]
@@ -884,15 +884,14 @@ class GoeChargerBaseEntity(CustomFriendlyNameEntity):
                     subKey1 = description.tuple_idx[0]
                     self._attr_translation_key = f"{self.data_key}_{subKey1}".lower()
 
-        elif hasattr(description, "idx") and description.idx is not None:
-            self._attr_translation_key = f"{self.data_key.lower()}_{description.idx}"
-        elif hasattr(description, "lookup") and description.lookup is not None:
-            self._attr_translation_key = f"{self.data_key.lower()}_value"
-        elif hasattr(description, "differential_base_key") and description.differential_base_key is not None:
-            self._attr_translation_key = description.translation_key.lower() if description.translation_key is not None \
-                else f"{self.data_key.lower()}_delta"
-        else:
-            self._attr_translation_key = self.data_key.lower()
+            elif hasattr(description, "idx") and description.idx is not None:
+                self._attr_translation_key = f"{self.data_key.lower()}_{description.idx}"
+            elif hasattr(description, "lookup") and description.lookup is not None:
+                self._attr_translation_key = f"{self.data_key.lower()}_value"
+            elif hasattr(description, "differential_base_key") and description.differential_base_key is not None:
+                self._attr_translation_key = f"{self.data_key.lower()}_delta"
+            else:
+                self._attr_translation_key = self.data_key.lower()
 
         self.entity_description = description
         self.coordinator = coordinator

@@ -420,8 +420,8 @@
 
       "fsptws_delta": {"name": "force single phase toggle wished since"},
       "inva_delta": {"name": "age of inverter data"},
-      "lbp_delta": {"name": "lastButtonPress"},
-      "lbp_delta_seconds": {"name": "lastButtonPress (seconds)"},
+      "lbp_delta": {"name": "last Button press"},
+      "lbp_delta_millis": {"name": "last Button press (millis)"},
       "lccfc_delta": {"name": "last CarState changed from charging"},
       "lccfi_delta": {"name": "last CarState changed from idle"},
       "lcctc_delta": {"name": "last CarState changed to charging"},
