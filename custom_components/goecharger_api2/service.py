@@ -42,6 +42,9 @@ class GoeChargerApiV2Service():
         self._stop_in_progress = False
 
     async def set_pv_data(self, call: ServiceCall):
+        require_ack = call.data.get('require_ack', False)
+        if not isinstance(require_ack, bool):
+            raise ServiceValidationError("require_ack must be a boolean")
         config_id, coordinator = self.get_coordinator(call)
         _LOGGER.debug(f"Service-set_pv_data(): Provided config_id: {config_id} -> using {coordinator.name} serial: {coordinator._serial}")
 
@@ -52,10 +55,12 @@ class GoeChargerApiV2Service():
             if isinstance(a_car_state, Number):
                 if int(a_car_state) < 2:
                     _LOGGER.debug(f"Service-set_pv_data(): No CAR CONNECTED to the Wallbox: API returned 'car' value '{a_car_state}'")
+                    message = f"No CAR CONNECTED to the Wallbox: API returned 'car' value '{a_car_state}'"
                     if call.return_response:
-                        return {"error": f"No CAR CONNECTED to the Wallbox: API returned 'car' value '{a_car_state}'"}
-                    else:
-                        return None
+                        return {"error": message}
+                    if require_ack:
+                        raise ServiceValidationError(message)
+                    return None
 
         pgrid = call.data.get('pgrid', None)
         ppv = call.data.get('ppv', 0)
@@ -73,7 +78,9 @@ class GoeChargerApiV2Service():
             }
             _LOGGER.debug(f"Service-set_pv_data(): set PV data: {payload}")
             try:
-                resp = await coordinator.async_write_key(Tag.IDS.key, payload)
+                resp = await coordinator.async_write_key(Tag.IDS.key, payload, require_ack=require_ack)
+                if require_ack and (not isinstance(resp, dict) or resp.get(Tag.IDS.key) != payload):
+                    raise ValueError("The charger did not acknowledge PV data")
                 if call.return_response:
                     return {
                         "success": "true",
@@ -85,9 +92,14 @@ class GoeChargerApiV2Service():
                 _LOGGER.debug(f"Service-set_pv_data(): Error {type(exc).__name__}: {exc}")
                 if call.return_response:
                     return {"error": str(exc), "date": str(datetime.datetime.now().time())}
+                if require_ack:
+                    raise ServiceValidationError(str(exc)) from exc
 
+            return None
         if call.return_response:
             return {"error": "No Grid Power provided (or false data)", "date": str(datetime.datetime.now().time())}
+        if require_ack:
+            raise ServiceValidationError("No Grid Power provided (or false data)")
 
     async def stop_charging(self, call: ServiceCall):
         if not self._stop_in_progress:

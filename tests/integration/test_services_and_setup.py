@@ -64,6 +64,13 @@ async def test_cloud_charger_without_a_car_returns_nothing_when_no_answer_is_wan
     coordinator.async_write_key.assert_not_awaited()
 
 
+async def test_cloud_charger_without_a_car_rejects_explicit_acknowledgement(hass):
+    service, coordinator = _service(hass, mode="wan", car=0)
+    with pytest.raises(ServiceValidationError, match="No CAR CONNECTED"):
+        await service.set_pv_data(_call(return_response=False, pgrid=-500, require_ack=True))
+    coordinator.async_write_key.assert_not_awaited()
+
+
 async def test_cloud_charger_with_a_car_gets_pv_data(hass):
     service, coordinator = _service(hass, mode="wan", car=2)
     result = await service.set_pv_data(_call(pgrid=-500))
@@ -100,7 +107,7 @@ async def test_missing_grid_power_without_wanted_answer_returns_nothing(hass):
 async def test_successful_pv_data_returns_nothing_when_no_answer_is_wanted(hass):
     service, coordinator = _service(hass)
     assert await service.set_pv_data(_call(return_response=False, pgrid=-1, ppv=2, pakku=3)) is None
-    coordinator.async_write_key.assert_awaited_once_with(Tag.IDS.key, {"pGrid": -1.0, "pPv": 2.0, "pAkku": 3.0})
+    coordinator.async_write_key.assert_awaited_once_with(Tag.IDS.key, {"pGrid": -1.0, "pPv": 2.0, "pAkku": 3.0}, require_ack=False)
 
 
 @pytest.mark.parametrize("error", [ValueError("down"), TypeError("odd")])
