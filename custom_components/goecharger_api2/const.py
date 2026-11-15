@@ -1429,6 +1429,17 @@ SENSOR_SENSORS = [
     ),
     ExtSensorEntityDescription(
         key=Tag.LBP.key,
+        differential_base_key=Tag.RBT.key,
+        translation_key="lbp_delta_seconds",
+        factor=1000,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=None,
+        icon="mdi:button-pointer",
+        entity_registry_enabled_default=True
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.LBP.key,
         factor=60000,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.MINUTES,

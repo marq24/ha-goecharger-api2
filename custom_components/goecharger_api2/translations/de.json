@@ -420,7 +420,8 @@
 
       "fsptws_delta": {"name": "Wechsel von/zu '1-phasigem Laden angefordert seit"},
       "inva_delta": {"name": "Inverter-Daten 'Alter'"},
-      "lbp_delta": {"name": "Letze Wallbox Schalter Betätigung"},
+      "lbp_delta": {"name": "Letzte Wallbox Schalter Betätigung"},
+      "lbp_delta_seconds": {"name": "Letzte Wallbox Schalter Betätigung (Sekunden)"},
       "lccfc_delta": {"name": "Letzter Fahrzeug Statuswechsel von 'Laden'"},
       "lccfi_delta": {"name": "Letzter Fahrzeug Statuswechsel von 'Inaktiv/Frei'"},
       "lcctc_delta": {"name": "Letzter Fahrzeug Statuswechsel zu 'Laden'"},
