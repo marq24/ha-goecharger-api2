@@ -45,7 +45,7 @@ def _call(return_response=True, **data):
 
 def _service(hass, mode="lan", car=2, **kwargs):
     coordinator = make_coordinator(hass, data={Tag.CAR_CONNECTED.key: car}, mode=mode, **kwargs)
-    coordinator.async_write_key = AsyncMock(return_value={Tag.IDS.key: {"pGrid": -500.0, "pPv": 0.0, "pAkku": 0.0}})
+    coordinator.async_write_key = AsyncMock(return_value={Tag.IDS.key: True})
     return GoeChargerApiV2Service(hass, coordinator._config_entry, coordinator), coordinator
 
 
@@ -61,6 +61,13 @@ async def test_cloud_charger_without_a_car_gets_no_pv_data(hass):
 async def test_cloud_charger_without_a_car_returns_nothing_when_no_answer_is_wanted(hass):
     service, coordinator = _service(hass, mode="wan", car=0)
     assert await service.set_pv_data(_call(return_response=False, pgrid=-500)) is None
+    coordinator.async_write_key.assert_not_awaited()
+
+
+async def test_cloud_charger_without_a_car_rejects_explicit_acknowledgement(hass):
+    service, coordinator = _service(hass, mode="wan", car=0)
+    with pytest.raises(ServiceValidationError, match="No CAR CONNECTED"):
+        await service.set_pv_data(_call(return_response=False, pgrid=-500, require_ack=True))
     coordinator.async_write_key.assert_not_awaited()
 
 
