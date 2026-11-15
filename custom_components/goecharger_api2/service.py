@@ -42,11 +42,12 @@ class GoeChargerApiV2Service():
         self._stop_in_progress = False
 
     async def set_pv_data(self, call: ServiceCall):
+        config_id, coordinator = self.get_coordinator(call)
+        _LOGGER.debug(f"Service-set_pv_data(): Provided config_id: {config_id} -> using {coordinator.name} serial: {coordinator._serial}")
+
         require_ack = call.data.get('require_ack', False)
         if not isinstance(require_ack, bool):
             raise ServiceValidationError("require_ack must be a boolean")
-        config_id, coordinator = self.get_coordinator(call)
-        _LOGGER.debug(f"Service-set_pv_data(): Provided config_id: {config_id} -> using {coordinator.name} serial: {coordinator._serial}")
 
         # before we're going to 'post' any data to the cloud, we will check if there is ANY vehicle connected
         if coordinator.intg_type == INTG_TYPE.CHARGER.value and coordinator.mode == WAN:

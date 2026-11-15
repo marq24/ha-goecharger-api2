@@ -54,7 +54,6 @@ set_pv_data:
           max: 50000
           unit_of_measurement: "W"
           mode: "box"
-
     require_ack:
       name: Require charger acknowledgement
       description: Wait for and check the charger's acknowledgement. If it fails, the action reports an error. Use a response variable to receive the result as data.
