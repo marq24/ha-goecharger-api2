@@ -889,7 +889,8 @@ class GoeChargerBaseEntity(CustomFriendlyNameEntity):
         elif hasattr(description, "lookup") and description.lookup is not None:
             self._attr_translation_key = f"{self.data_key.lower()}_value"
         elif hasattr(description, "differential_base_key") and description.differential_base_key is not None:
-            self._attr_translation_key = f"{self.data_key.lower()}_delta"
+            self._attr_translation_key = description.translation_key.lower() if description.translation_key is not None \
+                else f"{self.data_key.lower()}_delta"
         else:
             self._attr_translation_key = self.data_key.lower()
 
