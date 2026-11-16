@@ -76,7 +76,7 @@ async def test_sensor_without_data_has_no_value(hass):
 
 async def test_last_button_press_timestamp_is_raw_milliseconds(hass):
     description = next(description for description in SENSOR_SENSORS
-                       if description.translation_key == "lbp_delta_millis")
+                       if description.translation_key == "lbp_millis")
     coordinator = make_coordinator(hass, data={"lbp": 123456, "rbt": 124987})
     sensor = GoeChargerSensor(coordinator, description)
     assert sensor.native_value == 123456
