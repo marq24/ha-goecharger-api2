@@ -1,8 +1,10 @@
 """Entities for the editable go-e charger schedule rules."""
 
+import json
 import logging
 import re
 from datetime import time
+from importlib.resources import files
 from typing import Callable
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -26,6 +28,53 @@ WEEKDAYS = (
     ("friday", 32),
     ("saturday", 64),
 )
+_SUMMARY_WEEKDAYS = (
+    ("monday", 2),
+    ("tuesday", 4),
+    ("wednesday", 8),
+    ("thursday", 16),
+    ("friday", 32),
+    ("saturday", 64),
+    ("sunday", 1),
+)
+
+
+def _load_summary_translations() -> dict[str, tuple[tuple[str, ...], str]]:
+    translation_dir = files(__package__).joinpath("translations")
+    translations = {}
+    for language in ("de", "en", "fr"):
+        with translation_dir.joinpath(f"{language}.json").open("r", encoding="utf-8") as resource:
+            translation = json.load(resource)
+        common = translation["common"]
+        translations[language] = (
+            tuple(common[f"schedule_summary_{day}"] for day, _ in _SUMMARY_WEEKDAYS),
+            common["schedule_summary_pv_surplus"],
+        )
+    return translations
+
+
+_SUMMARY_TRANSLATIONS = _load_summary_translations()
+_SCHEDULE_CONTROL_ICONS = {
+    1: "mdi:flash",
+    2: "mdi:cancel",
+    3: "mdi:flash",
+    4: "mdi:cancel",
+}
+
+
+def _integer_value(value) -> int | None:
+    if isinstance(value, bool) or not isinstance(value, (int, str)):
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+
+
+def _summary_translations(coordinator):
+    config = getattr(getattr(coordinator, "hass", None), "config", None)
+    language = str(getattr(config, "language", "en")).lower().replace("_", "-").split("-", 1)[0]
+    return _SUMMARY_TRANSLATIONS.get(language, _SUMMARY_TRANSLATIONS["en"])
 
 
 def supports_schedule_rules(coordinator: GoeChargerDataUpdateCoordinator) -> bool:
@@ -115,6 +164,62 @@ class ScheduleRuleSwitch(ScheduleRuleEntity, SwitchEntity):
         super().__init__(coordinator, description, rule_index, Platform.SWITCH)
         self.field = field
         self.bit = bit
+
+    @property
+    def icon(self) -> str:
+        if self.field != "enabled":
+            return self.entity_description.icon
+        rule = schedule_rule(self.coordinator, self.rule_index)
+        control = _integer_value(rule.get("control")) if rule is not None else None
+        return _SCHEDULE_CONTROL_ICONS.get(control, self.entity_description.icon)
+
+    @property
+    def extra_state_attributes(self) -> dict | None:
+        if self.field != "enabled":
+            return None
+
+        rule = schedule_rule(self.coordinator, self.rule_index)
+        if rule is None:
+            return {"schedule_summary": None}
+
+        weekdays = _integer_value(rule.get("weekdays", 0))
+        if weekdays is None or weekdays < 0:
+            return {"schedule_summary": None}
+
+        begin = rule.get("begin")
+        end = rule.get("end")
+        if not isinstance(begin, (list, tuple)) or len(begin) < 2:
+            return {"schedule_summary": None}
+        if not isinstance(end, (list, tuple)) or len(end) < 2:
+            return {"schedule_summary": None}
+
+        begin_hour = _integer_value(begin[0])
+        begin_minute = _integer_value(begin[1])
+        end_hour = _integer_value(end[0])
+        end_minute = _integer_value(end[1])
+        if None in (begin_hour, begin_minute, end_hour, end_minute):
+            return {"schedule_summary": None}
+        try:
+            begin_time = time(begin_hour, begin_minute)
+            end_time = time(end_hour, end_minute)
+        except (TypeError, ValueError, OverflowError):
+            return {"schedule_summary": None}
+
+        day_names, pv_surplus_text = _summary_translations(self.coordinator)
+        selected_days = [
+            day_names[index]
+            for index, (_, bit) in enumerate(_SUMMARY_WEEKDAYS)
+            if weekdays & bit
+        ]
+        day_summary = f"{', '.join(selected_days)}, " if selected_days else ""
+        summary = (
+            f"{day_summary}{begin_time.hour:02d}:{begin_time.minute:02d} - "
+            f"{end_time.hour:02d}:{end_time.minute:02d}"
+        )
+        control = _integer_value(rule.get("control"))
+        if control in (3, 4):
+            summary += f" ({pv_surplus_text})"
+        return {"schedule_summary": summary}
 
     @property
     def is_on(self) -> bool | None:

@@ -1,10 +1,14 @@
 """Schedule-rule decoding, slot availability, firmware gating and field-preserving writes."""
 
+import json
+from copy import deepcopy
 from datetime import time
+from importlib.resources import files
 from unittest.mock import AsyncMock
 
 import pytest
 
+from custom_components.goecharger_api2 import schedule as schedule_module
 from custom_components.goecharger_api2.pygoecharger_ha.keys import CAT, Tag
 from custom_components.goecharger_api2.pygoecharger_ha.const import FILTER_ALL_CONFIG
 from custom_components.goecharger_api2.schedule import (
@@ -187,6 +191,153 @@ def test_entities_are_unavailable_when_schedule_list_is_missing(hass):
     assert not ScheduleRuleSwitch(coordinator, 0, "enabled").available
     assert not ScheduleRuleSelect(coordinator, 0).available
     assert not ScheduleRuleTime(coordinator, 0, "begin").available
+
+
+@pytest.mark.parametrize(
+    ("control", "suffix"),
+    [(1, ""), (3, " (mit PV-Überschuss)")],
+)
+def test_enabled_switch_summary_uses_german_full_week_and_time(hass, control, suffix):
+    hass.config.language = "de"
+    original_rule = _rule(
+        control,
+        weekdays=127,
+        begin=[2, 36, 0],
+        end=[4, 59, 0],
+    )
+    original_snapshot = deepcopy(original_rule)
+    coordinator = _coordinator(hass, [original_rule])
+
+    assert ScheduleRuleSwitch(coordinator, 0, "enabled").extra_state_attributes == {
+        "schedule_summary": (
+            "Mo., Di., Mi., Do., Fr., Sa., So., "
+            f"02:36 - 04:59{suffix}"
+        )
+    }
+    assert coordinator.data[Tag.SCH_RULES.key][0] == original_snapshot
+
+
+@pytest.mark.parametrize(
+    ("weekdays", "expected_days"),
+    [
+        (2 | 32 | 1, "Mo., Fr., So."),
+        (0, ""),
+    ],
+)
+def test_enabled_switch_summary_handles_weekday_subsets_and_empty_days(hass, weekdays, expected_days):
+    hass.config.language = "de"
+    coordinator = _coordinator(
+        hass,
+        [_rule(weekdays=weekdays, begin=[2, 36, 0], end=[4, 59, 0])],
+    )
+
+    assert ScheduleRuleSwitch(coordinator, 0, "enabled").extra_state_attributes == {
+        "schedule_summary": f"{expected_days + ', ' if expected_days else ''}02:36 - 04:59"
+    }
+
+
+@pytest.mark.parametrize(
+    ("language", "expected"),
+    [
+        ("en", "Mon, Tue, Wed, Thu, Fri, Sat, Sun, 02:36 - 04:59 (with PV surplus)"),
+        ("fr", "lun., mar., mer., jeu., ven., sam., dim., 02:36 - 04:59 (avec Surplus PV)"),
+        ("xx", "Mon, Tue, Wed, Thu, Fri, Sat, Sun, 02:36 - 04:59 (with PV surplus)"),
+    ],
+)
+def test_enabled_switch_summary_localizes_supported_and_unknown_languages(hass, language, expected):
+    hass.config.language = language
+    coordinator = _coordinator(
+        hass,
+        [_rule(3, weekdays=127, begin=[2, 36, 0], end=[4, 59, 0])],
+    )
+
+    assert ScheduleRuleSwitch(coordinator, 0, "enabled").extra_state_attributes == {
+        "schedule_summary": expected
+    }
+
+
+def test_summary_translation_resources_are_not_loaded_per_property_read(hass, monkeypatch):
+    coordinator = _coordinator(hass, [_rule(3, weekdays=127)])
+    switch = ScheduleRuleSwitch(coordinator, 0, "enabled")
+    monkeypatch.setattr(
+        schedule_module,
+        "_load_summary_translations",
+        lambda: pytest.fail("summary translation resources were reloaded"),
+    )
+
+    assert switch.extra_state_attributes["schedule_summary"].endswith("(with PV surplus)")
+    assert switch.extra_state_attributes["schedule_summary"].endswith("(with PV surplus)")
+
+
+def test_summary_translations_are_loaded_from_existing_language_files():
+    translation_dir = files("custom_components.goecharger_api2").joinpath("translations")
+    expected = {}
+    for language in ("de", "en", "fr"):
+        translation_path = translation_dir.joinpath(f"{language}.json")
+        with translation_path.open("r", encoding="utf-8") as resource:
+            common = json.load(resource)["common"]
+        expected[language] = (
+            tuple(
+                common[f"schedule_summary_{day}"]
+                for day, _ in schedule_module._SUMMARY_WEEKDAYS
+            ),
+            common["schedule_summary_pv_surplus"],
+        )
+
+    assert schedule_module._SUMMARY_TRANSLATIONS == expected
+
+
+@pytest.mark.parametrize(
+    ("control", "expected_icon"),
+    [
+        (1, "mdi:flash"),
+        (3, "mdi:flash"),
+        (2, "mdi:cancel"),
+        (4, "mdi:cancel"),
+    ],
+)
+def test_schedule_switch_icons_follow_mode_only_for_enabled_switches(hass, control, expected_icon):
+    coordinator = _coordinator(hass, [_rule(control)])
+
+    assert ScheduleRuleSwitch(coordinator, 0, "enabled").icon == expected_icon
+    assert ScheduleRuleSwitch(coordinator, 0, "allow_pv_surplus").icon == "mdi:calendar-clock"
+
+
+def test_enabled_switch_summary_and_icon_are_safe_for_unavailable_rules(hass):
+    coordinator = _coordinator(hass, [_rule()])
+    missing = ScheduleRuleSwitch(coordinator, 1, "enabled")
+    assert not missing.available
+    assert missing.extra_state_attributes == {"schedule_summary": None}
+    assert missing.icon == "mdi:calendar-clock"
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"weekdays": "bad"},
+        {"begin": [25, 0]},
+        {"end": None},
+    ],
+)
+def test_enabled_switch_summary_is_none_for_malformed_rule_values(hass, overrides):
+    coordinator = _coordinator(hass, [_rule(**overrides)])
+    malformed = ScheduleRuleSwitch(coordinator, 0, "enabled")
+
+    assert malformed.extra_state_attributes == {"schedule_summary": None}
+    assert malformed.icon == "mdi:calendar-clock"
+
+
+def test_enabled_switch_uses_fallback_icon_for_invalid_control(hass):
+    coordinator = _coordinator(
+        hass,
+        [_rule("invalid", weekdays=127, begin=[2, 36, 0], end=[4, 59, 0])],
+    )
+    switch = ScheduleRuleSwitch(coordinator, 0, "enabled")
+
+    assert switch.icon == "mdi:calendar-clock"
+    assert switch.extra_state_attributes == {
+        "schedule_summary": "Mon, Tue, Wed, Thu, Fri, Sat, Sun, 02:36 - 04:59"
+    }
 
 
 @pytest.mark.parametrize(("control", "behavior", "pv"), [

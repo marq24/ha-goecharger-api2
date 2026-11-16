@@ -84,6 +84,16 @@
       }
     }
   },
+  "common": {
+    "schedule_summary_monday": "lun.",
+    "schedule_summary_tuesday": "mar.",
+    "schedule_summary_wednesday": "mer.",
+    "schedule_summary_thursday": "jeu.",
+    "schedule_summary_friday": "ven.",
+    "schedule_summary_saturday": "sam.",
+    "schedule_summary_sunday": "dim.",
+    "schedule_summary_pv_surplus": "avec Surplus PV"
+  },
   "entity": {
     "binary_sensor": {
       "car_0":{"name":  "Véhicule branché"},

@@ -86,6 +86,16 @@
       }
     }
   },
+  "common": {
+    "schedule_summary_monday": "Mo.",
+    "schedule_summary_tuesday": "Di.",
+    "schedule_summary_wednesday": "Mi.",
+    "schedule_summary_thursday": "Do.",
+    "schedule_summary_friday": "Fr.",
+    "schedule_summary_saturday": "Sa.",
+    "schedule_summary_sunday": "So.",
+    "schedule_summary_pv_surplus": "mit PV-Überschuss"
+  },
   "entity": {
     "binary_sensor": {
       "car_0":{"name":  "Fahrzeug verbunden"},
