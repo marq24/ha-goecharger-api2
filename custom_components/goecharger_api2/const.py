@@ -1423,8 +1423,26 @@ SENSOR_SENSORS = [
         icon="mdi:timer-outline",
         entity_registry_enabled_default=False
     ),
-
     # lbp
+    ExtSensorEntityDescription(
+        key=Tag.LBP.key,
+        factor=60000,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=None,
+        icon="mdi:button-pointer",
+        entity_registry_enabled_default=False
+    ),
+    ExtSensorEntityDescription(
+        key=Tag.LBP.key,
+        translation_key="lbp_millis",
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=None,
+        icon="mdi:button-pointer",
+        entity_registry_enabled_default=False
+    ),
     ExtSensorEntityDescription(
         key=Tag.LBP.key,
         differential_base_key=Tag.RBT.key,
@@ -1435,25 +1453,6 @@ SENSOR_SENSORS = [
         device_class=None,
         icon="mdi:button-pointer",
         entity_registry_enabled_default=True
-    ),
-    ExtSensorEntityDescription(
-        key=Tag.LBP.key,
-        translation_key="lbp_delta_millis",
-        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=None,
-        icon="mdi:button-pointer",
-        entity_registry_enabled_default=False
-    ),
-    ExtSensorEntityDescription(
-        key=Tag.LBP.key,
-        factor=60000,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=None,
-        icon="mdi:button-pointer",
-        entity_registry_enabled_default=False
     ),
 
     # lccfc
