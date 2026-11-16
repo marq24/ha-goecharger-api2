@@ -1368,6 +1368,15 @@ SENSOR_SENSORS = [
         icon="mdi:timer-outline",
         entity_registry_enabled_default=True
     ),
+    ExtSensorEntityDescription(
+        key=Tag.RBT.key,
+        translation_key="rbt_millis",
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=None,
+        icon="mdi:timer-outline",
+        entity_registry_enabled_default=False
+    ),
 
     # fsptws
     ExtSensorEntityDescription(
@@ -1430,7 +1439,6 @@ SENSOR_SENSORS = [
     ExtSensorEntityDescription(
         key=Tag.LBP.key,
         translation_key="lbp_delta_millis",
-        differential_base_key=Tag.RBT.key,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=None,

@@ -407,6 +407,7 @@
       "wst_value": {"name": "WiFi Status"},
 
       "rbt": {"name": "Zeit seit Boot"},
+      "rbt_millis": {"name": "Zeit seit Boot (Millisekunden)"},
 
       "fsptws": {"name": "Wechsel von/zu '1-phasigem Laden angefordert seit [ORIG.]"},
       "inva": {"name": "Inverter-Daten 'Alter' [ORIG.]"},
@@ -422,7 +423,7 @@
       "fsptws_delta": {"name": "Wechsel von/zu '1-phasigem Laden angefordert seit"},
       "inva_delta": {"name": "Inverter-Daten 'Alter'"},
       "lbp_delta": {"name": "Letzte Wallbox Schalter Betätigung"},
-      "lbp_delta_millis": {"name": "Letzte Wallbox Schalter Betätigung (Millisekunden)"},
+      "lbp_delta_millis": {"name": "Zeitstempel des letzten Tastendrucks (ms seit Start)"},
       "lccfc_delta": {"name": "Letzter Fahrzeug Statuswechsel von 'Laden'"},
       "lccfi_delta": {"name": "Letzter Fahrzeug Statuswechsel von 'Inaktiv/Frei'"},
       "lcctc_delta": {"name": "Letzter Fahrzeug Statuswechsel zu 'Laden'"},

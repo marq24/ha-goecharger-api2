@@ -8,6 +8,7 @@ from datetime import datetime, time
 
 import pytest
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import UnitOfTime
 from homeassistant.exceptions import HomeAssistantError
 
 from custom_components.goecharger_api2.binary_sensor import GoeChargerApiV2BinarySensor
@@ -15,6 +16,7 @@ from custom_components.goecharger_api2.const import (
     ExtBinarySensorEntityDescription as BinaryDesc,
     ExtNumberEntityDescription as NumberDesc,
     ExtSelectEntityDescription as SelectDesc,
+    SENSOR_SENSORS,
     ExtSensorEntityDescription as SensorDesc,
     ExtSwitchEntityDescription as SwitchDesc,
 )
@@ -70,6 +72,25 @@ async def test_sensor_without_data_has_no_value(hass):
     sensor, coordinator = _sensor(hass, {}, key="amp")
     coordinator.data = None
     assert sensor.native_value is None
+
+
+async def test_last_button_press_timestamp_is_raw_milliseconds(hass):
+    description = next(description for description in SENSOR_SENSORS
+                       if description.translation_key == "lbp_delta_millis")
+    coordinator = make_coordinator(hass, data={"lbp": 123456, "rbt": 124987})
+    sensor = GoeChargerSensor(coordinator, description)
+    assert sensor.native_value == 123456
+    assert sensor.native_unit_of_measurement == UnitOfTime.MILLISECONDS
+
+
+async def test_time_since_boot_milliseconds_sensor_is_raw_and_disabled_by_default(hass):
+    description = next(description for description in SENSOR_SENSORS
+                       if description.translation_key == "rbt_millis")
+    coordinator = make_coordinator(hass, data={"rbt": 123456789})
+    sensor = GoeChargerSensor(coordinator, description)
+    assert sensor.native_value == 123456789
+    assert sensor.native_unit_of_measurement == UnitOfTime.MILLISECONDS
+    assert description.entity_registry_enabled_default is False
 
 
 @pytest.mark.parametrize("sub_key, key, expected", [
