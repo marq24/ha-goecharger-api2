@@ -90,6 +90,15 @@ async def test_write_none_is_sent_as_null(hass, aioclient_mock):
     assert str(aioclient_mock.mock_calls[0][1]).endswith("/api/set?dwo=null")
 
 
+async def test_write_list_is_json_encoded_as_one_query_parameter(hass, aioclient_mock):
+    aioclient_mock.get(LAN_SET, json={"sch_rules": True})
+    rules = [{"enabled": True, "weekdays": 5, "control": 3, "begin": [7, 0, 0], "end": [8, 0, 0]}]
+    await _lan(hass).write_value_to_key("sch_rules", rules)
+    assert _query(aioclient_mock) == {
+        "sch_rules": '[{"enabled":true,"weekdays":5,"control":3,"begin":[7,0,0],"end":[8,0,0]}]'
+    }
+
+
 async def test_write_success_returns_key_and_value(hass, aioclient_mock):
     aioclient_mock.get(LAN_SET, json={"amp": True})
     assert await _lan(hass).write_value_to_key("amp", 10) == {"amp": 10}

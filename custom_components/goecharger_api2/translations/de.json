@@ -340,6 +340,10 @@
           "4": "Blockieren (Laden mit PV-Überschuss aktiv)"
         }
       },
+      "sch_rules_behavior": {
+        "name": "Ladetimer {index} Verhalten",
+        "state": {"allow": "Erlauben", "block": "Blockieren"}
+      },
       "frm": {"name": "Rundungs-Modus",
         "state": {
           "0": "Netzbezug bevorzugen",
@@ -553,6 +557,15 @@
     "switch": {
       "acp": {"name": "Ladepausen zulassen (Fahrzeug Kompatibilität)"},
       "acs": {"name": "Autorisierung (Karte) notwendig"},
+      "sch_rules_enabled": {"name": "Ladetimer {index} aktiviert"},
+      "sch_rules_allow_pv_surplus": {"name": "Ladetimer {index} PV-Überschuss zulassen"},
+      "sch_rules_weekday_sunday": {"name": "Ladetimer {index} Sonntag"},
+      "sch_rules_weekday_monday": {"name": "Ladetimer {index} Montag"},
+      "sch_rules_weekday_tuesday": {"name": "Ladetimer {index} Dienstag"},
+      "sch_rules_weekday_wednesday": {"name": "Ladetimer {index} Mittwoch"},
+      "sch_rules_weekday_thursday": {"name": "Ladetimer {index} Donnerstag"},
+      "sch_rules_weekday_friday": {"name": "Ladetimer {index} Freitag"},
+      "sch_rules_weekday_saturday": {"name": "Ladetimer {index} Samstag"},
       "ara": {"name": "Next-Trip: Weiter im Eco-Modus laden"},
       "awe": {"name": "Mit günstigen Strompreisen laden"},
       "cmse": {"name": "Controller-Scan immer aktiviert"},
@@ -579,6 +592,10 @@
       "iim_4": {"name": "Invertieren Internal 5"},
       "iim_5": {"name": "Invertieren Internal 6"},
       "ocppe": {"name": "OCPP aktiviert"}
+    },
+    "time": {
+      "sch_rules_start": {"name": "Ladetimer {index} Beginn"},
+      "sch_rules_end": {"name": "Ladetimer {index} Ende"}
     }
   }
 }

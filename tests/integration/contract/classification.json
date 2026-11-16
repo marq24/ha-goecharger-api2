@@ -378,6 +378,9 @@
   "psm": {
    "reason": "used by the integration (selects), no row in any official key list that was checked"
   },
+  "sch_rules": {
+   "reason": "schedule rules are exposed by charger firmware 60+, but the key is not yet listed in the checked official API table"
+  },
   "simo": {
    "reason": "listed only in the per-firmware key lists, missing from the main key table"
   },

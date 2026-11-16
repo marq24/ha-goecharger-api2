@@ -340,6 +340,10 @@
           "4": "Blocked (Surplus active)"
         }
       },
+      "sch_rules_behavior": {
+        "name": "Schedule {index} Behavior",
+        "state": {"allow": "Charging", "block": "Blocking"}
+      },
       "frm": {"name": "Rounding mode",
         "state": {
           "0": "Prefer power import from grid",
@@ -553,6 +557,15 @@
     "switch": {
       "acp": {"name": "Allow Charge Pause (car compatibility)"},
       "acs": {"name": "Card Authorization required"},
+      "sch_rules_enabled": {"name": "Schedule {index} enabled"},
+      "sch_rules_allow_pv_surplus": {"name": "Schedule {index} Allow PV surplus"},
+      "sch_rules_weekday_sunday": {"name": "Schedule {index} Sunday"},
+      "sch_rules_weekday_monday": {"name": "Schedule {index} Monday"},
+      "sch_rules_weekday_tuesday": {"name": "Schedule {index} Tuesday"},
+      "sch_rules_weekday_wednesday": {"name": "Schedule {index} Wednesday"},
+      "sch_rules_weekday_thursday": {"name": "Schedule {index} Thursday"},
+      "sch_rules_weekday_friday": {"name": "Schedule {index} Friday"},
+      "sch_rules_weekday_saturday": {"name": "Schedule {index} Saturday"},
       "ara": {"name": "Automatic Stop remain in Awattar"},
       "awe": {"name": "Use Awattar (Charge when price is low)"},
       "cmse": {"name": "Controller-Scan always active"},
@@ -579,6 +592,10 @@
       "iim_4": {"name": "Invert Internal 5"},
       "iim_5": {"name": "Invert Internal 6"},
       "ocppe": {"name": "OCPP enabled"}
+    },
+    "time": {
+      "sch_rules_start": {"name": "Schedule {index} start"},
+      "sch_rules_end": {"name": "Schedule {index} end"}
     }
   }
 }

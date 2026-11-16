@@ -56,6 +56,7 @@ If you have any issues with this integration after you updated your go-eCharger 
  - __All documented fields__ [in the official go-eCharger GitHub repository](https://github.com/goecharger/go-eCharger-API-v2/blob/main/API_KEYS_FIRMWARE/apikeys-en.md) are supported by this integration (with very few exceptions) [[see list of currently not handled API keys](#list-of-currently-not-handled-api-keys)]
  - Support for 'PV surplus charging' (PV-Überschuss Laden) __without additional hardware__ — no need to pay for evcc. In order to use this feature, a small additional manual setup process is required [[details can be found below](#pv-surplus-charging-via-ha-automation)]
  - For all go-eCharger (status) fields that support a numeric status code, this code is available as a separate sensor
+ - Firmware 60 and newer expose up to ten editable schedule-rules (weekday selection, allow/block behavior, PV-surplus setting, and start/end times). Existing rules can be edited; the integration does not create or delete rules.
  - Multilanguage support: a German translation included (any feedback highly appreciated!) & looking forward to other language contributions
 - Hibernation-Mode: only request sensor data from wallbox when a system is in use [[details can be found below](#hibernation-mode--good-to-know-only-in-polling-mode)]
   

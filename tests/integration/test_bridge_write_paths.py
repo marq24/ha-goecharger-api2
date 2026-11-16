@@ -59,6 +59,15 @@ async def test_websocket_send_that_reports_failure_gives_an_empty_result(hass):
     assert await bridge.write_value_to_key("amp", 10) == {}
 
 
+async def test_schedule_rule_list_is_sent_as_json_value_over_websocket(hass):
+    bridge = make_bridge(hass, websocket=True)
+    rules = [{"enabled": True, "weekdays": 3, "control": 4, "begin": [6, 0, 0], "end": [7, 30, 0]}]
+    assert await bridge.write_value_to_key("sch_rules", rules) == {"sch_rules": rules}
+    sent = bridge._ws_connection.send_json.await_args.args[0]
+    assert sent["key"] == "sch_rules"
+    assert sent["value"] == rules
+
+
 # ----------------------------------------------------------------------------- several keys
 
 async def test_multiple_keys_over_websocket_are_sent_one_after_the_other(hass):

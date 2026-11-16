@@ -539,8 +539,8 @@ class GoeChargerApiV2Bridge:
                     args = f"{key}=null"
                 elif isinstance(value, (bool, int, float)):
                     args = {key: str(value).lower()}
-                elif isinstance(value, dict):
-                    args = {key: json.dumps(value).replace(' ','')}
+                elif isinstance(value, (dict, list)):
+                    args = {key: json.dumps(value, separators=(",", ":"))}
                 else:
                     args = {key: '"'+str(value)+'"'}
 
@@ -565,8 +565,8 @@ class GoeChargerApiV2Bridge:
                     params[a_key] = str(a_value).lower()
                 elif isinstance(a_value, str):
                     params[a_key] = '"'+str(a_value)+'"'
-                elif isinstance(a_value, dict):
-                    params[a_key] = json.dumps(a_value).replace(' ','')
+                elif isinstance(a_value, (dict, list)):
+                    params[a_key] = json.dumps(a_value, separators=(",", ":"))
             return await self._write_values_int(a_params = params, a_result_key = key, a_result_value = value)
 
     async def _write_values_int(self, a_params, a_result_key, a_result_value) -> dict:

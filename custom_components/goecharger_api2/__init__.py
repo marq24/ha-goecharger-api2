@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import random
-import time
+import time as time_module
 from collections import ChainMap
 from datetime import timedelta
 from typing import Any, Final
@@ -114,7 +114,7 @@ async def verify_usage(hass: HomeAssistant, config_entry: ConfigEntry, lang_map)
         if loaded_entries:
             if len(loaded_entries) > 8:
                 last_notify_ts = int(loaded_entries[0].data.get("verify_usage_notification", 0))
-                elapsed = time.time() - last_notify_ts
+                elapsed = time_module.time() - last_notify_ts
                 if elapsed > (60 * 24 * 60 * 60):
                     try:
                         notify_id = f"{DOMAIN}_verify_user_notification"
@@ -126,7 +126,7 @@ async def verify_usage(hass: HomeAssistant, config_entry: ConfigEntry, lang_map)
                         all_entries = hass.config_entries.async_entries(DOMAIN)
                         global IGNORE_CONFIG_ENTRY_UPDATES
                         IGNORE_CONFIG_ENTRY_UPDATES = True
-                        ts = int(time.time())
+                        ts = int(time_module.time())
                         for a_entry in all_entries:
                             new_data = {**a_entry.data}
                             new_data["verify_usage_notification"] = ts
@@ -344,7 +344,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             self._ws_data_update_notify_interval_in_seconds = 1
 
         # just to keep track if we allow a forced ws restart...
-        self._integration_start = time.time()
+        self._integration_start = time_module.time()
 
         # a MAP that contains all entities that are by the integration
         self.entities = {}
@@ -383,13 +383,13 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         """This method should be called when the integration wants that the current data of the coordinator will be updated"""
 
         # 1. ignoring all force update requests in the first 5 minutes after an integration restart...
-        delta_since_start = time.time() - self._integration_start
+        delta_since_start = time_module.time() - self._integration_start
         if delta_since_start < 300:
             _LOGGER.info(f"force_async_update_now(): Ignoring force update request in the first 5 minutes after integration restart - wait for {int(300-delta_since_start)} seconds before retrying.")
             return
 
         # 2. ignoring all force update requests after a fresh initialized ws_connection!
-        delta_since_ws_connect = time.time() - self.bridge.ws_connection_start
+        delta_since_ws_connect = time_module.time() - self.bridge.ws_connection_start
         if delta_since_ws_connect < 120:
             _LOGGER.info(f"force_async_update_now(): Ignoring force update request in the first 2 minutes after a fresh ws_connection - wait for {int(120-delta_since_ws_connect)} seconds before retrying.")
             return
@@ -571,7 +571,7 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
         # ok, we have issues communicating with the Wallbox...
         # let's delay the next request at least by 2 minutes
         # to allow the wallbox to become alive again?!
-        self._CLIENT_COMMUNICATION_ERROR_TS = time.time()
+        self._CLIENT_COMMUNICATION_ERROR_TS = time_module.time()
         self._CLIENT_COMMUNICATION_ERROR_COUNT += 1
         if self._CLIENT_COMMUNICATION_ERROR_COUNT > 5:
             _LOGGER.warning(f"{msg}: Too many ClientConnectionError #{self._CLIENT_COMMUNICATION_ERROR_COUNT} while fetching data: {type(exception).__name__} - {exception} - will try to restart integration.", stack_info=True)
@@ -589,8 +589,8 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.debug(f"_async_update_data called (but websocket is active - no data will be requested!)")
             return self.data
         else:
-            if self._CLIENT_COMMUNICATION_ERROR_TS + CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS > time.time():
-                time_info = CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS - (time.time() - self._CLIENT_COMMUNICATION_ERROR_TS)
+            if self._CLIENT_COMMUNICATION_ERROR_TS + CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS > time_module.time():
+                time_info = CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS - (time_module.time() - self._CLIENT_COMMUNICATION_ERROR_TS)
                 _LOGGER.info(f"_async_update_data(): skipping update due to client communication error for the next {time_info} seconds")
                 return self.data
             if self._RESTART_TRIGGERED:
@@ -619,8 +619,8 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed() from other
 
     async def async_write_key(self, key: str, value, entity: Entity = None, require_ack: bool = False) -> dict:
-        if self._CLIENT_COMMUNICATION_ERROR_TS + CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS > time.time():
-            time_info = CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS - (time.time() - self._CLIENT_COMMUNICATION_ERROR_TS)
+        if self._CLIENT_COMMUNICATION_ERROR_TS + CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS > time_module.time():
+            time_info = CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS - (time_module.time() - self._CLIENT_COMMUNICATION_ERROR_TS)
             _LOGGER.info(f"async_write_key(): skipping due to client communication error for the next {time_info} seconds")
             raise ValueError(f"async_write_key(): skipping due to client communication error for the next {time_info} seconds")
         if self._RESTART_TRIGGERED:
@@ -646,8 +646,8 @@ class GoeChargerDataUpdateCoordinator(DataUpdateCoordinator):
 
 
     async def async_write_multiple_keys(self, attr:dict, key: str, value, entity: Entity = None) -> dict:
-        if self._CLIENT_COMMUNICATION_ERROR_TS + CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS > time.time():
-            time_info = CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS - (time.time() - self._CLIENT_COMMUNICATION_ERROR_TS)
+        if self._CLIENT_COMMUNICATION_ERROR_TS + CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS > time_module.time():
+            time_info = CLIENT_COMMUNICATION_ERROR_DELAY_IN_SECONDS - (time_module.time() - self._CLIENT_COMMUNICATION_ERROR_TS)
             _LOGGER.info(f"async_write_multiple_keys(): skipping due to client communication error for the next {time_info} seconds")
             raise ValueError(f"async_write_multiple_keys(): skipping due to client communication error for the next {time_info} seconds")
         if self._RESTART_TRIGGERED:
