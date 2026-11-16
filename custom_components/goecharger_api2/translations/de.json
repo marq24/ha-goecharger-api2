@@ -341,8 +341,8 @@
         }
       },
       "sch_rules_behavior": {
-        "name": "Ladetimer {index} Verhalten",
-        "state": {"allow": "Erlauben", "block": "Blockieren"}
+        "name": "Zeitplan {index} Verhalten",
+        "state": {"allow": "Laden", "block": "Blockieren"}
       },
       "frm": {"name": "Rundungs-Modus",
         "state": {
@@ -557,15 +557,15 @@
     "switch": {
       "acp": {"name": "Ladepausen zulassen (Fahrzeug Kompatibilität)"},
       "acs": {"name": "Autorisierung (Karte) notwendig"},
-      "sch_rules_enabled": {"name": "Ladetimer {index} aktiviert"},
-      "sch_rules_allow_pv_surplus": {"name": "Ladetimer {index} PV-Überschuss zulassen"},
-      "sch_rules_weekday_sunday": {"name": "Ladetimer {index} Sonntag"},
-      "sch_rules_weekday_monday": {"name": "Ladetimer {index} Montag"},
-      "sch_rules_weekday_tuesday": {"name": "Ladetimer {index} Dienstag"},
-      "sch_rules_weekday_wednesday": {"name": "Ladetimer {index} Mittwoch"},
-      "sch_rules_weekday_thursday": {"name": "Ladetimer {index} Donnerstag"},
-      "sch_rules_weekday_friday": {"name": "Ladetimer {index} Freitag"},
-      "sch_rules_weekday_saturday": {"name": "Ladetimer {index} Samstag"},
+      "sch_rules_enabled": {"name": "Zeitplan {index} aktiviert"},
+      "sch_rules_allow_pv_surplus": {"name": "Zeitplan {index} PV-Überschuss zulassen"},
+      "sch_rules_weekday_sunday": {"name": "Zeitplan {index} Sonntag"},
+      "sch_rules_weekday_monday": {"name": "Zeitplan {index} Montag"},
+      "sch_rules_weekday_tuesday": {"name": "Zeitplan {index} Dienstag"},
+      "sch_rules_weekday_wednesday": {"name": "Zeitplan {index} Mittwoch"},
+      "sch_rules_weekday_thursday": {"name": "Zeitplan {index} Donnerstag"},
+      "sch_rules_weekday_friday": {"name": "Zeitplan {index} Freitag"},
+      "sch_rules_weekday_saturday": {"name": "Zeitplan {index} Samstag"},
       "ara": {"name": "Next-Trip: Weiter im Eco-Modus laden"},
       "awe": {"name": "Mit günstigen Strompreisen laden"},
       "cmse": {"name": "Controller-Scan immer aktiviert"},
@@ -594,8 +594,8 @@
       "ocppe": {"name": "OCPP aktiviert"}
     },
     "time": {
-      "sch_rules_start": {"name": "Ladetimer {index} Beginn"},
-      "sch_rules_end": {"name": "Ladetimer {index} Ende"}
+      "sch_rules_start": {"name": "Zeitplan {index} Beginn"},
+      "sch_rules_end": {"name": "Zeitplan {index} Ende"}
     }
   }
 }
