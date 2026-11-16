@@ -407,6 +407,7 @@
       "wst_value": {"name": "WiFi Status"},
 
       "rbt": {"name": "Zeit seit Boot"},
+      "rbt_millis": {"name": "Zeit seit Boot (Millisekunden)"},
 
       "fsptws": {"name": "Wechsel von/zu '1-phasigem Laden angefordert seit [ORIG.]"},
       "inva": {"name": "Inverter-Daten 'Alter' [ORIG.]"},

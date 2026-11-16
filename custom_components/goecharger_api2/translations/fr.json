@@ -397,6 +397,7 @@
       "wst_value": {"name": "Status WiFi"},
 
       "rbt": {"name": "Durée depuis démarrage"},
+      "rbt_millis": {"name": "Durée depuis démarrage (millisecondes)"},
 
       "fsptws": {"name": "bascule forcée en monophasé souhaité depuis [RAW]"},
       "inva": {"name": "age des données de l'onduleur [RAW]"},

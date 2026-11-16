@@ -83,6 +83,16 @@ async def test_last_button_press_timestamp_is_raw_milliseconds(hass):
     assert sensor.native_unit_of_measurement == UnitOfTime.MILLISECONDS
 
 
+async def test_time_since_boot_milliseconds_sensor_is_raw_and_disabled_by_default(hass):
+    description = next(description for description in SENSOR_SENSORS
+                       if description.translation_key == "rbt_millis")
+    coordinator = make_coordinator(hass, data={"rbt": 123456789})
+    sensor = GoeChargerSensor(coordinator, description)
+    assert sensor.native_value == 123456789
+    assert sensor.native_unit_of_measurement == UnitOfTime.MILLISECONDS
+    assert description.entity_registry_enabled_default is False
+
+
 @pytest.mark.parametrize("sub_key, key, expected", [
     ("energy", "c1e", 77), ("name", "c1n", "Anna"), ("cardId", "c1i", "A1B2")])
 async def test_sensor_card_values_of_firmware_60_use_single_keys(hass, sub_key, key, expected):

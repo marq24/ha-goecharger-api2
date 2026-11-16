@@ -407,6 +407,7 @@
       "wst_value": {"name": "WiFi Status"},
 
       "rbt": {"name": "time since boot"},
+      "rbt_millis": {"name": "time since boot (milliseconds)"},
 
       "fsptws": {"name": "force single phase toggle wished since [RAW]"},
       "inva": {"name": "age of inverter data [RAW]"},
