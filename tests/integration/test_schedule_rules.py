@@ -325,7 +325,7 @@ async def test_enabled_switch_summary_is_none_for_malformed_rule_values(hass, ov
     malformed = ScheduleRuleSwitch(coordinator, 0, "enabled")
 
     assert malformed.extra_state_attributes == {"schedule_summary": None}
-    assert malformed.icon == "mdi:calendar-clock"
+    assert malformed.icon == "mdi:flash"
 
 
 async def test_enabled_switch_uses_fallback_icon_for_invalid_control(hass):
