@@ -1430,7 +1430,6 @@ SENSOR_SENSORS = [
     ExtSensorEntityDescription(
         key=Tag.LBP.key,
         translation_key="lbp_delta_millis",
-        differential_base_key=Tag.RBT.key,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=None,

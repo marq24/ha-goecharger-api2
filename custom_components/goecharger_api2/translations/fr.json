@@ -412,7 +412,7 @@
       "fsptws_delta": {"name": "bascule forcée en monophasé souhaité depuis"},
       "inva_delta": {"name": "age des données de l'onduleur"},
       "lbp_delta": {"name": "dernier appui sur le bouton"},
-      "lbp_delta_millis": {"name": "dernier appui sur le bouton (millis)"},
+      "lbp_delta_millis": {"name": "Horodatage du dernier appui (ms depuis le démarrage)"},
       "lccfc_delta": {"name": "dernier changement de l'état du véhicule depuis 'En charge'"},
       "lccfi_delta": {"name": "dernier changement de l'état du véhicule depuis 'En attente'"},
       "lcctc_delta": {"name": "dernier changement de l'état du véhicule vers 'En charge'"},
