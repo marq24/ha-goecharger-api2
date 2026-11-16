@@ -44,13 +44,14 @@ def _rule(control=1, **overrides):
 
 def _coordinator(hass, rules):
     coordinator = make_coordinator(hass, {Tag.SCH_RULES.key: rules})
+    coordinator.available_cards_idx = []
     coordinator.bridge._versions = {Tag.FWV.key: "60.4"}
     coordinator._last_update_success = True
     coordinator.async_write_key = AsyncMock()
     return coordinator
 
 
-def test_firmware_gate_and_current_entity_groups(hass):
+async def test_firmware_gate_and_current_entity_groups(hass):
     coordinator = _coordinator(hass, [_rule()])
     assert supports_schedule_rules(coordinator)
     assert len(create_schedule_rule_switches(coordinator)) == 9
@@ -68,7 +69,7 @@ def test_firmware_gate_and_current_entity_groups(hass):
     assert Tag.SCH_RULES.cat == CAT.CONFIG and Tag.SCH_RULES.writeable
 
 
-def test_schedule_entity_ids_and_name_placeholders_are_one_based(hass):
+async def test_schedule_entity_ids_and_name_placeholders_are_one_based(hass):
     coordinator = _coordinator(hass, [_rule()] * SCHEDULE_RULE_COUNT)
     entity_groups = (
         create_schedule_rule_switches(coordinator),
@@ -173,7 +174,7 @@ async def test_schedule_rule_platforms_grow_once_and_retain_shrunk_slots(
     assert all(not entity.available for entity in retained_entities if entity.rule_index > 0)
 
 
-def test_entities_for_missing_slots_are_unavailable(hass):
+async def test_entities_for_missing_slots_are_unavailable(hass):
     coordinator = _coordinator(hass, [_rule()])
     enabled = ScheduleRuleSwitch(coordinator, 1, "enabled")
     behavior = ScheduleRuleSelect(coordinator, 1)
@@ -186,7 +187,7 @@ def test_entities_for_missing_slots_are_unavailable(hass):
     assert start.native_value is None
 
 
-def test_entities_are_unavailable_when_schedule_list_is_missing(hass):
+async def test_entities_are_unavailable_when_schedule_list_is_missing(hass):
     coordinator = _coordinator(hass, [])
     assert not ScheduleRuleSwitch(coordinator, 0, "enabled").available
     assert not ScheduleRuleSelect(coordinator, 0).available
@@ -197,7 +198,7 @@ def test_entities_are_unavailable_when_schedule_list_is_missing(hass):
     ("control", "suffix"),
     [(1, ""), (3, " (mit PV-Überschuss)")],
 )
-def test_enabled_switch_summary_uses_german_full_week_and_time(hass, control, suffix):
+async def test_enabled_switch_summary_uses_german_full_week_and_time(hass, control, suffix):
     hass.config.language = "de"
     original_rule = _rule(
         control,
@@ -224,7 +225,7 @@ def test_enabled_switch_summary_uses_german_full_week_and_time(hass, control, su
         (0, ""),
     ],
 )
-def test_enabled_switch_summary_handles_weekday_subsets_and_empty_days(hass, weekdays, expected_days):
+async def test_enabled_switch_summary_handles_weekday_subsets_and_empty_days(hass, weekdays, expected_days):
     hass.config.language = "de"
     coordinator = _coordinator(
         hass,
@@ -244,7 +245,7 @@ def test_enabled_switch_summary_handles_weekday_subsets_and_empty_days(hass, wee
         ("xx", "Mon, Tue, Wed, Thu, Fri, Sat, Sun, 02:36 - 04:59 (with PV surplus)"),
     ],
 )
-def test_enabled_switch_summary_localizes_supported_and_unknown_languages(hass, language, expected):
+async def test_enabled_switch_summary_localizes_supported_and_unknown_languages(hass, language, expected):
     hass.config.language = language
     coordinator = _coordinator(
         hass,
@@ -256,7 +257,7 @@ def test_enabled_switch_summary_localizes_supported_and_unknown_languages(hass, 
     }
 
 
-def test_summary_translation_resources_are_not_loaded_per_property_read(hass, monkeypatch):
+async def test_summary_translation_resources_are_not_loaded_per_property_read(hass, monkeypatch):
     coordinator = _coordinator(hass, [_rule(3, weekdays=127)])
     switch = ScheduleRuleSwitch(coordinator, 0, "enabled")
     monkeypatch.setattr(
@@ -296,14 +297,14 @@ def test_summary_translations_are_loaded_from_existing_language_files():
         (4, "mdi:cancel"),
     ],
 )
-def test_schedule_switch_icons_follow_mode_only_for_enabled_switches(hass, control, expected_icon):
+async def test_schedule_switch_icons_follow_mode_only_for_enabled_switches(hass, control, expected_icon):
     coordinator = _coordinator(hass, [_rule(control)])
 
     assert ScheduleRuleSwitch(coordinator, 0, "enabled").icon == expected_icon
     assert ScheduleRuleSwitch(coordinator, 0, "allow_pv_surplus").icon == "mdi:calendar-clock"
 
 
-def test_enabled_switch_summary_and_icon_are_safe_for_unavailable_rules(hass):
+async def test_enabled_switch_summary_and_icon_are_safe_for_unavailable_rules(hass):
     coordinator = _coordinator(hass, [_rule()])
     missing = ScheduleRuleSwitch(coordinator, 1, "enabled")
     assert not missing.available
@@ -319,7 +320,7 @@ def test_enabled_switch_summary_and_icon_are_safe_for_unavailable_rules(hass):
         {"end": None},
     ],
 )
-def test_enabled_switch_summary_is_none_for_malformed_rule_values(hass, overrides):
+async def test_enabled_switch_summary_is_none_for_malformed_rule_values(hass, overrides):
     coordinator = _coordinator(hass, [_rule(**overrides)])
     malformed = ScheduleRuleSwitch(coordinator, 0, "enabled")
 
@@ -327,7 +328,7 @@ def test_enabled_switch_summary_is_none_for_malformed_rule_values(hass, override
     assert malformed.icon == "mdi:calendar-clock"
 
 
-def test_enabled_switch_uses_fallback_icon_for_invalid_control(hass):
+async def test_enabled_switch_uses_fallback_icon_for_invalid_control(hass):
     coordinator = _coordinator(
         hass,
         [_rule("invalid", weekdays=127, begin=[2, 36, 0], end=[4, 59, 0])],

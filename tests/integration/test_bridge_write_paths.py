@@ -86,7 +86,14 @@ async def test_multiple_keys_over_http_are_encoded_by_type(hass, aioclient_mock)
     args = {"acp": True, "mca": 6, "x": 1.5, "name": "abc", "obj": {"a": 1}, "ignored": [1, 2]}
     assert await bridge.write_multiple_values_to_keys(args, "ct", "default") == {"ct": "default"}
     query = dict(aioclient_mock.mock_calls[0][1].query)
-    assert query == {"acp": "true", "mca": "6", "x": "1.5", "name": '"abc"', "obj": '{"a":1}'}
+    assert query == {
+        "acp": "true",
+        "mca": "6",
+        "x": "1.5",
+        "name": '"abc"',
+        "obj": '{"a":1}',
+        "ignored": "[1,2]",
+    }
 
 
 # ----------------------------------------------------------------------------- the answer of the charger
