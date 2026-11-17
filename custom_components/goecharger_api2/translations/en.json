@@ -86,16 +86,6 @@
       }
     }
   },
-  "common": {
-    "schedule_summary_monday": "Mon",
-    "schedule_summary_tuesday": "Tue",
-    "schedule_summary_wednesday": "Wed",
-    "schedule_summary_thursday": "Thu",
-    "schedule_summary_friday": "Fri",
-    "schedule_summary_saturday": "Sat",
-    "schedule_summary_sunday": "Sun",
-    "schedule_summary_pv_surplus": "with PV surplus"
-  },
   "entity": {
     "binary_sensor": {
       "car_0":{"name":  "Car connected"},

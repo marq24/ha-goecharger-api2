@@ -1,7 +1,6 @@
 from enum import Enum
 from typing import Final
 
-
 # API_KEYS_TO_IGNORE_FROM_WS: Final = ["utc", "loc", "rssi", "wifis", "scan", "dns", "efh", "efh8", "efh32", "efi", "ehs", "emfh", "emhb"]
 API_KEYS_TO_IGNORE_FROM_WS: Final = ["wifis", "scan", "dns", "efh", "efh8", "efh32", "efi", "ehs", "emfh", "emhb"]
 
@@ -283,7 +282,9 @@ TRANSLATIONS: Final = {
         "cll_minchargingcurrent": "Min. Ladestrom",
         "cll_requestedcurrent": "Angeforderter Ladestrom",
         "cll_temperaturecurrentlimit": "Stromlimit Temperatur",
-        "cll_unsymetrycurrentlimit": "Stromlimit Asymmetrie"
+        "cll_unsymetrycurrentlimit": "Stromlimit Asymmetrie",
+        "schedule_summary_days": ("Mo.", "Di.", "Mi.", "Do.", "Fr.", "Sa.", "So."),
+        "schedule_summary_pv_surplus": "mit PV-Überschuss"
     },
     "en": {
         "verify_usage_title": "Wouldn't you like to support the development ?",
@@ -428,6 +429,8 @@ TRANSLATIONS: Final = {
         "cll_minchargingcurrent": "Min. charging Current",
         "cll_requestedcurrent": "Requested Current",
         "cll_temperaturecurrentlimit": "Current-limit Temperature",
-        "cll_unsymetrycurrentlimit": "Current-limit Unsymetry"
+        "cll_unsymetrycurrentlimit": "Current-limit Unsymetry",
+        "schedule_summary_days": ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"),
+        "schedule_summary_pv_surplus": "with PV surplus"
     }
 }

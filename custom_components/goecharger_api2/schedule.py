@@ -1,10 +1,8 @@
 """Entities for the editable go-e charger schedule rules."""
 
-import json
 import logging
 import re
 from datetime import time
-from importlib.resources import files
 from typing import Callable
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -39,21 +37,6 @@ _SUMMARY_WEEKDAYS = (
 )
 
 
-def _load_summary_translations() -> dict[str, tuple[tuple[str, ...], str]]:
-    translation_dir = files(__package__).joinpath("translations")
-    translations = {}
-    for language in ("de", "en", "fr"):
-        with translation_dir.joinpath(f"{language}.json").open("r", encoding="utf-8") as resource:
-            translation = json.load(resource)
-        common = translation["common"]
-        translations[language] = (
-            tuple(common[f"schedule_summary_{day}"] for day, _ in _SUMMARY_WEEKDAYS),
-            common["schedule_summary_pv_surplus"],
-        )
-    return translations
-
-
-_SUMMARY_TRANSLATIONS = _load_summary_translations()
 _SCHEDULE_CONTROL_ICONS = {
     1: "mdi:flash",
     2: "mdi:cancel",
@@ -69,12 +52,6 @@ def _integer_value(value) -> int | None:
         return int(value)
     except (TypeError, ValueError, OverflowError):
         return None
-
-
-def _summary_translations(coordinator):
-    config = getattr(getattr(coordinator, "hass", None), "config", None)
-    language = str(getattr(config, "language", "en")).lower().replace("_", "-").split("-", 1)[0]
-    return _SUMMARY_TRANSLATIONS.get(language, _SUMMARY_TRANSLATIONS["en"])
 
 
 def supports_schedule_rules(coordinator: GoeChargerDataUpdateCoordinator) -> bool:
@@ -205,7 +182,9 @@ class ScheduleRuleSwitch(ScheduleRuleEntity, SwitchEntity):
         except (TypeError, ValueError, OverflowError):
             return {"schedule_summary": None}
 
-        day_names, pv_surplus_text = _summary_translations(self.coordinator)
+
+        day_names = self.coordinator.lang_map["schedule_summary_days"]
+        pv_surplus_text = self.coordinator.lang_map["schedule_summary_pv_surplus"]
         selected_days = [
             day_names[index]
             for index, (_, bit) in enumerate(_SUMMARY_WEEKDAYS)
