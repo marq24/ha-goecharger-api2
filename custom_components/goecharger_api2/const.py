@@ -85,7 +85,7 @@ class ExtSwitchEntityDescription(SwitchEntityDescription):
     idx: int | str | None = None
 
 
-PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.NUMBER, Platform.SELECT, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.NUMBER, Platform.SELECT, Platform.SENSOR, Platform.SWITCH, Platform.TIME]
 
 BINARY_SENSORS = [
     ExtBinarySensorEntityDescription(

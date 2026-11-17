@@ -59,6 +59,15 @@ async def test_websocket_send_that_reports_failure_gives_an_empty_result(hass):
     assert await bridge.write_value_to_key("amp", 10) == {}
 
 
+async def test_schedule_rule_list_is_sent_as_json_value_over_websocket(hass):
+    bridge = make_bridge(hass, websocket=True)
+    rules = [{"enabled": True, "weekdays": 3, "control": 4, "begin": [6, 0, 0], "end": [7, 30, 0]}]
+    assert await bridge.write_value_to_key("sch_rules", rules) == {"sch_rules": rules}
+    sent = bridge._ws_connection.send_json.await_args.args[0]
+    assert sent["key"] == "sch_rules"
+    assert sent["value"] == rules
+
+
 # ----------------------------------------------------------------------------- several keys
 
 async def test_multiple_keys_over_websocket_are_sent_one_after_the_other(hass):
@@ -77,7 +86,14 @@ async def test_multiple_keys_over_http_are_encoded_by_type(hass, aioclient_mock)
     args = {"acp": True, "mca": 6, "x": 1.5, "name": "abc", "obj": {"a": 1}, "ignored": [1, 2]}
     assert await bridge.write_multiple_values_to_keys(args, "ct", "default") == {"ct": "default"}
     query = dict(aioclient_mock.mock_calls[0][1].query)
-    assert query == {"acp": "true", "mca": "6", "x": "1.5", "name": '"abc"', "obj": '{"a":1}'}
+    assert query == {
+        "acp": "true",
+        "mca": "6",
+        "x": "1.5",
+        "name": '"abc"',
+        "obj": '{"a":1}',
+        "ignored": "[1,2]",
+    }
 
 
 # ----------------------------------------------------------------------------- the answer of the charger

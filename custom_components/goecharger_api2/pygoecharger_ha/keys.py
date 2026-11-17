@@ -313,6 +313,8 @@ class Tag(ApiKey, Enum):
     SCH_SUND = ApiKey(key="sch_sund", cat=CAT.CONFIG, writeable=True)
     # scheduler_weekday, control enum values: Disabled=0, Inside=1, Outside=2
     SCH_WEEK = ApiKey(key="sch_week", cat=CAT.CONFIG, writeable=True)
+    # scheduler rules introduced in charger firmware 60
+    SCH_RULES = ApiKey(key="sch_rules", cat=CAT.CONFIG, writeable=True)
     # Button Allow Force change (0=AlwaysLock, 1=LockWhenCarIsConnected, 2=LockWhenCarIsCharging, 3=NeverLock)
     SDP = ApiKey(key="sdp", cat=CAT.CONFIG, writeable=True)
     # stopHysteresis in W

@@ -4,6 +4,7 @@ The coordinator and the bridge are the real code. Timers (`async_call_later`, `a
 and sleeps are replaced so that no test waits or leaves a timer behind.
 """
 import asyncio
+import importlib
 import logging
 import time
 from collections import ChainMap
@@ -22,6 +23,14 @@ from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
 from .factories import make_coordinator
 
 PKG = "custom_components.goecharger_api2"
+
+
+async def test_coordinator_startup_uses_standard_clock_after_time_platform_import(hass):
+    importlib.import_module(f"{PKG}.time")
+
+    coordinator = make_coordinator(hass, data={})
+
+    assert isinstance(coordinator._integration_start, float)
 
 
 # ----------------------------------------------------------------------------- handle_write_result

@@ -12,8 +12,14 @@ from custom_components.goecharger_api2.const import DOMAIN, SELECT_SENSORS, CONT
 from custom_components.goecharger_api2.pygoecharger_ha import INTG_TYPE
 from custom_components.goecharger_api2.pygoecharger_ha.const import CT_VALUES, CT_VALUES_MAP
 from custom_components.goecharger_api2.pygoecharger_ha.keys import Tag
+from custom_components.goecharger_api2.schedule import (
+    add_schedule_rule_entities,
+    create_schedule_rule_selects,
+    supports_schedule_rules,
+)
 
 _LOGGER = logging.getLogger(__name__)
+LEGACY_SCHEDULE_KEYS = {Tag.SCH_WEEK.key, Tag.SCH_SATUR.key, Tag.SCH_SUND.key}
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_entity_cb: AddEntitiesCallback):
@@ -22,7 +28,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
     entities = []
 
     if coordinator.intg_type == INTG_TYPE.CHARGER.value:
+        schedule_rules_supported = supports_schedule_rules(coordinator)
         for description in SELECT_SENSORS:
+            if schedule_rules_supported and description.key in LEGACY_SCHEDULE_KEYS:
+                continue
             if coordinator.is_valid_charger_entity(description):
                 entity = GoeChargerSelect(coordinator, description)
                 entities.append(entity)
@@ -32,6 +41,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
             entities.append(entity)
 
     add_entity_cb(entities)
+    if coordinator.intg_type == INTG_TYPE.CHARGER.value and schedule_rules_supported:
+        add_schedule_rule_entities(coordinator, config_entry, add_entity_cb, create_schedule_rule_selects)
 
 
 class GoeChargerSelect(GoeChargerBaseEntity, SelectEntity):

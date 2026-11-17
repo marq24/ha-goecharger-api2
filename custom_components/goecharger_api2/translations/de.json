@@ -86,6 +86,16 @@
       }
     }
   },
+  "common": {
+    "schedule_summary_monday": "Mo.",
+    "schedule_summary_tuesday": "Di.",
+    "schedule_summary_wednesday": "Mi.",
+    "schedule_summary_thursday": "Do.",
+    "schedule_summary_friday": "Fr.",
+    "schedule_summary_saturday": "Sa.",
+    "schedule_summary_sunday": "So.",
+    "schedule_summary_pv_surplus": "mit PV-Überschuss"
+  },
   "entity": {
     "binary_sensor": {
       "car_0":{"name":  "Fahrzeug verbunden"},
@@ -340,6 +350,10 @@
           "4": "Blockieren (Laden mit PV-Überschuss aktiv)"
         }
       },
+      "sch_rules_behavior": {
+        "name": "Zeitplan {index} Verhalten",
+        "state": {"allow": "Laden", "block": "Blockieren"}
+      },
       "frm": {"name": "Rundungs-Modus",
         "state": {
           "0": "Netzbezug bevorzugen",
@@ -553,6 +567,15 @@
     "switch": {
       "acp": {"name": "Ladepausen zulassen (Fahrzeug Kompatibilität)"},
       "acs": {"name": "Autorisierung (Karte) notwendig"},
+      "sch_rules_enabled": {"name": "Zeitplan {index} aktiviert"},
+      "sch_rules_allow_pv_surplus": {"name": "Zeitplan {index} PV-Überschuss zulassen"},
+      "sch_rules_weekday_sunday": {"name": "Zeitplan {index} Sonntag"},
+      "sch_rules_weekday_monday": {"name": "Zeitplan {index} Montag"},
+      "sch_rules_weekday_tuesday": {"name": "Zeitplan {index} Dienstag"},
+      "sch_rules_weekday_wednesday": {"name": "Zeitplan {index} Mittwoch"},
+      "sch_rules_weekday_thursday": {"name": "Zeitplan {index} Donnerstag"},
+      "sch_rules_weekday_friday": {"name": "Zeitplan {index} Freitag"},
+      "sch_rules_weekday_saturday": {"name": "Zeitplan {index} Samstag"},
       "ara": {"name": "Next-Trip: Weiter im Eco-Modus laden"},
       "awe": {"name": "Mit günstigen Strompreisen laden"},
       "cmse": {"name": "Controller-Scan immer aktiviert"},
@@ -579,6 +602,10 @@
       "iim_4": {"name": "Invertieren Internal 5"},
       "iim_5": {"name": "Invertieren Internal 6"},
       "ocppe": {"name": "OCPP aktiviert"}
+    },
+    "time": {
+      "sch_rules_start": {"name": "Zeitplan {index} Beginn"},
+      "sch_rules_end": {"name": "Zeitplan {index} Ende"}
     }
   }
 }

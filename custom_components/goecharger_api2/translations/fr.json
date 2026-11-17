@@ -84,6 +84,16 @@
       }
     }
   },
+  "common": {
+    "schedule_summary_monday": "lun.",
+    "schedule_summary_tuesday": "mar.",
+    "schedule_summary_wednesday": "mer.",
+    "schedule_summary_thursday": "jeu.",
+    "schedule_summary_friday": "ven.",
+    "schedule_summary_saturday": "sam.",
+    "schedule_summary_sunday": "dim.",
+    "schedule_summary_pv_surplus": "avec Surplus PV"
+  },
   "entity": {
     "binary_sensor": {
       "car_0":{"name":  "Véhicule branché"},
@@ -337,6 +347,10 @@
           "4": "Bloquer (Autoriser avec surplus)"
         }
       },
+      "sch_rules_behavior": {
+        "name": "Planification {index} Comportement",
+        "state": {"allow": "Charger", "block": "Bloquer"}
+      },
       "frm": {"name": "Mode de rotation",
         "state": {
           "0": "Préférer le soutirage depuis le réseau",
@@ -543,6 +557,15 @@
     "switch": {
       "acp": {"name": "Autoriser pause de charge (compatibilité véhicule)"},
       "acs": {"name": "Autorisation par carte requise"},
+      "sch_rules_enabled": {"name": "Planification {index} activée"},
+      "sch_rules_allow_pv_surplus": {"name": "Planification {index} autoriser le surplus PV"},
+      "sch_rules_weekday_sunday": {"name": "Planification {index} dimanche"},
+      "sch_rules_weekday_monday": {"name": "Planification {index} lundi"},
+      "sch_rules_weekday_tuesday": {"name": "Planification {index} mardi"},
+      "sch_rules_weekday_wednesday": {"name": "Planification {index} mercredi"},
+      "sch_rules_weekday_thursday": {"name": "Planification {index} jeudi"},
+      "sch_rules_weekday_friday": {"name": "Planification {index} vendredi"},
+      "sch_rules_weekday_saturday": {"name": "Planification {index} samedi"},
       "ara": {"name": "Arrêt automique pour rester en aWATTar"},
       "awe": {"name": "Utiliser aWATTar (charger quand le prix est bas)"},
       "cmse": {"name": "Scan du contrôleur toujours actif"},
@@ -568,6 +591,10 @@
       "iim_4": {"name": "Inverser Internal 5"},
       "iim_5": {"name": "Inverser Internal 6"},
       "ocppe": {"name": "OCPP activé"}
+    },
+    "time": {
+      "sch_rules_start": {"name": "Règle horaire {index} début"},
+      "sch_rules_end": {"name": "Règle horaire {index} fin"}
     }
   }
 }

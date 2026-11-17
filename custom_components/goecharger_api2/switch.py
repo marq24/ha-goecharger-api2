@@ -10,6 +10,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from custom_components.goecharger_api2.pygoecharger_ha import INTG_TYPE
 from . import GoeChargerDataUpdateCoordinator, GoeChargerBaseEntity
 from .const import DOMAIN, SWITCH_SENSORS, CONTROLLER_SWITCH_SENSORS, ExtSwitchEntityDescription
+from .schedule import add_schedule_rule_entities, create_schedule_rule_switches, supports_schedule_rules
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,12 +25,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, add_
             if coordinator.is_valid_charger_entity(description):
                 entity = GoeChargerSwitch(coordinator, description)
                 entities.append(entity)
+        schedule_rules_supported = supports_schedule_rules(coordinator)
     else:
         for description in CONTROLLER_SWITCH_SENSORS:
             entity = GoeChargerSwitch(coordinator, description)
             entities.append(entity)
 
     add_entity_cb(entities)
+    if coordinator.intg_type == INTG_TYPE.CHARGER.value and schedule_rules_supported:
+        add_schedule_rule_entities(coordinator, config_entry, add_entity_cb, create_schedule_rule_switches)
 
 
 class GoeChargerSwitch(GoeChargerBaseEntity, SwitchEntity):
