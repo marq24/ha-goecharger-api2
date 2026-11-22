@@ -16,7 +16,8 @@ You have different options to do that:
 
 ### or a one time support via:
 - <sub>[![Wero][werobadge]][wero]</sub>
-- <sub>[![Revolut][revolutbadge]][revolut]</sub>&nbsp;&nbsp;also accepting credit cards & ApplePay
+- <sub>[![Revolut][revolutbadge]][revolut]</sub>&nbsp;&nbsp;also accepting credit cards
+- <sub>[![ApplePay][applepaybadge]][applepay]</sub>
 - <sub>[![BuyMeCoffee][buymecoffeebadge]][buymecoffee]</sub>
 - <sub>[![wise][wisebadge]][wise]</sub>
 - <sub>[![PayPal][paypalbadge]][paypal]</sub>
@@ -58,8 +59,8 @@ If you have already supported the development in the past - never mind - THANKS 
 [revolut]: https://revolut.me/marq24
 [revolutbadge]: https://img.shields.io/badge/_revolut-me_-blue.svg?style=for-the-badge&logo=revolut&logoColor=ccc&link=https%3A%2F%2Frevolut.me%2Fmarq24
 
+[applepay]: https://revolut.me/marq24
+[applepaybadge]: https://img.shields.io/badge/_apple-pay_-blue.svg?style=for-the-badge&logo=applepay&logoColor=ccc&link=https%3A%2F%2Frevolut.me%2Fmarq24
+
 [wise]: https://wise.com/pay/me/matthiasm1046
 [wisebadge]: https://img.shields.io/badge/_wise-me_-blue.svg?style=for-the-badge&logo=wise&logoColor=ccc&link=https%3A%2F%2Fwise.com%2Fpay%2Fme%2Fmatthiasm1046
-
-[applepay]: https://revolut.me/marq24
-[applepaybadge]: https://img.shields.io/badge/_&-me_-blue.svg?style=for-the-badge&logo=googlepay&logoColor=ccc&link=https%3A%2F%2Frevolut.me%2Fmarq24
