@@ -30,10 +30,13 @@ from homeassistant.helpers import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.event import async_track_time_interval, async_call_later
-from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.loader import async_get_integration
+try:
+    from homeassistant.helpers.typing import Undefined as HA_UNDEFINED  # type: ignore[attr-defined]
+except ImportError:
+    from homeassistant.helpers.typing import UNDEFINED as HA_UNDEFINED
 
 from custom_components.goecharger_api2.pygoecharger_ha import (
     GoeChargerApiV2Bridge,
@@ -930,7 +933,7 @@ class GoeChargerBaseEntity(CustomFriendlyNameEntity):
         If has_entity_name is True, this returns device.name + self.name
         """
         name = self.name
-        if name is UNDEFINED:
+        if name is HA_UNDEFINED:
             name = None
 
         if not self.has_entity_name or not (device_entry := self.device_entry):
