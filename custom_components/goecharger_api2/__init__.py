@@ -30,7 +30,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.event import async_track_time_interval, async_call_later
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.loader import async_get_integration
@@ -906,8 +906,7 @@ class GoeChargerBaseEntity(CustomFriendlyNameEntity):
         # is no need for a general entity map
         # self.coordinator.entities[self.entity_id] = self
 
-    def _name_internal(self, device_class_name: str | None,
-                       platform_translations: dict[str, Any], ) -> str | UndefinedType | None:
+    def _name_internal(self, device_class_name: str | None, platform_translations: dict[str, Any], ) -> str | None:
         return super()._name_internal(device_class_name, platform_translations)
 
     @property
